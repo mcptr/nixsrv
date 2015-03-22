@@ -15,9 +15,8 @@ Logger::Logger()
 
 Logger::Logger(const ProgramOptions& options)
 {
-	std::streambuf* buf;
-
 	if(options.get<bool>("foreground")) {
+		is_forground_ = true;
 		log_stream_.reset(&std::cerr);
 		//buf = std::cerr.rdbuf();
 	}
@@ -44,6 +43,12 @@ Logger::~Logger()
 		fstream_->close();
 		fstream_.reset();
 	}
+
+	if(is_forground_) {
+		// do not attempt to delete std:cerr.rdbuf()...
+		log_stream_.release();
+	}
+
 	log_stream_.reset();
 }
 

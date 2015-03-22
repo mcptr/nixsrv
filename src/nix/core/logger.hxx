@@ -35,15 +35,18 @@ public:
 
 	void flush();
 	
-	template <class T>
-	Logger& operator<<(const T& msg)
-	{
-		*log_stream_ << msg;
-		return *this;
-	}
+	// template <class T>
+	// Logger& operator<<(const T& msg)
+	// {
+	// 	mtx_.lock();
+	// 	*log_stream_ << msg;
+	// 	mtx_.unlock();
+	// 	return *this;
+	// }
 
 private:
 	bool flushed_ = true;
+	bool is_forground_ = false;
 	std::mutex mtx_;
 	std::unique_ptr<std::ostream> log_stream_;
 	std::unique_ptr<std::fstream> fstream_;
