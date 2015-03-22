@@ -33,14 +33,13 @@ typedef ObjectPool<Connection> ConnectionPool_t;
 
 void logger_test(nix::core::Logger& logger, ConnectionPool_t& pool)
 {
-//	std::shared_ptr<Connection> 
-	auto sh_ptr = pool.acquire(WAIT_FOREVER);
+	auto sh_ptr = pool.acquire();
 	std::stringstream s;
 	s << "THREAD " << std::this_thread::get_id();
 	if(sh_ptr) {
 		sh_ptr->print();
 	}
-	std::this_thread::sleep_for(std::chrono::milliseconds());
+	std::this_thread::sleep_for(std::chrono::milliseconds(100));
 	logger.log_info(s.str() + " Finished");
 	pool.release(sh_ptr);
 }

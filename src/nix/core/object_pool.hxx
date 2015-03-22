@@ -52,7 +52,7 @@ public:
 		pool_.push_back(std::shared_ptr<T>(obj));
 	}
 
-	std::shared_ptr<T> acquire(int timeout = 0)
+	std::shared_ptr<T> acquire(int timeout = WAIT_FOREVER)
 	{
 		using namespace std::chrono;
 		using std::placeholders::_1;
