@@ -11,6 +11,8 @@
 
 const int WAIT_FOREVER = -1;
 
+using std::placeholders::_1;
+
 template <class T>
 class ObjectPool
 {
@@ -39,11 +41,21 @@ public:
 		}
 	}
 
-	void apply(std::function<void(T&)> func)
+	size_t size() const
 	{
-		typename Pool_t::iterator it = pool_.begin();
-		for( ; it != pool_.end(); it++) {
-			func(*(it->get()));
+		return pool_.size();
+	}
+
+	void apply(std::function<void(T&)> func, int pos = -1)
+	{
+		if(pos > -1) {
+			func(*(pool_[pos].get()));
+		}
+		else {
+			typename Pool_t::iterator it = pool_.begin();
+			for( ; it != pool_.end(); it++) {
+				func(*(it->get()));
+			}
 		}
 	}
 
@@ -52,29 +64,30 @@ public:
 		pool_.push_back(std::shared_ptr<T>(obj));
 	}
 
-	std::shared_ptr<T> acquire(int timeout = WAIT_FOREVER)
+	bool acquire(std::shared_ptr<T>& ptr, int timeout = WAIT_FOREVER)
 	{
-		using namespace std::chrono;
-		using std::placeholders::_1;
-
-		std::shared_ptr<T> result(nullptr);
-		std::unique_lock<std::mutex> lock(mtx_);
+		ptr.reset();
 		typename Pool_t::iterator it;
-		while(!result) {
+		std::unique_lock<std::mutex> lock(mtx_);
+
+		while(!ptr) {
 			for(it = pool_.begin() ; it != pool_.end(); it++) {
 				if(it->unique()) {
-					result = *it;
+					ptr = std::shared_ptr<T>(
+						it->get(),
+						std::bind(&ObjectPool<T>::notify, this, _1)
+					);
 					break;
 				}
 			}
 
-			if(!result) {
+			if(!ptr) {
 				if(timeout == WAIT_FOREVER) {
 					cv_.wait(lock);
 				}
 				else {
 					std::cv_status status = 
-						cv_.wait_for(lock, milliseconds(timeout));
+						cv_.wait_for(lock, std::chrono::milliseconds(timeout));
 					if(status == std::cv_status::timeout) {
 						// will result in nullptr
 						break;
@@ -83,22 +96,21 @@ public:
 			}
 		}
 		lock.unlock();
-		return result;
+		return !!ptr;
 	}
 
-	void release(std::shared_ptr<T> ptr)
-	{
-		ptr.reset();
-		cv_.notify_all();
-	}
-	
 	typedef std::vector<std::shared_ptr<T>> Pool_t;
-
-
 protected:
 	Pool_t pool_;
 	std::mutex mtx_;
 	std::condition_variable cv_;
+
+	void notify(T* ptr)
+	{
+		std::cout << "NOTIFY: :" << ptr->get_id() << std::endl;
+		// ptr is shared. this is not a place to delete it
+		cv_.notify_all();
+	}
 };
 
 #endif

@@ -38,7 +38,7 @@ class Dirs(object):
 
 class Setup(object):
 	base_cxxflags = Split(" ".join([
-		"-std=c++0x -Wall -Wextra -pedantic -O2",
+		"-std=c++11 -Wall -Wextra -pedantic -O2",
 		"-pipe -pthread -finline-functions"
 	]))
 	base_libs = []
