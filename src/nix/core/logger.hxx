@@ -15,6 +15,7 @@ class Logger
 public:
 	enum Level { LOG_LVL_ERROR, LOG_LVL_INFO, LOG_LVL_WARN, LOG_LVL_DEBUG };
 	Logger();
+	Logger(const Logger& o) = delete;
 	explicit Logger(const ProgramOptions& options);
 	~Logger();
 

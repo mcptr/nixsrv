@@ -18,8 +18,9 @@ class ObjectPool
 {
 public:
 	typedef std::function<T*(void)> Initializer_t;
+	ObjectPool() = default;
 
-	ObjectPool(size_t size = 1)
+	ObjectPool(size_t size)
 	{
 		for(size_t i = 0 ; i < size; i++) {
 			pool_.push_back(std::shared_ptr<T>(new T()));
@@ -48,6 +49,7 @@ public:
 
 	void apply(std::function<void(T&)> func, int pos = -1)
 	{
+		mtx_.lock();
 		if(pos > -1) {
 			func(*(pool_[pos].get()));
 		}
@@ -57,6 +59,7 @@ public:
 				func(*(it->get()));
 			}
 		}
+		mtx_.unlock();
 	}
 
 	void insert(T* obj)

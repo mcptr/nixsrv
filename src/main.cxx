@@ -3,17 +3,29 @@
 #include <cstdlib>
 #include <ctime>
 
-#include "nix/core/program_options.hxx"
+// core
+#include "nix/core/db/connection.hxx"
 #include "nix/core/logger.hxx"
+#include "nix/core/module/api.hxx"
+#include "nix/core/module/manager.hxx"
 #include "nix/core/object_pool.hxx"
+#include "nix/core/program_options.hxx"
+// util
+#include "nix/util/fs.hxx"
+#include "nix/util/string.hxx"
 
-// testing
 #include <thread>
 #include <chrono>
 #include <vector>
 #include <functional>
 #include <sstream>
 #include <mutex>
+
+
+
+void read_modules_list(const nix::core::ProgramOptions& po,
+					   nix::core::ModuleManager::ModuleList_t& v);
+
 
 class Connection;
 
@@ -48,6 +60,7 @@ void logger_test(int i, nix::core::Logger& logger, ConnectionPool_t& pool)
 int main(int argc, char** argv)
 {
 	using namespace nix::core;
+	using namespace nix::util;
 
 	srand(time(NULL));
 
@@ -60,8 +73,8 @@ int main(int argc, char** argv)
 			return 0;
 		}
 
+		//--------------------------------------------------------------
 		Logger logger(program_options);
-		logger.log_info("Some info message logged");
 
 		ConnectionPool_t pool_test(
 			[]() -> Connection* { 
@@ -69,20 +82,28 @@ int main(int argc, char** argv)
 			}
 		);
 
-		size_t pool_size = 2;
-		ConnectionPool_t pool(0);
-		for(size_t i = 0 ; i < pool_size; i++) {
-			pool.insert(new Connection(i));
-		}
+		ModuleManager::ModuleList_t modules;
+		read_modules_list(program_options, modules);
 
-		std::vector<std::thread> threads;
-		int threads_num = 8;
-		for(int i = 0 ; i < threads_num; i++) {
-			threads.push_back(std::thread(logger_test, i, std::ref(logger), std::ref(pool)));
-		}
-		for(int i = 0 ; i < threads_num; i++) {
-			threads[i].join();
-		}
+		ObjectPool<db::Connection> db_pool; // to be fixed
+		ModuleAPI mod_api(db_pool);
+		ModuleManager module_manager(mod_api, logger);
+		module_manager.load(modules);
+
+		// size_t pool_size = 2;
+		// ConnectionPool_t pool(0);
+		// for(size_t i = 0 ; i < pool_size; i++) {
+		// 	pool.insert(new Connection(i));
+		// }
+
+		// std::vector<std::thread> threads;
+		// int threads_num = 8;
+		// for(int i = 0 ; i < threads_num; i++) {
+		// 	threads.push_back(std::thread(logger_test, i, std::ref(logger), std::ref(pool)));
+		// }
+		// for(int i = 0 ; i < threads_num; i++) {
+		// 	threads[i].join();
+		// }
 
 		// DBPool db_pool(program_options, logger);
 		// PluginStore plugin_store(program_options, logger, db_pool);
@@ -102,3 +123,28 @@ int main(int argc, char** argv)
 }
 
 
+void read_modules_list(const nix::core::ProgramOptions& po,
+					   nix::core::ModuleManager::ModuleList_t& v)
+{
+	using namespace nix::util;
+
+	std::string base_dir(
+		fs::resolve_path(po.get<std::string>("basedir"))
+	);
+
+	std::string plugins_dir = 
+		fs::resolve_path(po.get<std::string>("pluginsdir"));
+
+	std::ifstream modules_config(base_dir + "/etc/modules.load");
+	char line[256];
+	while(modules_config.getline(line, 255)) {
+		std::string module_name(line);
+		string::trim(module_name);
+		if(module_name.length() && module_name[0] != '#') {
+			// if(transport_) {
+			// 	loader.load(plugin_name, transport_.get());
+			// }
+			v.push_back(module_name);
+		}
+	}
+}

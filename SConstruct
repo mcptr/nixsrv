@@ -24,7 +24,6 @@ def extend_env(dest, src):
 		dest[item] = list(set(dest[item]))
 	return dest
 
-
 class Dirs(object):
 	build = "./build"
 	objects = "%s/objs" % build
@@ -135,7 +134,7 @@ def get_platform_default_inc():
 	}
 	return list(
 		map(lambda x: "%s/include" % x, __base.get(THIS_PLATFORM))
-		)
+	)
 
 # ------------------------------------------------------------------------
 # SETUP
@@ -281,12 +280,17 @@ extend_env(testsenv, [dbenv, yamienv, boostenv, combinedenv])
 # ------------------------------------------------------------------------
 
 translation_units = {
+	"core/module" : {},
+	"core/module/api" : {},
+	"core/module/instance" : {},
+	"core/module/manager" : {},
 	"core/logger" : {},
 	"core/program_options" : {
 		"libs" : ["boost_program_options"],
 		"libpath" : boostenv["LIBPATH"],
 	},
 	"util/fs" : {},
+	"util/string" : {},
 	# ######################################################################
 	# "core/auth/auth" : {
 	# 	"cpppath" : [resolve_include("yami4")],

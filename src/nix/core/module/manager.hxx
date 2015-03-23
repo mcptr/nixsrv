@@ -1,0 +1,43 @@
+#ifndef NIX_CORE_MODULE_MANAGER_HXX
+#define NIX_CORE_MODULE_MANAGER_HXX
+
+#include <vector>
+#include <string>
+#include <memory>
+
+#include "nix/core/module.hxx"
+#include "nix/core/db/connection.hxx"
+#include "nix/core/logger.hxx"
+#include "nix/core/object_pool.hxx"
+
+#include "api.hxx"
+#include "instance.hxx"
+
+
+namespace nix {
+namespace core {
+
+class ModuleManager
+{
+public:
+	typedef std::vector<std::string> ModuleList_t;
+
+	ModuleManager() = delete;
+	ModuleManager(ModuleAPI& api,
+				  Logger& logger);
+
+	void load(const ModuleList_t& modules);
+	void load(const std::string& module_path);
+	void unload();
+
+private:
+	ObjectPool<ModuleInstance> modules_pool_;
+
+	ModuleAPI& api_;
+	Logger& logger_;
+};
+
+} // core
+} // nix
+
+#endif

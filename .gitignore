@@ -24,3 +24,4 @@ doc/doxy
 */logs/*
 var/
 __pycache__
+.emacs*
