@@ -56,11 +56,21 @@ stop()
     if [ $PID ]; then
 		echo "Stopping $PROG / $PID"
 		kill -TERM $PID
+
+		while true; do
+			kill -0 $PID
+			if test $? = 0; then
+				echo "Wating for $PID to stop"
+				sleep 1
+			else
+				echo "Done"
+				break
+			fi
+		 done
     else
 		echo "Not running?"
     fi
 
-    sleep 1
     if [ -e $PIDPATH ]; then
 		rm $PIDPATH
     fi
