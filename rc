@@ -1,0 +1,114 @@
+#!/bin/sh
+
+ME=$(readlink -f $0)
+MY_DIR=$(dirname $ME)
+PROGNAME="NIX"
+PID=`pidof $PROGNAME`
+PROG="$MY_DIR/bin/$PROGNAME"
+PIDPATH="$MY_DIR/var/pid/srv.pid"
+
+export LD_LIBRARY_PATH=/usr/local/lib64/soci:/usr/local/lib64/yami4
+
+DBTYPE=${DBTYPE:-postgresql}
+
+_bar()
+{
+    echo "################################################################"
+}
+
+start()
+{
+    #echo "Starting"
+    #$PROG --dbtype=$DBTYPE -F $@
+    $PROG -F $@
+    show_status
+}
+
+start_no_db()
+{
+    #echo "Starting"
+    $PROG -F $@ -v
+    show_status
+}
+
+start_debug()
+{
+    _bar
+    echo "Starting debug and foreground mode"
+    echo "Hit CTRL+C to terminate"
+    _bar
+    $PROG --debug -fv -F $@
+    show_status
+}
+
+start_debug_no_db()
+{
+    _bar
+    echo "Starting debug and foreground mode"
+    echo "Hit CTRL+C to terminate"
+    _bar
+    $PROG --debug -fv -F $@
+    show_status
+}
+
+stop()
+{
+    if [ $PID ]; then
+		echo "Stopping $PROG / $PID"
+		kill -TERM $PID
+    else
+		echo "Not running?"
+    fi
+
+    sleep 1
+    if [ -e $PIDPATH ]; then
+		rm $PIDPATH
+    fi
+}
+
+show_status()
+{
+    PID=`pidof $PROGNAME`
+    if [ $PID ]; then
+		echo "Running, pid: $PID"
+    else
+		echo "Not running"
+    fi
+}
+
+if test $#  = 0; then
+    ACTION="help"
+else
+    ACTION=$1
+    shift
+    
+fi
+
+
+case "$ACTION" in
+    start)
+		start $@
+		;;
+    debug)
+		start_debug $@
+		;;
+    start_no_db|no_db)
+		start_no_db $@
+		;;
+    debug_no_db)
+		start_debug_no_db $@
+		;;
+    stop)
+		stop
+		;;
+    restart)
+		stop
+		start $@
+		;;
+    status)
+		show_status
+		;;
+    *)
+		echo "Usage: $0 {start|debug|stop|restart|status}"
+		exit 1
+esac
