@@ -1,0 +1,20 @@
+[global]
+databases = core,test
+
+[core]
+type = mongodb
+user = nix
+password = secret
+name = nix_main
+host = localhost
+port = 27017
+pool_size = 10
+
+[test]
+type = mongodb
+user = nix
+password = secret
+name = nix_test
+host = localhost
+port = 27017
+pool_size = 10

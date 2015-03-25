@@ -14,6 +14,7 @@
 
 // core
 #include "nix/core/db/connection.hxx"
+#include "nix/core/db/options.hxx"
 #include "nix/core/logger.hxx"
 #include "nix/core/module/api.hxx"
 #include "nix/core/module/manager.hxx"
@@ -83,14 +84,12 @@ int main(int argc, char** argv)
 			return 0;
 		}
 
+		if(program_options.get<bool>("debug")) {
+			program_options.dump_variables_map();
+		}
+
 		//--------------------------------------------------------------
 		Logger logger(program_options);
-
-		// ConnectionPool_t pool_test(
-		// 	[]() -> Connection* { 
-		// 		return new Connection(1); 
-		// 	}
-		// );
 
 		ModuleManager::Names_t modules;
 		setup_modules(modules, program_options);
@@ -118,25 +117,6 @@ int main(int argc, char** argv)
 		);
 
 		register_transport_modules(transport, modules);
-
-		// size_t pool_size = 2;
-		// ConnectionPool_t pool(0);
-		// for(size_t i = 0 ; i < pool_size; i++) {
-		// 	pool.insert(new Connection(i));
-		// }
-
-		// std::vector<std::thread> threads;
-		// int threads_num = 8;
-		// for(int i = 0 ; i < threads_num; i++) {
-		// 	threads.push_back(std::thread(logger_test, i, std::ref(logger), std::ref(pool)));
-		// }
-		// for(int i = 0 ; i < threads_num; i++) {
-		// 	threads[i].join();
-		// }
-
-		// DBPool db_pool(program_options, logger);
-		// PluginStore plugin_store(program_options, logger, db_pool);
-		
 	}
 	catch(std::exception& e) {
 		std::cerr << "std::exception (main()): " << e.what() << std::endl;
@@ -148,6 +128,10 @@ int main(int argc, char** argv)
 	return EXIT_SUCCESS;
 }
 
+
+// ---------------------------------------------------------------------
+// initialization helpers
+// ---------------------------------------------------------------------
 
 void setup_modules(ModuleManager::Names_t& v,
 				   const nix::core::ProgramOptions& po)
@@ -170,6 +154,7 @@ void setup_modules(ModuleManager::Names_t& v,
 			v.push_back(module_name);
 		}
 	}
+	modules_config.close();
 }
 
 void setup_transport(Options& options,
@@ -178,15 +163,15 @@ void setup_transport(Options& options,
 	using std::string;
 	using namespace nix;
 
-	options.port = po.get<int>("TRANSPORT.port");
-	options.threads = po.get<int>("TRANSPORT.threads");
-	options.listen_address = po.get<string>("TRANSPORT.address_family");
+	options.listen_address = po.get<string>("listen_address");
+	options.port = po.get<int>("port");
+	options.threads = po.get<int>("threads");
 
 	options.tcp_nonblocking = po.get<bool>("TRANSPORT-YAMI.tcp_nonblocking");
 	options.tcp_listen_backlog = po.get<bool>("TRANSPORT-YAMI.tcp_listen_backlog");
 	options.dispatcher_threads = po.get<bool>("TRANSPORT-YAMI.dispatcher_threads");
 
-	string address_family(po.get<string>("TRANSPORT.address_family"));
+	string address_family(po.get<string>("address_family"));
 	util::string::to_lower(util::string::trim(address_family));
 
 
@@ -199,7 +184,7 @@ void setup_transport(Options& options,
 	else if(address_family.compare("udp") == 0) {
 		options.address_family = Options::UDP;
 	}
-	else if(address_family.compare("INPROC") == 0) {
+	else if(address_family.compare("inproc") == 0) {
 		options.address_family = Options::INPROC;
 	}
 }
@@ -207,6 +192,25 @@ void setup_transport(Options& options,
 void setup_db_pool(ObjectPool<Connection>& pool,
 				   const ProgramOptions& po)
 {
+	using namespace std;
+
+	string base_dir(
+		nix::util::fs::resolve_path(po.get<string>("basedir"))
+	);
+
+	std::string config_path(po.get<string>("dbconfig"));
+	if(po.is_verbose()) {
+		std::cout << "Reading db configuration: "
+				  <<  config_path
+				  << std::endl;
+	}
+
+	nix::core::db::Options options;
+	options.parse(config_path);
+	for(auto& inst : options.get_instances()) {
+		// create connection
+		// pool.insert
+	}
 }
 
 void register_transport_modules(

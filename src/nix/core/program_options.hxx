@@ -1,34 +1,27 @@
 #ifndef NIX_CORE_PROGRAM_OPTIONS_HXX
 #define NIX_CORE_PROGRAM_OPTIONS_HXX
 
-#include <boost/program_options.hpp>
-#include <string>
+#include "options.hxx"
 
 namespace nix {
 namespace core {
 
 namespace po = boost::program_options;
 
-class ProgramOptions
+class ProgramOptions : public Options
 {
 public:
 	void parse(int argc, char** argv);
 	bool has_help() const;
 	void display_help() const;
 
-	template <class T>
-	const T get(const std::string& k) const
+	inline bool is_verbose() const
 	{
-		try {
-			return vm_[k].as<T>();
-		}
-		catch(boost::bad_any_cast& e) {
-			std::cerr << "ERROR: ProgramOptions::get(): " << k << std::endl;
-			throw e;
-		}
+		return (vm_["debug"].as<bool>() || vm_["verbose"].as<bool>());
 	}
+
 private:
-	po::variables_map vm_;
+	void dump_variables() const;
 	po::options_description all_;
 };
 

@@ -15,8 +15,6 @@ namespace core {
 
 const int WAIT_FOREVER = -1;
 
-using std::placeholders::_1;
-
 template <class T>
 class ObjectPool
 {
@@ -87,7 +85,7 @@ public:
 				if(it->unique()) {
 					ptr = std::shared_ptr<T>(
 						it->get(),
-						std::bind(&ObjectPool<T>::notify, this, _1)
+						std::bind(&ObjectPool<T>::notify, this)
 					);
 					break;
 				}
@@ -117,7 +115,7 @@ protected:
 	std::mutex mtx_;
 	std::condition_variable cv_;
 
-	void notify(T* ptr)
+	void notify()
 	{
 		cv_.notify_all();
 	}

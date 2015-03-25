@@ -1,20 +1,20 @@
-basedir = ~/Devel/xploitive
-pluginsdir = ~/Devel/xploitive/lib
-logdir = ~/Devel/xploitive/logs
-pidbase = ~/Devel/xploitive/var/run
-pidname = extsrv.localhost
+basedir = ~/Devel/nix
+pluginsdir = ~/Devel/nix/lib
+logdir = ~/Devel/nix/var/log
+pidbase = ~/Devel/nix/var/run
+pidname = nix.localhost
 
-dbuser = minus
+dbuser = nix
 dbname = 
 dbpass = 
 
-[NET]
-server_af = tcp
-server_address = 127.0.0.1
-server_port = 9876
-server_threads = 10
+[TRANSPORT]
+address_family = tcp
+listen_address = 127.0.0.1
+port = 9876
+threads = 10
 
-[NET-YAMI]
-tcp_listen_backlog = 250
+[TRANSPORT-YAMI]
+tcp_listen_backlog = 50
 tcp_nonblocking = 1
 dispatcher_threads = 10

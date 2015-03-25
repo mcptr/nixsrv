@@ -11,14 +11,14 @@ class FatalError :  public std::logic_error
 {
 public:
 	FatalError() = delete;
-	FatalError(const std::string& m) : std::logic_error(m) { }
+	explicit FatalError(const std::string& m) : std::logic_error(m) { }
 };
 
 class RuntimeError :  public std::runtime_error
 {
 public:
 	RuntimeError() = delete;
-	RuntimeError(const std::string& m) : std::runtime_error(m) { }
+	explicit RuntimeError(const std::string& m) : std::runtime_error(m) { }
 };
 
 typedef FatalError InitializationError;
