@@ -2,6 +2,7 @@
 #define NIX_CORE_MODULE_API_HXX
 
 #include "nix/core/db/connection.hxx"
+#include "nix/core/logger.hxx"
 #include "nix/core/object_pool.hxx"
 
 namespace nix {
@@ -10,10 +11,12 @@ namespace core {
 class ModuleAPI
 {
 public:
-	ModuleAPI(ObjectPool<db::Connection>& db_pool);
+	ModuleAPI(Logger& logger_ref,
+			  ObjectPool<db::Connection>& db_pool_ref);
 
 	// refs
-	ObjectPool<db::Connection>& db_pool_;
+	Logger& logger;
+	ObjectPool<db::Connection>& db_pool;
 };
 
 } // core

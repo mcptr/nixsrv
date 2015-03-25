@@ -7,18 +7,20 @@ namespace nix {
 namespace core {
 
 ModuleManager::ModuleManager(ModuleAPI& api,
-							 Logger& logger)
+							 Logger& logger,
+							 bool fatal)
 	: api_(api),
-	  logger_(logger)
+	  logger_(logger),
+	  fatal_(fatal)
 {
 }
 
-void ModuleManager::load(const ModuleList_t& modules)
+void ModuleManager::load(const Names_t& modules)
 {
 	std::string err_msg;
 	for(auto it : modules) {
 		logger_.log_info("TODO*** ModuleManager::load(): loading module: " + it);
-		ModuleInstance* mod = new ModuleInstance(api_, it);
+		ModuleInstance* mod = new ModuleInstance(api_, it, fatal_);
 		if(mod->load(err_msg)) {
 			modules_pool_.insert(mod);
 		}
@@ -36,7 +38,8 @@ void ModuleManager::load(const std::string& module_path)
 
 void ModuleManager::unload()
 {
-
+	modules_pool_.clear();
 }
+
 } // core
 } // nix

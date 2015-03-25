@@ -1,4 +1,3 @@
-#include <iostream>
 #include "module.hxx"
 
 namespace nix {
@@ -24,7 +23,6 @@ int Module::get_version() const
 void Module::deleter(Module *ptr)
 {
 	delete ptr;
-	std::cout << "deleter()" << std::endl;
 }
 
 } // core

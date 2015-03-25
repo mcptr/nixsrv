@@ -289,6 +289,13 @@ translation_units = {
 		"libs" : ["boost_program_options"],
 		"libpath" : boostenv["LIBPATH"],
 	},
+	"core/net/transport" : {
+		"env": combinedenv,
+	},
+	"core/net/transport/options" : {},
+	"core/net/transport/yami" : {
+		"env" : yamienv,
+	},
 	"util/fs" : {},
 	"util/string" : {},
 	# ######################################################################

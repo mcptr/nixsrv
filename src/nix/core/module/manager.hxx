@@ -20,13 +20,15 @@ namespace core {
 class ModuleManager
 {
 public:
-	typedef std::vector<std::string> ModuleList_t;
+	typedef std::vector<std::string> Names_t;
+
 
 	ModuleManager() = delete;
 	ModuleManager(ModuleAPI& api,
-				  Logger& logger);
+				  Logger& logger,
+				  bool fatal = false);
 
-	void load(const ModuleList_t& modules);
+	void load(const Names_t& modules);
 	void load(const std::string& module_path);
 	void unload();
 
@@ -35,6 +37,7 @@ private:
 
 	ModuleAPI& api_;
 	Logger& logger_;
+	bool fatal_;
 };
 
 } // core

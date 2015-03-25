@@ -1,0 +1,20 @@
+basedir = ~/Devel/xploitive
+pluginsdir = ~/Devel/xploitive/lib
+logdir = ~/Devel/xploitive/logs
+pidbase = ~/Devel/xploitive/var/run
+pidname = extsrv.localhost
+
+dbuser = minus
+dbname = 
+dbpass = 
+
+[NET]
+server_af = tcp
+server_address = 127.0.0.1
+server_port = 9876
+server_threads = 10
+
+[NET-YAMI]
+tcp_listen_backlog = 250
+tcp_nonblocking = 1
+dispatcher_threads = 10

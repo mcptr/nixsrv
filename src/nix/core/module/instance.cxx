@@ -1,15 +1,20 @@
 #include <dlfcn.h>
 
+#include "nix/core/exception.hxx"
 #include "instance.hxx"
 
 namespace nix {
 namespace core {
 
 
-ModuleInstance::ModuleInstance(ModuleAPI& api, const std::string& lib_path)
-	: api_(api), lib_path_(lib_path)
+ModuleInstance::ModuleInstance(ModuleAPI& api,
+							   const std::string& lib_path,
+							   bool fatal)
+	: api_(api),
+	  lib_path_(lib_path),
+	  fatal_(fatal)
 {
-	/* empty */
+	lib_handle_.reset();
 }
 
 ModuleInstance::~ModuleInstance()
@@ -29,6 +34,9 @@ bool ModuleInstance::load(std::string& err_msg)
 	void* h = dlopen(lib_path_.c_str(), RTLD_LAZY | RTLD_NOW);
 	err_msg.assign(dlerror());
 	if(!h) {
+		if(fatal_) {
+			throw FatalError("ModuleInstance::load(): Failed to load module: " + err_msg);
+		}
 		return false;
 	}
 
@@ -39,7 +47,7 @@ bool ModuleInstance::load(std::string& err_msg)
 	}
 
 	module_ptr_ = creator(api_);
-	lib_handle_.reset((long*)h); // fixme
+	lib_handle_.reset((long*)h); // FIXME
 	return !!module_ptr_;
 }
 
@@ -47,10 +55,11 @@ bool ModuleInstance::unload(std::string& err_msg)
 {
 	err_msg.clear();
 	module_ptr_.reset();
-	dlclose(lib_handle_.get());
-	err_msg.assign(dlerror());
-	lib_handle_.release();
-	return err_msg.length() == 0;
+	if(lib_handle_ && dlclose(lib_handle_.get())) {
+		return false;
+	}
+	lib_handle_.reset();
+	return true;
 }
 
 } // core

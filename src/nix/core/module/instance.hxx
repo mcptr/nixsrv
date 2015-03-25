@@ -14,7 +14,9 @@ class ModuleInstance
 {
 public:
 	ModuleInstance() = delete;
-	ModuleInstance(ModuleAPI& api, const std::string& lib_path);
+	ModuleInstance(ModuleAPI& api,
+				   const std::string& lib_path,
+				   bool fatal = false);
 	~ModuleInstance();
 	Module& module() const;
 
@@ -26,6 +28,7 @@ private:
 
 	ModuleAPI& api_;
 	const std::string& lib_path_;
+	bool fatal_;
 };
 
 } // core

@@ -9,6 +9,10 @@
 #include <condition_variable>
 #include <iostream>
 
+
+namespace nix {
+namespace core {
+
 const int WAIT_FOREVER = -1;
 
 using std::placeholders::_1;
@@ -40,6 +44,11 @@ public:
 		for( ; it != pool_.end(); it++) {
 			it->reset();
 		}
+	}
+
+	void clear()
+	{
+		pool_.clear();
 	}
 
 	size_t size() const
@@ -110,10 +119,11 @@ protected:
 
 	void notify(T* ptr)
 	{
-		std::cout << "NOTIFY: :" << ptr->get_id() << std::endl;
-		// ptr is shared. this is not a place to delete it
 		cv_.notify_all();
 	}
 };
+
+} // core
+} // nix
 
 #endif

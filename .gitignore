@@ -2,7 +2,7 @@
 etc/config.ini
 etc/db/postgresql.ini
 etc/db/mysql.ini
-etc/ext_mods/portal/db/postgresql.ini
+etc/db/mongodb.ini
 py/etc/agents
 bin/
 build/
