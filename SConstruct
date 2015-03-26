@@ -280,6 +280,18 @@ extend_env(testsenv, [dbenv, yamienv, boostenv, combinedenv])
 # ------------------------------------------------------------------------
 
 translation_units = {
+	"api/message/object" : {
+		"env": combinedenv,
+	},
+	"api/message/array" : {
+		"env": combinedenv,
+	},
+	"api/message/incoming" : {
+		"env": combinedenv,
+	},
+	"api/message/outgoing" : {
+		"env": combinedenv,
+	},
 	"core/db/connection" : {},
 	"core/db/instance_config" : {},
 	"core/db/options" : {},
