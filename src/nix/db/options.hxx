@@ -11,7 +11,7 @@
 
 
 namespace nix {
-
+namespace db {
 
 namespace po = boost::program_options;
 
@@ -32,6 +32,7 @@ private:
 };
 
 
+} // db
 } // nix
 
 #endif

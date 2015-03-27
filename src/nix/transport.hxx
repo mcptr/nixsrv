@@ -7,16 +7,13 @@
 
 #include "transport/options.hxx"
 #include "nix/module/instance.hxx"
-#include "nix/routing/route.hxx"
+#include "nix/route.hxx"
 
 
 namespace nix {
 
 // fwd
 //class ModuleInstance;
-
-namespace net {
-
 
 class Transport
 {
@@ -40,8 +37,12 @@ protected:
 };
 
 
+namespace transport {
+
 Transport* create_transport(Transport::TransportType_t type,
 							const transport::Options& options);
+
+} // transport
 
 
 } // nix

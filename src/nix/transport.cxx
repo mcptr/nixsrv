@@ -17,6 +17,9 @@ void Transport::stop()
 	/* empty */
 }
 
+
+namespace transport {
+
 Transport* create_transport(Transport::TransportType_t type,
 							const transport::Options& options)
 {
@@ -31,6 +34,8 @@ Transport* create_transport(Transport::TransportType_t type,
 
 	return ptr;
 }
+
+} // transport
 
 
 } // nix

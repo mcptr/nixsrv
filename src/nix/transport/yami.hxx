@@ -6,9 +6,9 @@
 
 #include "nix/module.hxx"
 #include "nix/module/instance.hxx"
-#include "nix/net/transport.hxx"
+#include "nix/transport.hxx"
 #include "nix/request.hxx"
-#include "nix/routing/route.hxx"
+#include "nix/route.hxx"
 #include "nix/response.hxx"
 
 #include "options.hxx"

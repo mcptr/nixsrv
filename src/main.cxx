@@ -12,32 +12,29 @@
 #include <sstream>
 #include <mutex>
 
-// core
-#include "nix/core/db/connection.hxx"
-#include "nix/core/db/options.hxx"
-#include "nix/core/logger.hxx"
-#include "nix/core/module/api.hxx"
-#include "nix/core/module/manager.hxx"
-#include "nix/core/object_pool.hxx"
-#include "nix/core/program_options.hxx"
-
-// core::net
-#include "nix/core/net/transport.hxx"
-#include "nix/core/net/transport/options.hxx"
+#include "nix/db/connection.hxx"
+#include "nix/db/options.hxx"
+#include "nix/logger.hxx"
+#include "nix/module/api.hxx"
+#include "nix/module/manager.hxx"
+#include "nix/object_pool.hxx"
+#include "nix/program_options.hxx"
+#include "nix/transport.hxx"
+#include "nix/transport/options.hxx"
 
 // util
 #include "nix/util/fs.hxx"
 #include "nix/util/string.hxx"
 
 
-using nix::core::Logger;
-using nix::core::ModuleManager;
-using nix::core::ModuleAPI;
-using nix::core::ObjectPool;
-using nix::core::ProgramOptions;
-using nix::core::db::Connection;
-using nix::core::net::Transport;
-using nix::core::net::transport::Options;
+using nix::Logger;
+using nix::ModuleManager;
+using nix::ModuleAPI;
+using nix::ObjectPool;
+using nix::ProgramOptions;
+using nix::db::Connection;
+using nix::Transport;
+using nix::transport::Options;
 
 void setup_modules(ModuleManager::Names_t& v,
 				   const ProgramOptions& po);
@@ -106,7 +103,7 @@ int main(int argc, char** argv)
 		setup_transport(transport_options, program_options);
 
 		transport.reset(
-			nix::core::net::create_transport(
+			nix::transport::create_transport(
 				Transport::YAMI, transport_options
 			)
 		);
@@ -130,7 +127,7 @@ int main(int argc, char** argv)
 // ---------------------------------------------------------------------
 
 void setup_modules(ModuleManager::Names_t& v,
-				   const nix::core::ProgramOptions& po)
+				   const nix::ProgramOptions& po)
 {
 	using namespace nix::util;
 
@@ -158,6 +155,7 @@ void setup_transport(Options& options,
 {
 	using std::string;
 	using namespace nix;
+	using nix::transport::Options;
 
 	options.listen_address = po.get<string>("listen_address");
 	options.port = po.get<int>("port");
@@ -201,7 +199,7 @@ void setup_db_pool(ObjectPool<Connection>& pool,
 				  << std::endl;
 	}
 
-	nix::core::db::Options options;
+	nix::db::Options options;
 	options.parse(config_path);
 	for(auto& inst : options.get_instances()) {
 		// create connection

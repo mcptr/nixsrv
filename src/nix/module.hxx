@@ -5,8 +5,8 @@
 #include <functional>
 #include <string>
 
-#include "nix/net/transport.hxx"
-#include "nix/routing/route.hxx"
+#include "nix/transport.hxx"
+#include "nix/route.hxx"
 
 #include "module/api.hxx"
 
@@ -15,8 +15,6 @@ namespace nix {
 
 
 using std::placeholders::_1;
-using nix::net::Transport;
-using nix::Route;
 
 class Module
 {

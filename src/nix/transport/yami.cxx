@@ -1,4 +1,4 @@
-#include "nix/routing/route.hxx"
+#include "nix/route.hxx"
 #include "nix/message/incoming.hxx"
 #include "nix/message/outgoing.hxx"
 

@@ -17,7 +17,7 @@ Route::Route(const std::string& route,
 {
 }
 
-void Route::operator()(const api::Request_t& req, api::Response& res)
+void Route::operator()(const Request_t& req, api::Response& res)
 {
 	handler_(req, res);
 }

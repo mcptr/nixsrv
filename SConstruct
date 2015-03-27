@@ -280,39 +280,39 @@ extend_env(testsenv, [dbenv, yamienv, boostenv, combinedenv])
 # ------------------------------------------------------------------------
 
 translation_units = {
-	"api/message/object" : {
+	"db/connection" : {},
+	"db/instance_config" : {},
+	"db/options" : {},
+	"message/object" : {
 		"env": combinedenv,
 	},
-	"api/message/array" : {
+	"message/array" : {
 		"env": combinedenv,
 	},
-	"api/message/incoming" : {
+	"message/incoming" : {
 		"env": combinedenv,
 	},
-	"api/message/outgoing" : {
+	"message/outgoing" : {
 		"env": combinedenv,
 	},
-	"core/db/connection" : {},
-	"core/db/instance_config" : {},
-	"core/db/options" : {},
-	"core/options" : {},
-	"core/module" : {},
-	"core/module/api" : {},
-	"core/module/instance" : {},
-	"core/module/manager" : {
+	"module" : {},
+	"module/api" : {},
+	"module/instance" : {},
+	"module/manager" : {
 		"env": combinedenv,
 	},
-	"core/logger" : {},
-	"core/net/transport" : {
-		"env": combinedenv,
-	},
-	"core/net/transport/options" : {},
-	"core/net/transport/yami" : {
-		"env" : yamienv,
-	},
-	"core/program_options" : {
+	"logger" : {},
+	"options" : {},
+	"program_options" : {
 		"libs" : ["boost_program_options"],
 		"libpath" : boostenv["LIBPATH"],
+	},
+	"transport" : {
+		"env": combinedenv,
+	},
+	"transport/options" : {},
+	"transport/yami" : {
+		"env" : yamienv,
 	},
 	"util/fs" : {},
 	"util/string" : {},
@@ -387,7 +387,7 @@ combinedenv.Alias('all', Dirs.install)
 
 print("Building targets: %s\n" % "\n".join(list(map(str, BUILD_TARGETS))))
 
-if is_option_set("mods"):
+if is_option_set("mods") and False:
 	base_dir = Dir(".").path
 	nix_objs_dir = os.path.join(base_dir, "../../..",	Dirs.objects)
 

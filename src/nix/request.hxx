@@ -20,7 +20,7 @@ public:
 		: im_(inc_transport_msg)
 	{
 		seq_id_++;
-		message_.reset(new api::IncomingMessage());
+		message_.reset(new IncomingMessage());
 	}
 
 	virtual ~Request() = default;
@@ -40,16 +40,16 @@ public:
 		return route_;
 	}
 
-	virtual const api::IncomingMessage& get_message() const
+	virtual const IncomingMessage& get_message() const
 	{
 		return *(message_.get());
 	}
 
-	virtual void reply(api::Response& response);
+	virtual void reply(Response& response) = 0;
 
 protected:
 	const TransportMessage_t& im_;
-	std::shared_ptr<api::IncomingMessage> message_;
+	std::shared_ptr<IncomingMessage> message_;
 
 	std::string module_;
 	std::string route_;

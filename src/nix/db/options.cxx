@@ -96,4 +96,5 @@ void Options::parse(const std::string& config_path)
 }
 
 
+} // db
 } // nix

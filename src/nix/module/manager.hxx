@@ -9,7 +9,7 @@
 #include "nix/db/connection.hxx"
 #include "nix/logger.hxx"
 #include "nix/object_pool.hxx"
-#include "nix/net/transport.hxx"
+#include "nix/transport.hxx"
 
 #include "api.hxx"
 #include "instance.hxx"
