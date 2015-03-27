@@ -4,11 +4,13 @@
 #include <memory>
 #include <string>
 
-#include "nix/core/module.hxx"
 #include "api.hxx"
 
 namespace nix {
 namespace core {
+
+// fwd
+class Module;
 
 class ModuleInstance
 {
@@ -18,7 +20,7 @@ public:
 				   const std::string& lib_path,
 				   bool fatal = false);
 	~ModuleInstance();
-	Module& module() const;
+	std::shared_ptr<const Module> module() const;
 
 	bool load(std::string& err_msg);
 	bool unload(std::string& err_msg);
@@ -27,7 +29,7 @@ private:
 	std::unique_ptr<long> lib_handle_;
 
 	ModuleAPI& api_;
-	const std::string& lib_path_;
+	const std::string lib_path_;
 	bool fatal_;
 };
 

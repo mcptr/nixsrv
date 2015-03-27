@@ -15,6 +15,7 @@ class Options
 public:
 	Options() = default;
 	virtual ~Options() = default;
+
 	template <class T>
 	const T get(const std::string& k) const
 	{
@@ -22,7 +23,7 @@ public:
 			return vm_[k].as<T>();
 		}
 		catch(boost::bad_any_cast& e) {
-			std::cerr << "ERROR: ProgramOptions::get(): " << k << std::endl;
+			std::cerr << "ERROR: Options::get(): " << k << std::endl;
 			throw e;
 		}
 	}

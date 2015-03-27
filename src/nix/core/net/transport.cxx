@@ -6,6 +6,7 @@ namespace nix {
 namespace core {
 namespace net {
 
+
 Transport::Transport(const transport::Options& options)
 	: options_(options)
 {

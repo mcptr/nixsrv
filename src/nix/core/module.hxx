@@ -5,18 +5,24 @@
 #include <functional>
 #include <string>
 
+#include "nix/core/net/transport.hxx"
+#include "nix/core/routing/route.hxx"
+
 #include "module/api.hxx"
 
 namespace nix {
 namespace core {
 
 using std::placeholders::_1;
+using nix::core::net::Transport;
+using nix::core::Route;
 
 class Module
 {
 public:
-	typedef std::unique_ptr<Module, std::function<void(Module*)>> ModulePointer_t;
-	typedef ModulePointer_t create_t(ModuleAPI&);
+	typedef std::unique_ptr<Module, std::function<void(Module*)>> ModuleInitializer_t;
+	typedef ModuleInitializer_t create_t(ModuleAPI&);
+
 	Module() = delete;
 	explicit Module(ModuleAPI& api, const std::string& id, int version = 0);
 	virtual ~Module() = default;
@@ -26,15 +32,17 @@ public:
 
 	static void deleter(Module* ptr);
 
-	//virtual void register_routing(Transport& t, );
-	// virtual void on_incoming_message(const IncomingMessage& msg);
-	// virtual void on_outgoing_message(const OutgoingMessage& msg);
-
+	virtual inline const Transport::Routes_t& get_routing() const final
+	{
+		return routes_;
+	}
 protected:
 	ModuleAPI& api_;
+
 private:
-	std::string ident_;
+	const std::string ident_;
 	int version_;
+	Transport::Routes_t routes_;
 };
 
 

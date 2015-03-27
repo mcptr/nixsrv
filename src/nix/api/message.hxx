@@ -7,7 +7,6 @@
 #include <mongo/bson/bson.h>
 #include <mongo/db/json.h>
 
-
 namespace nix {
 namespace api {
 

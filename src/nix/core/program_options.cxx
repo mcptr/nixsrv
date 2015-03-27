@@ -32,6 +32,7 @@ void ProgramOptions::parse(int argc, char** argv)
 
 		string stropt;
 		int intopt;
+		bool boolopt;
 
 		flags.add_options()
 			("help,h", "display this help")
@@ -95,7 +96,7 @@ void ProgramOptions::parse(int argc, char** argv)
 			 po::value(&intopt)->default_value(10), "TRANSPORT-YAMI.tcp_listen_backlog"
 			)
 			("TRANSPORT-YAMI.tcp_nonblocking",
-			 po::value(&intopt)->default_value(1), "TRANSPORT-YAMI.tcp_nonblocking"
+			 po::value(&boolopt)->default_value(true), "TRANSPORT-YAMI.tcp_nonblocking"
 			)
 			("TRANSPORT-YAMI.dispatcher_threads",
 			 po::value(&intopt)->default_value(10), "TRANSPORT-YAMI.dispatcher_threads"

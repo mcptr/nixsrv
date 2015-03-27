@@ -9,6 +9,7 @@
 #include "nix/core/db/connection.hxx"
 #include "nix/core/logger.hxx"
 #include "nix/core/object_pool.hxx"
+#include "nix/core/net/transport.hxx"
 
 #include "api.hxx"
 #include "instance.hxx"
@@ -32,6 +33,7 @@ public:
 	void load(const std::string& module_path);
 	void unload();
 
+	void register_routing(std::shared_ptr<Transport> t);
 private:
 	ObjectPool<ModuleInstance> modules_pool_;
 

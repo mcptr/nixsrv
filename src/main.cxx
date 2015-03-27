@@ -51,11 +51,6 @@ void setup_db_pool(ObjectPool<Connection>& pool,
 				   const ProgramOptions& po);
 
 
-void register_transport_modules(
-	std::unique_ptr<Transport>& transport,
-	ModuleManager::Names_t& modules);
-
-
 void test_logger_test(int i, Logger& logger, ObjectPool<Connection>& pool)
 {
 	std::shared_ptr<Connection> ptr;
@@ -73,7 +68,7 @@ int main(int argc, char** argv)
 {
 	srand(time(NULL));
 
-	std::unique_ptr<Transport> transport;
+	std::shared_ptr<Transport> transport;
 
 	try {
 		ProgramOptions program_options;
@@ -116,7 +111,8 @@ int main(int argc, char** argv)
 			)
 		);
 
-		register_transport_modules(transport, modules);
+		module_manager.register_routing(transport);
+
 	}
 	catch(std::exception& e) {
 		std::cerr << "std::exception (main()): " << e.what() << std::endl;
@@ -168,8 +164,8 @@ void setup_transport(Options& options,
 	options.threads = po.get<int>("threads");
 
 	options.tcp_nonblocking = po.get<bool>("TRANSPORT-YAMI.tcp_nonblocking");
-	options.tcp_listen_backlog = po.get<bool>("TRANSPORT-YAMI.tcp_listen_backlog");
-	options.dispatcher_threads = po.get<bool>("TRANSPORT-YAMI.dispatcher_threads");
+	options.tcp_listen_backlog = po.get<int>("TRANSPORT-YAMI.tcp_listen_backlog");
+	options.dispatcher_threads = po.get<int>("TRANSPORT-YAMI.dispatcher_threads");
 
 	string address_family(po.get<string>("address_family"));
 	util::string::to_lower(util::string::trim(address_family));
@@ -210,17 +206,5 @@ void setup_db_pool(ObjectPool<Connection>& pool,
 	for(auto& inst : options.get_instances()) {
 		// create connection
 		// pool.insert
-	}
-}
-
-void register_transport_modules(
-	std::unique_ptr<Transport>& transport,
-	ModuleManager::Names_t& modules)
-{
-	if(transport) {
-		ModuleManager::Names_t::const_iterator it = modules.begin();
-		for( ; it != modules.end(); it++) {
-			//transport->register_module(it->get());
-		}
 	}
 }

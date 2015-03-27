@@ -1,11 +1,11 @@
 #include <dlfcn.h>
 
 #include "nix/core/exception.hxx"
+#include "nix/core/module.hxx"
 #include "instance.hxx"
 
 namespace nix {
 namespace core {
-
 
 ModuleInstance::ModuleInstance(ModuleAPI& api,
 							   const std::string& lib_path,
@@ -23,9 +23,9 @@ ModuleInstance::~ModuleInstance()
 	unload(err);
 }
 
-Module& ModuleInstance::module() const
+std::shared_ptr<const Module> ModuleInstance::module() const
 {
-	return *(module_ptr_.get());
+	return module_ptr_;
 }
 
 bool ModuleInstance::load(std::string& err_msg)

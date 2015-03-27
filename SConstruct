@@ -299,7 +299,9 @@ translation_units = {
 	"core/module" : {},
 	"core/module/api" : {},
 	"core/module/instance" : {},
-	"core/module/manager" : {},
+	"core/module/manager" : {
+		"env": combinedenv,
+	},
 	"core/logger" : {},
 	"core/net/transport" : {
 		"env": combinedenv,
@@ -319,101 +321,15 @@ translation_units = {
 	# 	"cpppath" : [resolve_include("yami4")],
 	# 	"env" : dbenv
 	# },
-	# "core/logger/file" : {},
-	# "core/message/message" : {
-	# 	"env" : combinedenv,
-	# },
-	# "core/message/incoming_message" : {
-	# 	"env" : combinedenv,
-	# },
-	# "core/message/outgoing_message" : {
-	# 	"env" : combinedenv,
-	# },
-	# "core/request/request" : {
-	# 	"env" : combinedenv,
-	# },
-	# "core/response/response" : {
-	# 	"env" : combinedenv,
-	# },
-	# "core/routing/route_handler" : {
-	# 	"env" : combinedenv,
-	# },
-	# "core/routing/routing" : {
-	# 	"env" : combinedenv,
-	# },
-	# "core/routing/param" : {},
-	# "core/session/session" : {
-	# 	"env" : combinedenv,
-	# },
-	# "core/session/manager" : {
-	# 	"env" : combinedenv,
-	# },
-	# "core/storage/db" : {
-	# 	"env" : dbenv,
-	# },
-	# "core/storage/factory" : {
-	# 	"env" : dbenv,
-	# },
-	# "core/types" : {},
-	# "core/types/storage" : {},
 	# "daemon/daemon" : {
 	# 	"env" : combinedenv,
 	# },
 	# "daemon/signal_handlers" : {
 	# 	"env" : combinedenv,
 	# },
-	# "util/string" : {},
 	# "util/version" : {},
 	# "util/pid" : {},
-	# "util/types" : {
-	# 	"env" : combinedenv,
-	# },
-	# "generic/console" : {},
 	# "generic/uuid" : {},
-	# "impl/extsrv/extsrv" : {
-	# 	"env" : combinedenv,
-	# },
-	# "options/dbopts" : {
-	# 	"libs" : ["boost_program_options"],
-	# 	"libpath" : boostenv["LIBPATH"],
-	# },
-	# "plugin/extlib" : {},
-	# "plugin/plugin" : {
-	# 	"env": combinedenv,
-	# },
-	# "plugin/pool" : {
-	# 	"env" : combinedenv,
-	# },
-	# "plugin/loader" : {
-	# 	"env": combinedenv,
-	# },
-	# "plugin/thread_manager" : {},
-	# "plugin/action_matcher/standard" : {},
-	# "plugin/action_matcher/regex" : {
-	# 	"libs" : ["boost_regex"],
-	# 	"libpath" : boostenv["LIBPATH"],
-	# },
-	# "runtime/config" : {},
-	# "net/transport/factory" : {
-	# 	"env": combinedenv,
-	# },
-	# "net/transport/transport" : {
-	# 	"env": combinedenv,
-	# },
-	# "net/transport/yami/yami_transport" : {
-	# 	"env" : yamienv,
-	# }, 
-	# "net/transport/yami/processor" : {
-	# 	"env" : yamienv,
-	# },
-	# "net/transport/yami/response" : {
-	# 	"env": combinedenv,
-	# },
-	# "sysinfo/sysinfo" : {},
-	# "sysinfo/request" : {},
-	# "target/main" : {
-	#	"env": combinedenv,
-	# },
 }
 
 main_target_objects = []
