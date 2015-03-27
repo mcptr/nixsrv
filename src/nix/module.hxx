@@ -1,5 +1,5 @@
-#ifndef NIX_CORE_MODULE_HXX
-#define NIX_CORE_MODULE_HXX
+#ifndef NIX_MODULE_HXX
+#define NIX_MODULE_HXX
 
 #include <memory>
 #include <functional>

@@ -1,5 +1,5 @@
-#ifndef NIX_CORE_OBJECT_POOL_HXX
-#define NIX_CORE_OBJECT_POOL_HXX
+#ifndef NIX_OBJECT_POOL_HXX
+#define NIX_OBJECT_POOL_HXX
 
 #include <vector>
 #include <memory>

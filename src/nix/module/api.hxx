@@ -1,5 +1,5 @@
-#ifndef NIX_CORE_MODULE_API_HXX
-#define NIX_CORE_MODULE_API_HXX
+#ifndef NIX_MODULE_API_HXX
+#define NIX_MODULE_API_HXX
 
 #include "nix/core/db/connection.hxx"
 #include "nix/core/logger.hxx"

@@ -1,5 +1,5 @@
-#ifndef NIX_CORE_MESSAGE_INCOMING_HXX
-#define NIX_CORE_MESSAGE_INCOMING_HXX
+#ifndef NIX_MESSAGE_INCOMING_HXX
+#define NIX_MESSAGE_INCOMING_HXX
 
 #include "nix/core/message.hxx"
 

@@ -1,5 +1,5 @@
-#ifndef NIX_CORE_PROGRAM_OPTIONS_HXX
-#define NIX_CORE_PROGRAM_OPTIONS_HXX
+#ifndef NIX_PROGRAM_OPTIONS_HXX
+#define NIX_PROGRAM_OPTIONS_HXX
 
 #include "options.hxx"
 

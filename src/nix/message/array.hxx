@@ -1,5 +1,5 @@
-#ifndef NIX_CORE_MESSAGE_ARRAY_HXX
-#define NIX_CORE_MESSAGE_ARRAY_HXX
+#ifndef NIX_MESSAGE_ARRAY_HXX
+#define NIX_MESSAGE_ARRAY_HXX
 
 #include <string>
 #include "element.hxx"

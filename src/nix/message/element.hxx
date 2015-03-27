@@ -1,5 +1,5 @@
-#ifndef NIX_CORE_MESSAGE_ELEMENT_HXX
-#define NIX_CORE_MESSAGE_ELEMENT_HXX
+#ifndef NIX_MESSAGE_ELEMENT_HXX
+#define NIX_MESSAGE_ELEMENT_HXX
 
 #include <string>
 #include <mongo/bson/bson.h>

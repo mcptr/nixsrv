@@ -1,5 +1,5 @@
-#ifndef NIX_CORE_OPTIONS_HXX
-#define NIX_CORE_OPTIONS_HXX
+#ifndef NIX_OPTIONS_HXX
+#define NIX_OPTIONS_HXX
 
 #include <boost/program_options.hpp>
 #include <string>

@@ -1,5 +1,5 @@
-#ifndef NIX_CORE_REQUEST_HXX
-#define NIX_CORE_REQUEST_HXX
+#ifndef NIX_REQUEST_HXX
+#define NIX_REQUEST_HXX
 
 #include <memory>
 #include <string>

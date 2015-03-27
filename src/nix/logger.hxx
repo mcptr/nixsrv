@@ -1,5 +1,5 @@
-#ifndef NIX_CORE_LOGGER_HXX
-#define NIX_CORE_LOGGER_HXX
+#ifndef NIX_LOGGER_HXX
+#define NIX_LOGGER_HXX
 
 #include <memory>
 #include <fstream>

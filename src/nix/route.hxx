@@ -1,5 +1,5 @@
-#ifndef NIX_CORE_ROUTING_ROUTE_HXX
-#define NIX_CORE_ROUTING_ROUTE_HXX
+#ifndef NIX_ROUTING_ROUTE_HXX
+#define NIX_ROUTING_ROUTE_HXX
 
 #include <string>
 #include <functional>

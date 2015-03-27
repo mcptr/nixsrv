@@ -1,5 +1,5 @@
-#ifndef NIX_CORE_MESSAGE_HXX
-#define NIX_CORE_MESSAGE_HXX
+#ifndef NIX_MESSAGE_HXX
+#define NIX_MESSAGE_HXX
 
 #include <iostream>
 #include <string>

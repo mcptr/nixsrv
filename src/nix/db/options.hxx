@@ -1,5 +1,5 @@
-#ifndef NIX_CORE_DB_OPTIONS_HXX
-#define NIX_CORE_DB_OPTIONS_HXX
+#ifndef NIX_DB_OPTIONS_HXX
+#define NIX_DB_OPTIONS_HXX
 
 #include <memory>
 #include <vector>

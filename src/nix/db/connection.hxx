@@ -1,5 +1,5 @@
-#ifndef NIX_CORE_DB_CONNECTION_HXX
-#define NIX_CORE_DB_CONNECTION_HXX
+#ifndef NIX_DB_CONNECTION_HXX
+#define NIX_DB_CONNECTION_HXX
 
 namespace nix {
 namespace core {

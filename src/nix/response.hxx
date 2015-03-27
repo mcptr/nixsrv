@@ -1,5 +1,5 @@
-#ifndef NIX_CORE_RESPONSE_HXX
-#define NIX_CORE_RESPONSE_HXX
+#ifndef NIX_RESPONSE_HXX
+#define NIX_RESPONSE_HXX
 
 #include <string>
 #include <memory>

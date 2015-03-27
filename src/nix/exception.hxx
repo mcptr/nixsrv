@@ -1,5 +1,5 @@
-#ifndef NIX_CORE_EXCEPTION_HXX
-#define NIX_CORE_EXCEPTION_HXX
+#ifndef NIX_EXCEPTION_HXX
+#define NIX_EXCEPTION_HXX
 
 #include <stdexcept>
 #include <string>

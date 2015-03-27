@@ -1,5 +1,5 @@
-#ifndef NIX_CORE_MODULE_MANAGER_HXX
-#define NIX_CORE_MODULE_MANAGER_HXX
+#ifndef NIX_MODULE_MANAGER_HXX
+#define NIX_MODULE_MANAGER_HXX
 
 #include <vector>
 #include <string>

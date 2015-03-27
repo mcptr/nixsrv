@@ -1,5 +1,5 @@
-#ifndef NIX_CORE_NET_TRANSPORT_HXX
-#define NIX_CORE_NET_TRANSPORT_HXX
+#ifndef NIX_NET_TRANSPORT_HXX
+#define NIX_NET_TRANSPORT_HXX
 
 #include <string>
 #include <vector>

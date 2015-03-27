@@ -1,5 +1,5 @@
-#ifndef NIX_CORE_NET_TRANSPORT_YAMI_HXX
-#define NIX_CORE_NET_TRANSPORT_YAMI_HXX
+#ifndef NIX_NET_TRANSPORT_YAMI_HXX
+#define NIX_NET_TRANSPORT_YAMI_HXX
 
 #include <string>
 #include <yami4-cpp/yami.h>
