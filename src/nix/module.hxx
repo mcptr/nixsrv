@@ -15,8 +15,8 @@ namespace nix {
 
 
 using std::placeholders::_1;
-using nix::core::net::Transport;
-using nix::core::Route;
+using nix::net::Transport;
+using nix::Route;
 
 class Module
 {

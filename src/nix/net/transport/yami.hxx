@@ -19,12 +19,12 @@ namespace net {
 namespace transport {
 
 
-class YAMIRequest : nix::core::Request<yami::incoming_message>
+class YAMIRequest : nix::Request<yami::incoming_message>
 {
 public:
 	YAMIRequest() = delete;
 	YAMIRequest(yami::incoming_message& im);
-	void reply(nix::core::api::Response& response);
+	void reply(nix::Response& response);
 };
 
 

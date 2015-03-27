@@ -15,7 +15,7 @@ namespace db {
 
 namespace po = boost::program_options;
 
-class Options : public nix::core::Options
+class Options : public nix::Options
 {
 public:
 	typedef std::vector<std::shared_ptr<InstanceConfig>> InstanceList_t;

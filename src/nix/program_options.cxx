@@ -123,7 +123,7 @@ void ProgramOptions::parse(int argc, char** argv)
 			}
 			else {
 				if(!vm_["no_config"].as<bool>()) {
-					throw nix::core::InitializationError("Configuration file not found: " + config_path);
+					throw nix::InitializationError("Configuration file not found: " + config_path);
 				}
 			}
 
@@ -132,7 +132,7 @@ void ProgramOptions::parse(int argc, char** argv)
 	}
 	catch(exception& e) {
 		cerr << "error: " << e.what() << "\n";
-		throw nix::core::InitializationError(e.what());
+		throw nix::InitializationError(e.what());
 	}
 }
 

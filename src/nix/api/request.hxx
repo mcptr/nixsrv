@@ -9,7 +9,7 @@ namespace nix {
 namespace api {
 
 // FIXME: solve "dangling" yami (ifdefs on compilation time?)
-typedef nix::core::Request<yami::incoming_message> Request_t;
+typedef nix::Request<yami::incoming_message> Request_t;
 
 
 } // api

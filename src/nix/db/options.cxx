@@ -23,7 +23,7 @@ void Options::parse(const std::string& config_path)
 
 	ifstream cf(config_path.c_str());
 	if(!cf.good()) {
-		throw nix::core::InitializationError("No db config found (" + config_path + ")");
+		throw nix::InitializationError("No db config found (" + config_path + ")");
 	}
 
 	po::store(po::parse_config_file(cf, db_options, true), vm);

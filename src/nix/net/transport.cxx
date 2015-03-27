@@ -27,7 +27,7 @@ Transport* create_transport(Transport::TransportType_t type,
 		ptr = new transport::YAMI(options);
 		break;
 	default:
-		throw nix::core::FatalError("create_transport(): Invalid transport");
+		throw nix::FatalError("create_transport(): Invalid transport");
 	}
 
 	return ptr;

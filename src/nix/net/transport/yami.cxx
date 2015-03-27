@@ -72,7 +72,7 @@ YAMIRequest::YAMIRequest(yami::incoming_message& im)
 	}
 }
 
-void YAMIRequest::reply(nix::core::Response& response)
+void YAMIRequest::reply(nix::Response& response)
 {
 }
 
