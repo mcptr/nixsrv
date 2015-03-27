@@ -6,8 +6,8 @@
 #include <memory>
 
 #include "transport/options.hxx"
-#include "nix/core/module/instance.hxx"
-#include "nix/core/routing/route.hxx"
+#include "nix/module/instance.hxx"
+#include "nix/routing/route.hxx"
 
 namespace nix {
 namespace core {

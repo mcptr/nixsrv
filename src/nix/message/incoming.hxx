@@ -1,7 +1,7 @@
 #ifndef NIX_MESSAGE_INCOMING_HXX
 #define NIX_MESSAGE_INCOMING_HXX
 
-#include "nix/core/message.hxx"
+#include "nix/message.hxx"
 
 
 namespace nix {

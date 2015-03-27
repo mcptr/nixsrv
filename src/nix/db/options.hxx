@@ -4,8 +4,8 @@
 #include <memory>
 #include <vector>
 
-#include "nix/core/exception.hxx"
-#include "nix/core/options.hxx"
+#include "nix/exception.hxx"
+#include "nix/options.hxx"
 
 #include "instance_config.hxx"
 

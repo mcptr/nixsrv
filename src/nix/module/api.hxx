@@ -1,9 +1,9 @@
 #ifndef NIX_MODULE_API_HXX
 #define NIX_MODULE_API_HXX
 
-#include "nix/core/db/connection.hxx"
-#include "nix/core/logger.hxx"
-#include "nix/core/object_pool.hxx"
+#include "nix/db/connection.hxx"
+#include "nix/logger.hxx"
+#include "nix/object_pool.hxx"
 
 namespace nix {
 namespace core {

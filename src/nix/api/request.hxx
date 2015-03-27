@@ -3,7 +3,7 @@
 
 #include <yami4-cpp/yami.h>
 
-#include "nix/core/request.hxx"
+#include "nix/request.hxx"
 
 namespace nix {
 namespace api {

@@ -4,12 +4,12 @@
 #include <string>
 #include <yami4-cpp/yami.h>
 
-#include "nix/core/module.hxx"
-#include "nix/core/module/instance.hxx"
-#include "nix/core/net/transport.hxx"
-#include "nix/core/request.hxx"
-#include "nix/core/routing/route.hxx"
-#include "nix/core/response.hxx"
+#include "nix/module.hxx"
+#include "nix/module/instance.hxx"
+#include "nix/net/transport.hxx"
+#include "nix/request.hxx"
+#include "nix/routing/route.hxx"
+#include "nix/response.hxx"
 
 #include "options.hxx"
 

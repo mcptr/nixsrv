@@ -3,8 +3,8 @@
 
 #include <string>
 #include <memory>
-#include "nix/core/message.hxx"
-#include "nix/core/message/outgoing.hxx"
+#include "nix/message.hxx"
+#include "nix/message/outgoing.hxx"
 
 
 namespace nix {

@@ -1,6 +1,6 @@
-#include "nix/core/routing/route.hxx"
-#include "nix/core/message/incoming.hxx"
-#include "nix/core/message/outgoing.hxx"
+#include "nix/routing/route.hxx"
+#include "nix/message/incoming.hxx"
+#include "nix/message/outgoing.hxx"
 
 #include "yami.hxx"
 

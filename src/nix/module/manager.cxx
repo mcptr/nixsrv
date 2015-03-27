@@ -1,6 +1,6 @@
 #include <memory>
 
-#include "nix/core/object_pool.hxx"
+#include "nix/object_pool.hxx"
 #include "manager.hxx"
 
 namespace nix {

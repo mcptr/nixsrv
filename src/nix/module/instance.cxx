@@ -1,7 +1,7 @@
 #include <dlfcn.h>
 
-#include "nix/core/exception.hxx"
-#include "nix/core/module.hxx"
+#include "nix/exception.hxx"
+#include "nix/module.hxx"
 #include "instance.hxx"
 
 namespace nix {

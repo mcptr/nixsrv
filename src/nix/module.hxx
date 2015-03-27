@@ -5,8 +5,8 @@
 #include <functional>
 #include <string>
 
-#include "nix/core/net/transport.hxx"
-#include "nix/core/routing/route.hxx"
+#include "nix/net/transport.hxx"
+#include "nix/routing/route.hxx"
 
 #include "module/api.hxx"
 

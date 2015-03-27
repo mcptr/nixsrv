@@ -1,4 +1,4 @@
-#include "nix/core/exception.hxx"
+#include "nix/exception.hxx"
 #include "transport.hxx"
 #include "transport/yami.hxx"
 
