@@ -5,7 +5,6 @@
 
 
 namespace nix {
-namespace core {
 
 
 class IncomingMessage : public Message<mongo::BSONObj, mongo::BSONElement>
@@ -19,7 +18,6 @@ protected:
 };
 
 
-} // core
 } // nix
 
 #endif

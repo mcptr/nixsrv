@@ -1,5 +1,5 @@
-#ifndef NIX_NET_TRANSPORT_HXX
-#define NIX_NET_TRANSPORT_HXX
+#ifndef NIX_TRANSPORT_HXX
+#define NIX_TRANSPORT_HXX
 
 #include <string>
 #include <vector>
@@ -9,8 +9,8 @@
 #include "nix/module/instance.hxx"
 #include "nix/routing/route.hxx"
 
+
 namespace nix {
-namespace core {
 
 // fwd
 //class ModuleInstance;
@@ -44,8 +44,6 @@ Transport* create_transport(Transport::TransportType_t type,
 							const transport::Options& options);
 
 
-} // net
-} // core
 } // nix
 
 #endif

@@ -2,7 +2,6 @@
 
 
 namespace nix {
-namespace core {
 
 
 Object& Object::set_null(const std::string& k)
@@ -48,5 +47,4 @@ Object& Object::set(const std::string& k, Element& v)
 }
 
 
-} // core
 } // nix

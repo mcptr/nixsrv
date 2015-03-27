@@ -5,7 +5,7 @@
 
 
 namespace nix {
-namespace core {
+
 
 class Object;
 class Array;
@@ -26,7 +26,6 @@ protected:
 };
 
 
-} // core
 } // nix
 
 #endif

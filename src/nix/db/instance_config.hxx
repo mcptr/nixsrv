@@ -3,9 +3,10 @@
 
 #include <string>
 
+
 namespace nix {
-namespace core {
 namespace db {
+
 
 class InstanceConfig
 {
@@ -22,8 +23,8 @@ public:
 	std::string dsn(bool mask_passwd = false) const;
 };
 
+
 } // db
-} // core
 } // nix
 
 #endif

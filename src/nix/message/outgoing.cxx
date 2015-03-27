@@ -4,7 +4,6 @@
 
 
 namespace nix {
-namespace core {
 
 
 OutgoingMessage::OutgoingMessage(const std::string& id, int version)
@@ -42,6 +41,5 @@ std::string OutgoingMessage::_to_string()
 }
 
 
-} // core
 } // nix
 

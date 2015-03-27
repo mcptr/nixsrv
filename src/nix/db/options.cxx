@@ -2,9 +2,10 @@
 
 #include "options.hxx"
 
+
 namespace nix {
-namespace core {
 namespace db {
+
 
 void Options::parse(const std::string& config_path)
 {
@@ -94,6 +95,5 @@ void Options::parse(const std::string& config_path)
 	}
 }
 
-} // db
-} // core
+
 } // nix

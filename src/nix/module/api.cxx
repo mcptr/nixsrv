@@ -1,7 +1,8 @@
 #include "api.hxx"
 
+
 namespace nix {
-namespace core {
+
 
 ModuleAPI::ModuleAPI(Logger& logger_ref,
 					 ObjectPool<db::Connection>& db_pool_ref)
@@ -11,6 +12,4 @@ ModuleAPI::ModuleAPI(Logger& logger_ref,
 }
 
 
-
-} // core
 } // nix

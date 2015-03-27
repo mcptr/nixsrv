@@ -9,9 +9,9 @@
 
 #include "instance_config.hxx"
 
+
 namespace nix {
-namespace core {
-namespace db {
+
 
 namespace po = boost::program_options;
 
@@ -31,8 +31,7 @@ private:
 
 };
 
-} // db
-} // core
+
 } // nix
 
 #endif

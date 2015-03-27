@@ -6,7 +6,6 @@
 
 
 namespace nix {
-namespace core {
 
 
 class Array;
@@ -28,7 +27,6 @@ public:
 };
 
 
-} // core
 } // nix
 
 #endif

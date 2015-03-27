@@ -3,9 +3,10 @@
 
 #include "instance_config.hxx"
 
+
 namespace nix {
-namespace core {
 namespace db {
+
 
 std::string InstanceConfig::dsn(bool mask_passwd) const
 {
@@ -24,6 +25,6 @@ std::string InstanceConfig::dsn(bool mask_passwd) const
 	return info.str();
 }
 
+
 } // db
-} // core
 } // nix

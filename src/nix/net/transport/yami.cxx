@@ -6,9 +6,8 @@
 
 
 namespace nix {
-namespace core {
-namespace net {
 namespace transport {
+
 
 YAMI::YAMI(const Options& options)
 	: Transport(options)
@@ -77,8 +76,5 @@ void YAMIRequest::reply(nix::Response& response)
 }
 
 
-
 } // transport
-} // net
-} // core
 } // nix

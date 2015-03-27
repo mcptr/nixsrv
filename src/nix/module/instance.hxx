@@ -6,8 +6,9 @@
 
 #include "api.hxx"
 
+
 namespace nix {
-namespace core {
+
 
 // fwd
 class Module;
@@ -33,7 +34,7 @@ private:
 	bool fatal_;
 };
 
-} // core
+
 } // nix
 
 #endif

@@ -4,8 +4,9 @@
 #include "nix/module.hxx"
 #include "instance.hxx"
 
+
 namespace nix {
-namespace core {
+
 
 ModuleInstance::ModuleInstance(ModuleAPI& api,
 							   const std::string& lib_path,
@@ -62,5 +63,5 @@ bool ModuleInstance::unload(std::string& err_msg)
 	return true;
 }
 
-} // core
+
 } // nix

@@ -2,7 +2,6 @@
 
 
 namespace nix {
-namespace core {
 
 
 bool IncomingMessage::parse(const std::string& input, bool validate_msg)
@@ -28,5 +27,4 @@ std::string IncomingMessage::_to_string()
 }
 
 
-} // core
 } // nix

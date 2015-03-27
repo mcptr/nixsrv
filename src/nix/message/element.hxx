@@ -7,7 +7,6 @@
 
 
 namespace nix {
-namespace core {
 
 
 template <class ContentBuilderT, class ContentT>
@@ -32,7 +31,6 @@ protected:
 };
 
 
-} // core
 } // nix
 
 #endif

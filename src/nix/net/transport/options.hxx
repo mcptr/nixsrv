@@ -1,12 +1,10 @@
-#ifndef NIX_NET_TRANSPORT_OPTIONS_HXX
-#define NIX_NET_TRANSPORT_OPTIONS_HXX
+#ifndef NIX_TRANSPORT_OPTIONS_HXX
+#define NIX_TRANSPORT_OPTIONS_HXX
 
 #include <string>
 
 
 namespace nix {
-namespace core {
-namespace net {
 namespace transport {
 
 class Options
@@ -27,8 +25,6 @@ public:
 };
 
 } // transport
-} // net
-} // core
 } // nix
 
 #endif

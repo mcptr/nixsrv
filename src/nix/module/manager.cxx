@@ -3,8 +3,9 @@
 #include "nix/object_pool.hxx"
 #include "manager.hxx"
 
+
 namespace nix {
-namespace core {
+
 
 ModuleManager::ModuleManager(ModuleAPI& api,
 							 Logger& logger,
@@ -52,5 +53,4 @@ void ModuleManager::register_routing(std::shared_ptr<Transport> t)
 }
 
 
-} // core
 } // nix

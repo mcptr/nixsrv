@@ -16,7 +16,7 @@
 
 
 namespace nix {
-namespace core {
+
 
 class ModuleManager
 {
@@ -42,7 +42,7 @@ private:
 	bool fatal_;
 };
 
-} // core
+
 } // nix
 
 #endif

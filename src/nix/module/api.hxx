@@ -5,8 +5,9 @@
 #include "nix/logger.hxx"
 #include "nix/object_pool.hxx"
 
+
 namespace nix {
-namespace core {
+
 
 class ModuleAPI
 {
@@ -19,7 +20,7 @@ public:
 	ObjectPool<db::Connection>& db_pool;
 };
 
-} // core
+
 } // nix
 
 #endif

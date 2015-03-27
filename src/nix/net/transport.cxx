@@ -2,9 +2,8 @@
 #include "transport.hxx"
 #include "transport/yami.hxx"
 
+
 namespace nix {
-namespace core {
-namespace net {
 
 
 Transport::Transport(const transport::Options& options)
@@ -34,6 +33,4 @@ Transport* create_transport(Transport::TransportType_t type,
 }
 
 
-} // net
-} // core
 } // nix
