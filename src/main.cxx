@@ -12,6 +12,10 @@
 #include <sstream>
 #include <mutex>
 
+// implementation type (for compile time)
+#include "nix/impl_types.hxx"
+
+// nix
 #include "nix/db/connection.hxx"
 #include "nix/db/options.hxx"
 #include "nix/logger.hxx"
@@ -26,6 +30,9 @@
 #include "nix/util/fs.hxx"
 #include "nix/util/string.hxx"
 
+// devel
+#include "nix/direct_handlers.hxx"
+
 
 using nix::Logger;
 using nix::ModuleManager;
@@ -35,6 +42,8 @@ using nix::ProgramOptions;
 using nix::db::Connection;
 using nix::Transport;
 using nix::transport::Options;
+
+
 
 void setup_modules(ModuleManager::Names_t& v,
 				   const ProgramOptions& po);
@@ -47,28 +56,19 @@ void setup_transport(Options& options,
 void setup_db_pool(ObjectPool<Connection>& pool,
 				   const ProgramOptions& po);
 
+void inject_transport_handlers(std::shared_ptr<nix::impl::Transport_t> transport);
 
-void test_logger_test(int i, Logger& logger, ObjectPool<Connection>& pool)
-{
-	std::shared_ptr<Connection> ptr;
-	if(pool.acquire(ptr)) {
-		std::stringstream s;
-		s << "THREAD " << i;
-	
-		std::this_thread::sleep_for(std::chrono::milliseconds());
-		logger.log_info(s.str() + " Finished");
-	}
-}
+void serve(std::shared_ptr<nix::impl::Transport_t> transport);
 
 
 int main(int argc, char** argv)
 {
 	srand(time(NULL));
 
-	std::shared_ptr<Transport> transport;
+	ProgramOptions program_options;
+	std::shared_ptr<nix::impl::Transport_t> transport;
 
 	try {
-		ProgramOptions program_options;
 		program_options.parse(argc, argv);
 		
 		if(program_options.has_help()) {
@@ -102,11 +102,7 @@ int main(int argc, char** argv)
 		Options transport_options;
 		setup_transport(transport_options, program_options);
 
-		transport.reset(
-			nix::transport::create_transport(
-				Transport::YAMI, transport_options
-			)
-		);
+		transport.reset(new nix::impl::Transport_t(transport_options));
 
 		module_manager.register_routing(transport);
 
@@ -116,7 +112,20 @@ int main(int argc, char** argv)
 		return EXIT_FAILURE;
 	}
 
-	transport->start();
+	if(program_options.get<bool>("debug")) {
+		inject_transport_handlers(transport);
+	}
+	
+	if(program_options.get<bool>("foreground")) {
+		serve(transport);
+		int dummy;
+		std::cin >> dummy;
+	}
+	else {
+		std::thread transport_thread(serve, transport);
+		transport_thread.join();
+		std::cout << "EXIT" << std::endl;
+	}
 
 	return EXIT_SUCCESS;
 }
@@ -205,4 +214,15 @@ void setup_db_pool(ObjectPool<Connection>& pool,
 		// create connection
 		// pool.insert
 	}
+}
+
+void inject_transport_handlers(std::shared_ptr<nix::impl::Transport_t> transport)
+{
+	transport->register_object("echo", nix::direct_handlers::echo);
+}
+
+void serve(std::shared_ptr<nix::impl::Transport_t> transport)
+{
+	transport->start();
+	std::this_thread::sleep_for(std::chrono::milliseconds(10 * 1000));
 }

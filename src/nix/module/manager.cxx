@@ -1,5 +1,6 @@
 #include <memory>
 
+#include "nix/impl_types.hxx"
 #include "nix/object_pool.hxx"
 #include "manager.hxx"
 
@@ -18,23 +19,21 @@ ModuleManager::ModuleManager(ModuleAPI& api,
 
 void ModuleManager::load(const Names_t& modules)
 {
-	std::string err_msg;
 	for(auto it : modules) {
-		logger_.log_info("TODO*** ModuleManager::load(): loading module: " + it);
-		ModuleInstance* mod = new ModuleInstance(api_, it, fatal_);
-		if(mod->load(err_msg)) {
-			modules_pool_.insert(mod);
-		}
-		else {
-			logger_.log_error("ModuleManager::load(): " + err_msg);
-			delete mod;
-		}
+		load(it);
 	}
 }
 
 void ModuleManager::load(const std::string& module_path)
 {
-	logger_.log_info("TODO*** ModuleManager::load(): loading module: " + module_path);
+	std::string err_msg;
+	ModuleInstance* mod = new ModuleInstance(api_, module_path, fatal_);
+	if(mod->load(err_msg)) {
+		modules_pool_.insert(mod);
+	}
+	else {
+		delete mod;
+	}
 }
 
 void ModuleManager::unload()
@@ -42,7 +41,7 @@ void ModuleManager::unload()
 	modules_pool_.clear();
 }
 
-void ModuleManager::register_routing(std::shared_ptr<Transport> t)
+void ModuleManager::register_routing(std::shared_ptr<impl::Transport_t> t)
 {
 	modules_pool_.apply(
 		[&t] (ModuleInstance& inst)

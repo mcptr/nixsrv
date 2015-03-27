@@ -5,6 +5,7 @@
 #include <string>
 #include <memory>
 
+#include "nix/impl_types.hxx"
 #include "nix/module.hxx"
 #include "nix/db/connection.hxx"
 #include "nix/logger.hxx"
@@ -33,7 +34,7 @@ public:
 	void load(const std::string& module_path);
 	void unload();
 
-	void register_routing(std::shared_ptr<Transport> t);
+	void register_routing(std::shared_ptr<impl::Transport_t> t);
 private:
 	ObjectPool<ModuleInstance> modules_pool_;
 

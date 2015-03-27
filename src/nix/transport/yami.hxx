@@ -4,19 +4,23 @@
 #include <string>
 #include <yami4-cpp/yami.h>
 
-#include "nix/module.hxx"
-#include "nix/module/instance.hxx"
 #include "nix/transport.hxx"
 #include "nix/request.hxx"
-#include "nix/route.hxx"
-#include "nix/response.hxx"
 
 #include "options.hxx"
 
 
 namespace nix {
-namespace transport {
 
+
+// fwd
+class Module;
+class ModuleInstance;
+class Response;
+class Route;
+
+
+namespace transport {
 
 class YAMIRequest : nix::Request<yami::incoming_message>
 {
@@ -34,15 +38,18 @@ public:
 
 	void operator()(yami::incoming_message& im);
 
-	void set_routing(const std::string& module_name,
-					 const Transport::Routes_t& routing);
+	void set_routing(
+		const std::string& module_name,
+		const Transport<yami::incoming_message>::Routes_t& routing
+	);
 
 private:
-	std::map<const std::string, const Transport::Routes_t&> routing_;
+	std::map<const std::string,
+			 const Transport<yami::incoming_message>::Routes_t&> routing_;
 };
 
 
-class YAMI : public Transport
+class YAMI : public Transport<yami::incoming_message>
 {
 public:
 	YAMI() = delete;
@@ -50,11 +57,17 @@ public:
 	virtual ~YAMI();
 
 	void start();
+
 	void register_module(std::shared_ptr<const Module> inst);
+
+	virtual void register_object(
+		const std::string& name, 
+		std::function<void(yami::incoming_message&)> msg);
 
 private:
 	std::unique_ptr<yami::agent> agent_;
 	YAMIRequestDispatcher req_dispatcher_;
+	std::string build_address() const;
 };
 
 

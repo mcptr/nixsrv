@@ -280,6 +280,11 @@ extend_env(testsenv, [dbenv, yamienv, boostenv, combinedenv])
 # ------------------------------------------------------------------------
 
 translation_units = {
+	# ------------------------
+	"direct_handlers" : {
+		"env": combinedenv,
+	},
+	# ------------------------
 	"db/connection" : {},
 	"db/instance_config" : {},
 	"db/options" : {},
@@ -295,9 +300,13 @@ translation_units = {
 	"message/outgoing" : {
 		"env": combinedenv,
 	},
-	"module" : {},
+	"module" : {
+		"env": combinedenv,
+	},
 	"module/api" : {},
-	"module/instance" : {},
+	"module/instance" : {
+		"env": combinedenv,
+	},
 	"module/manager" : {
 		"env": combinedenv,
 	},
@@ -306,9 +315,6 @@ translation_units = {
 	"program_options" : {
 		"libs" : ["boost_program_options"],
 		"libpath" : boostenv["LIBPATH"],
-	},
-	"transport" : {
-		"env": combinedenv,
 	},
 	"transport/options" : {},
 	"transport/yami" : {

@@ -5,9 +5,7 @@
 #include <functional>
 #include <string>
 
-#include "nix/transport.hxx"
-#include "nix/route.hxx"
-
+#include "nix/impl_types.hxx"
 #include "module/api.hxx"
 
 
@@ -31,7 +29,7 @@ public:
 
 	static void deleter(Module* ptr);
 
-	virtual inline const Transport::Routes_t& get_routing() const final
+	virtual inline const impl::Transport_t::Routes_t& get_routing() const final
 	{
 		return routes_;
 	}
@@ -41,7 +39,7 @@ protected:
 private:
 	const std::string ident_;
 	int version_;
-	Transport::Routes_t routes_;
+	impl::Transport_t::Routes_t routes_;
 };
 
 

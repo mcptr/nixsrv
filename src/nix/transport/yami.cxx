@@ -1,16 +1,23 @@
-#include "nix/route.hxx"
+#include <string>
+
+#include "nix/impl_types.hxx"
+
+#include "nix/exception.hxx"
 #include "nix/message/incoming.hxx"
 #include "nix/message/outgoing.hxx"
+#include "nix/module.hxx"
+#include "nix/route.hxx"
 
 #include "yami.hxx"
 
+#include <iostream>
 
 namespace nix {
 namespace transport {
 
 
 YAMI::YAMI(const Options& options)
-	: Transport(options)
+	: Transport<yami::incoming_message>(options)
 {
 	yami::parameters params;
 	params.set_integer("dispatcher_threads", options_.dispatcher_threads);
@@ -24,10 +31,33 @@ YAMI::~YAMI()
 	agent_.reset();
 }
 
+std::string YAMI::build_address() const
+{
+	std::string address;
+	switch(options_.address_family) {
+	case Options::UNIX:
+		address.append("unix://");
+		break;
+	case Options::TCP:
+		address.append("tcp://");
+		break;
+	case Options::UDP:
+		address.append("udp://");
+		break;
+	default:
+		throw nix::InitializationError("YAMI::build_address(): Invalid protocol");
+	}
+
+	address.append(options_.listen_address.c_str());
+	address.append(":");
+	address.append((options_.port ? std::to_string(options_.port) : "*"));
+	return address;
+}
+
 void YAMI::start()
 {
 	// this throws yami::yami_runtime_error
-	address_ = agent_->add_listener(address_);
+	std::string resolved_address = agent_->add_listener(build_address());
 }
 
 void YAMI::register_module(std::shared_ptr<const Module> inst)
@@ -40,6 +70,12 @@ void YAMI::register_module(std::shared_ptr<const Module> inst)
 	agent_->register_object(inst->get_ident(), req_dispatcher_);
 }
 
+void YAMI::register_object(
+	const std::string& name,
+	std::function<void(yami::incoming_message&)> handler)
+{
+	agent_->register_object(name, handler);
+}
 
 
 // request handler
@@ -51,7 +87,7 @@ void YAMIRequestDispatcher::operator()(yami::incoming_message& im)
 }
 
 void YAMIRequestDispatcher::set_routing(const std::string& module_name,
-										const Transport::Routes_t& routing)
+										const Transport<yami::parameters>::Routes_t& routing)
 {
 	routing_.emplace(module_name, routing);
 }
