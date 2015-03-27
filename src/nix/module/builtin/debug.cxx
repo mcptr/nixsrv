@@ -43,7 +43,7 @@ void Debug::start()
 	for(auto& wrk : workers_) {
 		LOG(DEBUG) << "Starting worker thread";
 		threads_.push_back(
-			std::move(std::thread(&debug::Worker::run, std::ref(wrk))));
+			std::move(std::thread(&debug::Worker::run, wrk)));
 	}
 }
 

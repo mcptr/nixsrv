@@ -170,6 +170,14 @@ def get_platform_default_inc():
 		map(lambda x: "%s/include" % x, __base.get(THIS_PLATFORM))
 	)
 
+def get_platform_default_libs():
+	libs = {
+		"linux" : [],
+		"freebsd" : ["execinfo"],
+	}
+	return libs.get(THIS_PLATFORM)
+
+
 # ------------------------------------------------------------------------
 # SETUP
 # ------------------------------------------------------------------------
@@ -186,7 +194,7 @@ baseenv = Environment(
 	CXXFLAGS = setup.base_cxxflags,
 	CPPDEFINES = setup.base_defines,
 	CPPPATH = [Dirs.project_source] + get_platform_default_inc(),
-	LIBS = setup.base_libs,
+	LIBS = setup.base_libs + get_platform_default_libs(),
 	LIBPATH = setup.base_libpath,
 	LINKFLAGS = setup.base_linkflags
 )
