@@ -7,8 +7,9 @@
 #include <mutex>
 #include "program_options.hxx"
 
+
 namespace nix {
-namespace core {
+
 
 class Logger
 {
@@ -98,7 +99,7 @@ void Logger::log_debug(const T& msg, bool do_flush)
 	log(Level::LOG_LVL_DEBUG, msg, do_flush);
 }
 
-} // core
+
 } // nix
 
 #endif

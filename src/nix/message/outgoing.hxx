@@ -1,11 +1,11 @@
-#ifndef NIX_API_MESSAGE_OUTGOING_HXX
-#define NIX_API_MESSAGE_OUTGOING_HXX
+#ifndef NIX_CORE_MESSAGE_OUTGOING_HXX
+#define NIX_CORE_MESSAGE_OUTGOING_HXX
 
-#include "nix/api/message.hxx"
+#include "nix/core/message.hxx"
 
 
 namespace nix {
-namespace api {
+namespace core {
 
 class Object;
 class Array;
@@ -26,7 +26,7 @@ protected:
 };
 
 
-} // api
+} // core
 } // nix
 
 #endif

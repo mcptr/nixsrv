@@ -1,6 +1,6 @@
 #include "nix/core/routing/route.hxx"
-#include "nix/api/message/incoming.hxx"
-#include "nix/api/message/outgoing.hxx"
+#include "nix/core/message/incoming.hxx"
+#include "nix/core/message/outgoing.hxx"
 
 #include "yami.hxx"
 
@@ -47,6 +47,8 @@ void YAMI::register_module(std::shared_ptr<const Module> inst)
 void YAMIRequestDispatcher::operator()(yami::incoming_message& im)
 {
 	YAMIRequest req(im);
+	// h = find route
+	// h
 }
 
 void YAMIRequestDispatcher::set_routing(const std::string& module_name,
@@ -68,6 +70,10 @@ YAMIRequest::YAMIRequest(yami::incoming_message& im)
 	if(im.get_parameters().find("message", pe)) {
 		message_->parse(im.get_parameters().get_string("message"));
 	}
+}
+
+void YAMIRequest::reply(nix::core::Response& response)
+{
 }
 
 

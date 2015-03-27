@@ -10,8 +10,9 @@
 
 #include "module/api.hxx"
 
+
 namespace nix {
-namespace core {
+
 
 using std::placeholders::_1;
 using nix::core::net::Transport;
@@ -46,7 +47,6 @@ private:
 };
 
 
-} // core
 } // nix
 
 #endif

@@ -1,14 +1,13 @@
-#ifndef NIX_API_RESPONSE_HXX
-#define NIX_API_RESPONSE_HXX
+#ifndef NIX_CORE_RESPONSE_HXX
+#define NIX_CORE_RESPONSE_HXX
 
 #include <string>
 #include <memory>
-#include "nix/api/message.hxx"
-#include "nix/api/message/outgoing.hxx"
+#include "nix/core/message.hxx"
+#include "nix/core/message/outgoing.hxx"
 
 
 namespace nix {
-namespace api {
 
 
 class Response
@@ -16,7 +15,6 @@ class Response
 public:
 	Response(int request_id);
 	virtual ~Response();
-
 	OutgoingMessage& from_schema(const std::string& id, int version = 0);
 
 	OutgoingMessage& create(
@@ -50,7 +48,6 @@ protected:
 };
 
 
-} // api
 } // nix
 
 #endif

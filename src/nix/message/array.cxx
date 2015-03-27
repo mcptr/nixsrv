@@ -2,7 +2,7 @@
 
 
 namespace nix {
-namespace api {
+namespace core {
 
 
 Array& Array::append_null()
@@ -42,5 +42,5 @@ Array& Array::append(Element& v)
 }
 
 
-} // api
+} // core
 } // nix

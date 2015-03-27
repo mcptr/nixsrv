@@ -3,8 +3,9 @@
 
 #include "options.hxx"
 
+
 namespace nix {
-namespace core {
+
 
 namespace po = boost::program_options;
 
@@ -25,7 +26,7 @@ private:
 	po::options_description all_;
 };
 
-} // core
+
 } // nix
 
 #endif

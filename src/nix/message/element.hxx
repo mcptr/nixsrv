@@ -1,5 +1,5 @@
-#ifndef NIX_API_MESSAGE_ELEMENT_HXX
-#define NIX_API_MESSAGE_ELEMENT_HXX
+#ifndef NIX_CORE_MESSAGE_ELEMENT_HXX
+#define NIX_CORE_MESSAGE_ELEMENT_HXX
 
 #include <string>
 #include <mongo/bson/bson.h>
@@ -7,7 +7,7 @@
 
 
 namespace nix {
-namespace api {
+namespace core {
 
 
 template <class ContentBuilderT, class ContentT>
@@ -32,7 +32,7 @@ protected:
 };
 
 
-} // api
+} // core
 } // nix
 
 #endif

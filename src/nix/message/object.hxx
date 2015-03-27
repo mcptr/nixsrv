@@ -1,5 +1,5 @@
-#ifndef NIX_API_MESSAGE_OBJECT_HXX
-#define NIX_API_MESSAGE_OBJECT_HXX
+#ifndef NIX_CORE_MESSAGE_OBJECT_HXX
+#define NIX_CORE_MESSAGE_OBJECT_HXX
 
 #include <string>
 
@@ -9,7 +9,7 @@
 
 
 namespace nix {
-namespace api {
+namespace core {
 
 
 class Array;
@@ -30,7 +30,7 @@ public:
 };
 
 
-} // api
+} // core
 } // nix
 
 #endif

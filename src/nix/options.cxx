@@ -3,8 +3,9 @@
 
 #include "options.hxx"
 
+
 namespace nix {
-namespace core {
+
 
 void Options::dump_variables_map() const
 {
@@ -27,5 +28,5 @@ void Options::dump_variables_map() const
 	}
 }
 
-} // core
+
 } // nix

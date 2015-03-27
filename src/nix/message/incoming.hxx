@@ -1,11 +1,11 @@
-#ifndef NIX_API_MESSAGE_INCOMING_HXX
-#define NIX_API_MESSAGE_INCOMING_HXX
+#ifndef NIX_CORE_MESSAGE_INCOMING_HXX
+#define NIX_CORE_MESSAGE_INCOMING_HXX
 
-#include "nix/api/message.hxx"
+#include "nix/core/message.hxx"
 
 
 namespace nix {
-namespace api {
+namespace core {
 
 
 class IncomingMessage : public Message<mongo::BSONObj, mongo::BSONElement>
@@ -19,7 +19,7 @@ protected:
 };
 
 
-} // api
+} // core
 } // nix
 
 #endif

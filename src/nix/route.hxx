@@ -7,15 +7,10 @@
 
 namespace nix {
 
-namespace api {
 
 // fwd
 class Request_t;
 class Response;
-
-}
-
-namespace core {
 
 
 class Route
@@ -28,33 +23,36 @@ public:
 				   INTERNAL } AccessModifier_t;
 
 	typedef std::function<
-		void(const api::Request_t&, api::Response& response)
+		void(const Request_t&, Response&)
 		> Handler_t;
 
 	Route() = delete;
 
 	Route(const std::string& route,
 		  Method_t method,
-		  AccessModifier_t am,
+		  Handler_t& handler,
+		  AccessModifier_t am = RESTRICTED,
 		  const std::string& description = "");
 
 	virtual ~Route() = default;
+
+	void operator()(const Request_t& req,
+					Response& res);
 
 	const std::string& get_route() const;
 	Method_t get_method() const;
 	AccessModifier_t& get_access_modifier() const;
 	const std::string& get_description() const;
-	
 
 private:
 	const std::string route_;
 	Method_t method_;
-	AccessModifier_t am_ = RESTRICTED;
+	Handler_t handler;
+	AccessModifier_t am_;
 	const std::string description_;
 };
 
 
-} // core
 } // nix
 
 #endif

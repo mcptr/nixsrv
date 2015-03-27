@@ -1,13 +1,25 @@
 #include "route.hxx"
 
+
 namespace nix {
-namespace core {
+
 
 Route::Route(const std::string& route,
 			 Method_t method,
+			 Handler_t& handler,
 			 AccessModifier_t am,
 			 const std::string& description)
+	: route_(route),
+	  method_(method),
+	  handler_(handler),
+	  am_(am),
+	  description_(description)
 {
+}
+
+void Route::operator()(const api::Request_t& req, api::Response& res)
+{
+	handler_(req, res);
 }
 
 // FIXME: implement theses
@@ -17,5 +29,4 @@ AccessModifier_t& Route::get_access_modifier() const {}
 const std::string& Route::get_description() const {}
 
 
-} // core
 } // nix

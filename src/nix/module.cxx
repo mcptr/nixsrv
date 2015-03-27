@@ -1,7 +1,8 @@
 #include "module.hxx"
 
+
 namespace nix {
-namespace core {
+
 
 Module::Module(ModuleAPI& api, const std::string& id, int version)
 	: api_(api),
@@ -25,5 +26,5 @@ void Module::deleter(Module *ptr)
 	delete ptr;
 }
 
-} // core
+
 } // nix

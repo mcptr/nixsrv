@@ -5,8 +5,9 @@
 #include "exception.hxx"
 #include "nix/util/fs.hxx"
 
+
 namespace nix {
-namespace core {
+
 
 Logger::Logger()
 {
@@ -88,5 +89,5 @@ std::string Logger::lvl_to_str(Level lvl) const
 	return out;
 }
 
-} // core
+
 } // nix

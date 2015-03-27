@@ -6,7 +6,7 @@
 
 
 namespace nix {
-namespace core {
+
 
 namespace po = boost::program_options;
 
@@ -34,7 +34,7 @@ protected:
 	po::variables_map vm_;
 };
 
-} // core
+
 } // nix
 
 #endif

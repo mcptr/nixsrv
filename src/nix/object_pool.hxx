@@ -11,7 +11,7 @@
 
 
 namespace nix {
-namespace core {
+
 
 const int WAIT_FOREVER = -1;
 
@@ -121,7 +121,7 @@ protected:
 	}
 };
 
-} // core
+
 } // nix
 
 #endif

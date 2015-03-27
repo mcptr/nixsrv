@@ -5,7 +5,6 @@
 #include <string>
 
 namespace nix {
-namespace core {
 
 class FatalError :  public std::logic_error
 {
@@ -25,7 +24,6 @@ typedef FatalError InitializationError;
 
 //typedef RuntimeError AuthError;
 
-} // core
 } // nix
 
 #endif

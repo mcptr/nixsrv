@@ -1,5 +1,5 @@
-#ifndef NIX_API_MESSAGE_HXX
-#define NIX_API_MESSAGE_HXX
+#ifndef NIX_CORE_MESSAGE_HXX
+#define NIX_CORE_MESSAGE_HXX
 
 #include <iostream>
 #include <string>
@@ -7,8 +7,8 @@
 #include <mongo/bson/bson.h>
 #include <mongo/db/json.h>
 
+
 namespace nix {
-namespace api {
 
 
 template<class T, class ElementT>
@@ -207,7 +207,6 @@ bool Message<T, ElementT>::exists(const std::string& k) const
 }
 
 
-} // api
 } // nix
 
 #endif

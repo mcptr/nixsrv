@@ -1,7 +1,8 @@
 #include "response.hxx"
 
+
 namespace nix {
-namespace api {
+
 
 Response::Response(int request_id)
 	: request_id_(request_id)
@@ -82,5 +83,4 @@ void Response::set_content(message::Array& arr, const std::string& id, int versi
 }
 
 
-} // api
 } // nix

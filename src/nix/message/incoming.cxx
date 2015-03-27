@@ -2,7 +2,7 @@
 
 
 namespace nix {
-namespace api {
+namespace core {
 
 
 bool IncomingMessage::parse(const std::string& input, bool validate_msg)
@@ -28,5 +28,5 @@ std::string IncomingMessage::_to_string()
 }
 
 
-} // api
+} // core
 } // nix

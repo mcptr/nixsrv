@@ -8,8 +8,9 @@
 #include "program_options.hxx"
 #include "nix/util/fs.hxx"
 
+
 namespace nix {
-namespace core {
+
 
 void ProgramOptions::parse(int argc, char** argv)
 {
@@ -145,5 +146,5 @@ void ProgramOptions::display_help() const
 	std::cout << all_ << std::endl;
 }
 
-} // core
+
 } // nix
