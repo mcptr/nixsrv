@@ -1,13 +1,10 @@
-basedir = ~/Devel/nix
-modulessdir = ~/Devel/nix/lib
-logdir = ~/Devel/nix/var/log
-pidbase = ~/Devel/nix/var/run
+basedir = ~/Devel/nix-env/nix
+modulessdir = ~/Devel/nix-env/nix/lib
+logdir = ~/Devel/nix-env/nix/var/log
+pidbase = ~/Devel/nix-env/nix/var/run
 pidname = nix.localhost
 
-address_family = tcp
-listen_address = 127.0.0.1
-port = 9876
-threads = 10
+address = tcp://127.0.0.1:9876
 
 [SERVER]
 tcp_listen_backlog = 250
