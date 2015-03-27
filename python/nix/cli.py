@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3.4
 
 import sys
 # import argparse
@@ -41,12 +41,13 @@ def call(agent, mod, route, params):
 			print("REJECTED", msg.get_exception_msg())
 		else:
 			print("The message has been abandoned.")
+		pass
 
 futures = []
 
 with yami.Agent({"tcp_nonblocking" : 1}) as client_agent:
 	with ThreadPoolExecutor(max_workers=100) as executor:
-		for x in range(0, 50000):
+		for x in range(0, 500):
 			futures.append(executor.submit(
 				call, client_agent,
 				"Debug", "debug_async", {
