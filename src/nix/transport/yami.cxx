@@ -24,7 +24,10 @@ YAMI::YAMI(const Options& options)
 	params.set_integer("dispatcher_threads", options_.dispatcher_threads);
 	params.set_integer("tcp_nonblocking", options_.tcp_nonblocking);
 	params.set_integer("tcp_listen_backlog", options_.tcp_listen_backlog);
-	agent_.reset(new yami::agent(params));
+
+	agent_.reset(new yami::agent(stats_callback_, params));
+
+	agent_->register_object("stats", stats_callback_);
 }
 
 YAMI::~YAMI()
@@ -58,7 +61,12 @@ std::string YAMI::build_address() const
 void YAMI::start()
 {
 	// this throws yami::yami_runtime_error
-	std::string resolved_address = agent_->add_listener(build_address());
+	resolved_address_ = agent_->add_listener(build_address());
+}
+
+void YAMI::stop()
+{
+	agent_->remove_listener(resolved_address_);
 }
 
 void YAMI::register_module(std::shared_ptr<const Module> inst)
@@ -77,6 +85,13 @@ void YAMI::register_object(
 {
 	agent_->register_object(name, handler);
 }
+
+void YAMI::register_io_error_handler(IOErrorHandler_t handler)
+{
+	agent_->register_io_error_logger(handler);
+}
+
+
 
 // request handler
 void YAMIRequestDispatcher::operator()(yami::incoming_message& im)
@@ -98,7 +113,6 @@ void YAMIRequestDispatcher::set_routing(const std::string& module_name,
 	}
 }
 
-
 // request
 
 YAMIRequest::YAMIRequest(yami::incoming_message& im)
@@ -116,6 +130,25 @@ YAMIRequest::YAMIRequest(yami::incoming_message& im)
 void YAMIRequest::reply(nix::Response& response)
 {
 }
+
+
+// // YAMIEventCallback
+
+// void YAMIEventCallback::operator()(yami::incoming_message& msg)
+// {
+// 	using namespace yami;
+// 	if (msg.get_message_name() != "get") {
+// 		msg.reject("Unknown message name.");
+// 	}
+
+// 	const parameters & msg_params = msg.get_parameters();
+// 	bool reset = false;
+
+//     parameters reply_params;
+//     get(reply_params, reset);
+
+// 	msg.reply(reply_params);
+// }
 
 
 } // transport

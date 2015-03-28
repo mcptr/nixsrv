@@ -1,0 +1,117 @@
+#!/usr/local/bin/python3 -tt
+
+import os
+import sys
+import time
+import argparse
+from subprocess import call, DEVNULL, STDOUT, PIPE
+
+
+os.environ.putenv("LD_LIBRARY_PATH", "/usr/local/lib64/soci:/usr/local/lib64/yami4")
+
+
+class Runner(object):
+	def __init__(self, **kwargs):
+		self.verbose = kwargs.pop("verbose", False)
+		self.parent_dir = os.path.abspath(os.path.dirname(sys.argv[0] ) + "/../")
+		self.cxx_tests_dir = "%s/cxx/build/target" % self.parent_dir
+		self.python_dir = "%s/python" % self.parent_dir
+
+		self.test_results = {
+			"CXX" : [],
+			"NOSE" : False,
+			"PEP8" : False,
+		}
+
+	def exec_test(self, *args, **kwargs):
+		title = kwargs.pop("title", "...")
+		group = kwargs.pop("group", False)
+		on_fail = kwargs.pop("on_fail", False)
+		print("".center(72, "-"))
+		print("#", title, "...")
+		status = self.run_command(*args, **kwargs)
+		print("# Result:", "FAIL" if status else "PASS")
+		if status:
+			if group:
+				self.test_results[group.upper()] = 1
+			elif callable(on_fail):
+				on_fail(status=status, title=title)
+		
+		return status
+
+	def run_command(self, *args, **kwargs):
+		params = {
+			"shell" : kwargs.pop("shell", False)
+		}
+
+		if not self.verbose:
+			params["stdout"] = DEVNULL
+			params["stderr"] = DEVNULL
+			
+		status = call(*args, **params)
+		return status
+		
+
+	def run_cxx_tests(self):
+		for (root, dirs, files) in os.walk(self.cxx_tests_dir):
+			for test in files:
+				if test.startswith("test_"):
+					test_exe = "%s/%s" % (root, test)
+					self.exec_test(
+						test_exe,
+						title="CXX: " + test,
+						on_fail=lambda **kwargs: self.test_results["CXX"].append(test_exe)
+					)
+					
+
+	def run_pep8(self):
+		title = "Running pep8 against " + self.python_dir
+		returncode = self.exec_test(
+			["pep8", "--ignore=W191,E203,E251,E303", self.python_dir],
+			title=title,	
+			group="PEP8"
+		)
+
+	def run_nose(self):
+		title = "Running nosetest in " + self.python_dir
+		self.exec_test(
+			["nosetests", "-v", self.python_dir],
+			title=title,
+			group="NOSE"
+		)
+
+	def count_failures(self):
+		return len(list(filter(lambda x: self.test_results[x], self.test_results)))
+
+	def display_results(self):
+		failures = 0
+		if self.test_results["CXX"]:
+			failures 
+			print("Failed CXX tests:\n%s" % "\t\n".join(
+				sorted(self.test_results["CXX"]))
+			)
+			print("".center(72, "-"))
+		print("PEP8: %s" % ("FAIL" if self.test_results["PEP8"] else "PASS"))
+		print("NOSE: %s" % ("FAIL" if self.test_results["NOSE"] else "PASS"))
+		print("".center(72, "-"))
+
+
+def run_tests(**kwargs):
+	verbose = kwargs.pop("verbose", False)
+	print("")
+	runner = Runner(verbose=verbose)
+	runner.run_cxx_tests()
+	runner.run_pep8()
+	runner.run_nose()
+	print("".center(72, "="))
+	runner.display_results()
+	print("Total failures: %d" % runner.count_failures())
+	sys.exit(runner.count_failures())
+
+
+if __name__ == "__main__":
+	parser = argparse.ArgumentParser(description='Test runner')
+	parser.add_argument("-v", "--verbose", action="store_true", help="verbose")
+
+	args = parser.parse_args()
+	run_tests(verbose=args.verbose)

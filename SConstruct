@@ -38,7 +38,7 @@ class Dirs(object):
 class Setup(object):
 	base_cxxflags = Split(" ".join([
 		"-std=c++11 -Wall -Wextra -pedantic -O2",
-		"-pipe -pthread -finline-functions"
+		"-pipe -pthread -finline-functions -L/usr/lib/gcc/x86_64-linux-gnu/4.8"
 	]))
 	base_libs = []
 	base_libpath = ["/usr/lib", "/usr/local/lib"]
@@ -51,8 +51,9 @@ class Setup(object):
 		if is_option_set("debug"):
 			self.base_cxxflags.append("-g")
 		if is_option_set("profile"):
-			self.base_cxxflags.append("--coverage")
-			self.base_linkflags.append("-profile")
+			#self.base_cxxflags.append("--coverage")
+			#self.base_linkflags.append("-profile")
+			self.base_linkflags.append("-pg")
 		if THIS_PLATFORM == "linux":
 			self.base_libs.append("dl")
 

@@ -36,7 +36,7 @@ public:
 
 	virtual void start() = 0;
 
-	virtual void stop() {}
+	virtual void stop() = 0;
 
 	virtual void register_module(std::shared_ptr<const Module> mod) = 0;
 

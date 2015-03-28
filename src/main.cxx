@@ -12,6 +12,12 @@
 #include <functional>
 #include <sstream>
 #include <mutex>
+#include <condition_variable>
+
+// daemon
+#include <unistd.h> // linux
+#include <cstdlib> // bsd
+#include <csignal>
 
 // implementation type (for compile time)
 #include "nix/impl_types.hxx"
@@ -61,6 +67,14 @@ void inject_transport_handlers(std::shared_ptr<nix::impl::Transport_t> transport
 
 void serve(std::shared_ptr<nix::impl::Transport_t> transport);
 
+void termination_signal_handler(int sig);
+
+
+std::mutex main_mtx;
+std::condition_variable main_cv;
+int signaled = false;
+
+std::vector<std::thread> threads;
 
 int main(int argc, char** argv)
 {
@@ -105,6 +119,13 @@ int main(int argc, char** argv)
 
 		transport.reset(new nix::impl::Transport_t(transport_options));
 
+		transport->register_io_error_handler(
+			[&logger](int err, const char* errmsg) -> void
+			{
+				logger.log_error(errmsg);
+			}
+		);
+
 		module_manager.register_routing(transport);
 
 	}
@@ -116,16 +137,21 @@ int main(int argc, char** argv)
 	if(program_options.get<bool>("debug")) {
 		transport->register_object("echo", nix::direct_handlers::echo);
 	}
-	
-	if(program_options.get<bool>("foreground")) {
-		serve(transport);
-		int dummy;
-		std::cin >> dummy;
+
+	std::signal(SIGINT, termination_signal_handler);
+	std::signal(SIGTERM, termination_signal_handler);
+
+	if(!program_options.get<bool>("foreground")) {
+		int attached = daemon(1, 1);
+		if(attached) {
+			std::cerr << "daemon() failed: " << std::endl;
+			return EXIT_FAILURE;
+		}
 	}
-	else {
-		std::thread transport_thread(serve, transport);
-		transport_thread.join();
-		std::cout << "EXIT" << std::endl;
+
+	threads.push_back(std::thread(serve, transport));
+	for(auto& th : threads) {
+		th.join();
 	}
 
 	return EXIT_SUCCESS;
@@ -219,6 +245,21 @@ void setup_db_pool(ObjectPool<Connection>& pool,
 
 void serve(std::shared_ptr<nix::impl::Transport_t> transport)
 {
-	transport->start();
-	std::this_thread::sleep_for(std::chrono::milliseconds(10 * 1000));
+	std::unique_lock<std::mutex> lock(main_mtx);
+
+	while(!signaled) {
+		transport->start();
+		main_cv.wait(lock);
+	}
+
+	transport->stop();
+	transport.reset();
+	lock.unlock();
+
+}
+
+void termination_signal_handler(int /* sig */)
+{
+	signaled = true;
+	main_cv.notify_all();
 }
