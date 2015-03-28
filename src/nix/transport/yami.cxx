@@ -1,14 +1,15 @@
 #include <string>
 
-#include "nix/impl_types.hxx"
+#include "yami.hxx"
 
+#include "nix/impl_types.hxx"
 #include "nix/exception.hxx"
 #include "nix/message/incoming.hxx"
 #include "nix/message/outgoing.hxx"
 #include "nix/module.hxx"
 #include "nix/route.hxx"
 
-#include "yami.hxx"
+#include "nix/direct_handlers.hxx"
 
 #include <iostream>
 
@@ -62,34 +63,39 @@ void YAMI::start()
 
 void YAMI::register_module(std::shared_ptr<const Module> inst)
 {
-	req_dispatcher_.set_routing(
+	dispatcher_.set_routing(
 		inst->get_ident(),
 		inst->get_routing()
 	);
 
-	agent_->register_object(inst->get_ident(), req_dispatcher_);
+	agent_->register_object(inst->get_ident(), dispatcher_);
 }
 
 void YAMI::register_object(
 	const std::string& name,
-	std::function<void(yami::incoming_message&)> handler)
+	DirectHandler_t handler)
 {
 	agent_->register_object(name, handler);
 }
-
 
 // request handler
 void YAMIRequestDispatcher::operator()(yami::incoming_message& im)
 {
 	YAMIRequest req(im);
-	// h = find route
-	// h
+	Routing_t::iterator it = routing_.find(req.get_module() + ":" + req.get_route());
+	if(it != routing_.end()) {
+		Response res(req.get_seq_id());
+		it->second->handle(req, res);
+	}
 }
 
 void YAMIRequestDispatcher::set_routing(const std::string& module_name,
 										const Transport<yami::parameters>::Routes_t& routing)
 {
-	routing_.emplace(module_name, routing);
+	Transport<yami::parameters>::Routes_t::const_iterator it = routing.begin();
+	for( ; it != routing.end(); it++) {
+		routing_.emplace(module_name + "::" + (*it)->get_route(), *it);
+	}
 }
 
 

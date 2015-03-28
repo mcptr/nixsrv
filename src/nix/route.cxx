@@ -17,16 +17,9 @@ Route::Route(const std::string& route,
 {
 }
 
-void Route::operator()(const Request_t& req, api::Response& res)
+void Route::handle(const impl::Request_t& req, Response& res) const
 {
 	handler_(req, res);
 }
-
-// FIXME: implement theses
-const std::string& Route::get_route() const {}
-Method_t Route::get_method() const {}
-AccessModifier_t& Route::get_access_modifier() const {}
-const std::string& Route::get_description() const {}
-
 
 } // nix

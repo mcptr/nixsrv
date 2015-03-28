@@ -3,9 +3,11 @@
 
 #include <string>
 #include <yami4-cpp/yami.h>
+#include <unordered_map>
 
 #include "nix/transport.hxx"
 #include "nix/request.hxx"
+#include "nix/response.hxx"
 
 #include "options.hxx"
 
@@ -16,13 +18,11 @@ namespace nix {
 // fwd
 class Module;
 class ModuleInstance;
-class Response;
 class Route;
-
 
 namespace transport {
 
-class YAMIRequest : nix::Request<yami::incoming_message>
+class YAMIRequest : public nix::Request<yami::incoming_message>
 {
 public:
 	YAMIRequest() = delete;
@@ -43,15 +43,19 @@ public:
 		const Transport<yami::incoming_message>::Routes_t& routing
 	);
 
+	// first: "module::route"
+	typedef std::map<const std::string, std::shared_ptr<const Route>> Routing_t;
+
 private:
-	std::map<const std::string,
-			 const Transport<yami::incoming_message>::Routes_t&> routing_;
+	Routing_t routing_;
 };
 
 
 class YAMI : public Transport<yami::incoming_message>
 {
 public:
+	typedef std::function<void(yami::incoming_message&)> DirectHandler_t;
+
 	YAMI() = delete;
 	explicit YAMI(const Options& options);
 	virtual ~YAMI();
@@ -60,14 +64,13 @@ public:
 
 	void register_module(std::shared_ptr<const Module> inst);
 
-	virtual void register_object(
-		const std::string& name, 
-		std::function<void(yami::incoming_message&)> msg);
+	virtual
+	void register_object(const std::string& name, DirectHandler_t handler);
 
 private:
 	std::unique_ptr<yami::agent> agent_;
-	YAMIRequestDispatcher req_dispatcher_;
 	std::string build_address() const;
+	YAMIRequestDispatcher dispatcher_;
 };
 
 

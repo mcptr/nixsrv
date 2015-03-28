@@ -1,4 +1,5 @@
 #include "direct_handlers.hxx"
+#include <iostream>
 
 namespace nix {
 namespace direct_handlers {

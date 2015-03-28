@@ -172,12 +172,12 @@ extend_env(baseenv, {
 boostenv = baseenv.Clone()
 extend_env(boostenv, {
 	"LIBS" : [
-		"boost_log",
 		"boost_system",
 		"boost_thread",
-		"boost_filesystem",
 		"boost_program_options",
-		"boost_regex",
+		#"boost_log",
+		#"boost_filesystem",
+		#"boost_regex",
 	]
 })
 # ------------------------------------------------------------------------
@@ -315,6 +315,12 @@ translation_units = {
 	"program_options" : {
 		"libs" : ["boost_program_options"],
 		"libpath" : boostenv["LIBPATH"],
+	},
+	"response" : {
+		"env": combinedenv,
+	},
+	"route" : {
+		"env": combinedenv,
 	},
 	"transport/options" : {},
 	"transport/yami" : {

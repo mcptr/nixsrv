@@ -3,6 +3,7 @@
 #include <cstdlib>
 #include <ctime>
 #include <memory>
+#include <functional>
 
 // for testing
 #include <thread>
@@ -113,7 +114,7 @@ int main(int argc, char** argv)
 	}
 
 	if(program_options.get<bool>("debug")) {
-		inject_transport_handlers(transport);
+		transport->register_object("echo", nix::direct_handlers::echo);
 	}
 	
 	if(program_options.get<bool>("foreground")) {
@@ -214,11 +215,6 @@ void setup_db_pool(ObjectPool<Connection>& pool,
 		// create connection
 		// pool.insert
 	}
-}
-
-void inject_transport_handlers(std::shared_ptr<nix::impl::Transport_t> transport)
-{
-	transport->register_object("echo", nix::direct_handlers::echo);
 }
 
 void serve(std::shared_ptr<nix::impl::Transport_t> transport)

@@ -4,12 +4,12 @@
 #include <string>
 #include <functional>
 
+#include "nix/impl_types.hxx"
 
 namespace nix {
 
 
 // fwd
-class Request_t;
 class Response;
 
 
@@ -23,7 +23,7 @@ public:
 				   INTERNAL } AccessModifier_t;
 
 	typedef std::function<
-		void(const Request_t&, Response&)
+		void(const impl::Request_t&, Response&)
 		> Handler_t;
 
 	Route() = delete;
@@ -36,18 +36,17 @@ public:
 
 	virtual ~Route() = default;
 
-	void operator()(const Request_t& req,
-					Response& res);
+	void handle(const impl::Request_t& req, Response& res) const;
 
-	const std::string& get_route() const;
-	Method_t get_method() const;
-	AccessModifier_t& get_access_modifier() const;
-	const std::string& get_description() const;
+	inline const std::string& get_route() const { return route_; }
+	inline Method_t get_method() const { return method_; }
+	inline AccessModifier_t get_access_modifier() const { return am_; }
+	inline const std::string& get_description() const { return description_; }
 
 private:
 	const std::string route_;
 	Method_t method_;
-	Handler_t handler;
+	Handler_t handler_;
 	AccessModifier_t am_;
 	const std::string description_;
 };

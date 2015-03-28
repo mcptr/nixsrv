@@ -12,6 +12,7 @@
 
 namespace nix {
 
+
 // fwd
 class Module;
 class ModuleInstance;
