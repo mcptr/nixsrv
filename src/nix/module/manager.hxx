@@ -34,7 +34,7 @@ public:
 	void load(const std::string& module_path);
 	void unload();
 
-	void register_routing(std::shared_ptr<impl::Transport_t> t);
+	void register_routing(std::shared_ptr<impl::ServerTransport_t> t);
 private:
 	ObjectPool<ModuleInstance> modules_pool_;
 

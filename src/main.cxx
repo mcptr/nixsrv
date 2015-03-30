@@ -47,7 +47,6 @@ using nix::ModuleAPI;
 using nix::ObjectPool;
 using nix::ProgramOptions;
 using nix::db::Connection;
-using nix::Transport;
 using nix::transport::Options;
 
 
@@ -63,9 +62,9 @@ void setup_transport(Options& options,
 void setup_db_pool(ObjectPool<Connection>& pool,
 				   const ProgramOptions& po);
 
-void inject_transport_handlers(std::shared_ptr<nix::impl::Transport_t> transport);
+void inject_transport_handlers(std::shared_ptr<nix::impl::ServerTransport_t> transport);
 
-void serve(std::shared_ptr<nix::impl::Transport_t> transport);
+void serve(std::shared_ptr<nix::impl::ServerTransport_t> transport);
 
 void termination_signal_handler(int sig);
 
@@ -81,7 +80,7 @@ int main(int argc, char** argv)
 	srand(time(NULL));
 
 	ProgramOptions program_options;
-	std::shared_ptr<nix::impl::Transport_t> transport;
+	std::shared_ptr<nix::impl::ServerTransport_t> transport;
 
 	try {
 		program_options.parse(argc, argv);
@@ -117,7 +116,7 @@ int main(int argc, char** argv)
 		Options transport_options;
 		setup_transport(transport_options, program_options);
 
-		transport.reset(new nix::impl::Transport_t(transport_options));
+		transport.reset(new nix::impl::ServerTransport_t(transport_options));
 
 		transport->register_io_error_handler(
 			[&logger](int err, const char* errmsg) -> void
@@ -243,7 +242,7 @@ void setup_db_pool(ObjectPool<Connection>& pool,
 	}
 }
 
-void serve(std::shared_ptr<nix::impl::Transport_t> transport)
+void serve(std::shared_ptr<nix::impl::ServerTransport_t> transport)
 {
 	std::unique_lock<std::mutex> lock(main_mtx);
 

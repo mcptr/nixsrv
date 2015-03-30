@@ -17,8 +17,8 @@ namespace nix {
 namespace transport {
 
 
-YAMI::YAMI(const Options& options)
-	: Transport<yami::incoming_message>(options)
+YAMIServer::YAMIServer(const Options& options)
+	: ServerTransport<yami::incoming_message>(options)
 {
 	yami::parameters params;
 	params.set_integer("dispatcher_threads", options_.dispatcher_threads);
@@ -30,12 +30,12 @@ YAMI::YAMI(const Options& options)
 	agent_->register_object("stats", stats_callback_);
 }
 
-YAMI::~YAMI()
+YAMIServer::~YAMIServer()
 {
 	agent_.reset();
 }
 
-std::string YAMI::build_address() const
+std::string YAMIServer::build_address() const
 {
 	std::string address;
 	switch(options_.address_family) {
@@ -49,7 +49,7 @@ std::string YAMI::build_address() const
 		address.append("udp://");
 		break;
 	default:
-		throw nix::InitializationError("YAMI::build_address(): Invalid protocol");
+		throw nix::InitializationError("YAMIServer::build_address(): Invalid protocol");
 	}
 
 	address.append(options_.listen_address.c_str());
@@ -58,18 +58,18 @@ std::string YAMI::build_address() const
 	return address;
 }
 
-void YAMI::start()
+void YAMIServer::start()
 {
 	// this throws yami::yami_runtime_error
 	resolved_address_ = agent_->add_listener(build_address());
 }
 
-void YAMI::stop()
+void YAMIServer::stop()
 {
 	agent_->remove_listener(resolved_address_);
 }
 
-void YAMI::register_module(std::shared_ptr<const Module> inst)
+void YAMIServer::register_module(std::shared_ptr<const Module> inst)
 {
 	dispatcher_.set_routing(
 		inst->get_ident(),
@@ -79,14 +79,14 @@ void YAMI::register_module(std::shared_ptr<const Module> inst)
 	agent_->register_object(inst->get_ident(), dispatcher_);
 }
 
-void YAMI::register_object(
+void YAMIServer::register_object(
 	const std::string& name,
 	DirectHandler_t handler)
 {
 	agent_->register_object(name, handler);
 }
 
-void YAMI::register_io_error_handler(IOErrorHandler_t handler)
+void YAMIServer::register_io_error_handler(IOErrorHandler_t handler)
 {
 	agent_->register_io_error_logger(handler);
 }
@@ -105,9 +105,9 @@ void YAMIRequestDispatcher::operator()(yami::incoming_message& im)
 }
 
 void YAMIRequestDispatcher::set_routing(const std::string& module_name,
-										const Transport<yami::parameters>::Routes_t& routing)
+										const ServerTransport<yami::parameters>::Routes_t& routing)
 {
-	Transport<yami::parameters>::Routes_t::const_iterator it = routing.begin();
+	ServerTransport<yami::parameters>::Routes_t::const_iterator it = routing.begin();
 	for( ; it != routing.end(); it++) {
 		routing_.emplace(module_name + "::" + (*it)->get_route(), *it);
 	}
@@ -132,23 +132,60 @@ void YAMIRequest::reply(nix::Response& response)
 }
 
 
-// // YAMIEventCallback
 
-// void YAMIEventCallback::operator()(yami::incoming_message& msg)
-// {
-// 	using namespace yami;
-// 	if (msg.get_message_name() != "get") {
-// 		msg.reject("Unknown message name.");
-// 	}
+// client
+YAMIClient::YAMIClient(const std::string& address,
+					   const transport::Options& options)
+	: ClientTransport<yami::parameters>(address, options)
+{
+	yami::parameters params;
+	params.set_integer("tcp_nonblocking", options_.tcp_nonblocking);
+	agent_.reset(new yami::agent(params));
+}
 
-// 	const parameters & msg_params = msg.get_parameters();
-// 	bool reset = false;
+YAMIClient::~YAMIClient()
+{
+	agent_.reset();
+}
 
-//     parameters reply_params;
-//     get(reply_params, reset);
+std::shared_ptr<nix::IncomingMessage> 
+YAMIClient::call(const std::string& module,
+				 const std::string& route,
+				 const yami::parameters& parameters,
+				 int timeout)
+{
+	std::shared_ptr<nix::IncomingMessage> msg
+		= agent_->send(address_, module, route, parameters);
 
-// 	msg.reply(reply_params);
-// }
+}
+
+std::shared_ptr<IncomingMessage> 
+YAMIClient::call(const std::string& module,
+				 const std::string& route,
+				 OutgoingMessage& msg,
+				 int timeout)
+{
+	yami::parameters content;
+	content.set_string("message", msg.to_string());
+	call(module, route, content, timeout);
+}
+
+void YAMIClient::send_one_way(const std::string& module,
+							  const std::string& route,
+							  const yami::parameters& msg)
+{
+	agent_->send_one_way(address_, module, route, msg);
+}
+
+
+void YAMIClient::send_one_way(const std::string& module,
+							  const std::string& route,
+							  OutgoingMessage& msg)
+{
+	yami::parameters content;
+	content.set_string("message", msg.to_string());
+	send_one_way(module, route, content);
+}
 
 
 } // transport

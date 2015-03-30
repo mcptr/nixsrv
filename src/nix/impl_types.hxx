@@ -9,7 +9,8 @@ namespace impl {
 
 
 // default transport implementaion
-typedef nix::transport::YAMI Transport_t;
+typedef nix::transport::YAMIServer ServerTransport_t;
+typedef nix::transport::YAMIClient ClientTransport_t;
 typedef nix::transport::YAMIRequest Request_t;
 
 

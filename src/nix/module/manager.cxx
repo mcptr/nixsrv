@@ -41,7 +41,7 @@ void ModuleManager::unload()
 	modules_pool_.clear();
 }
 
-void ModuleManager::register_routing(std::shared_ptr<impl::Transport_t> t)
+void ModuleManager::register_routing(std::shared_ptr<impl::ServerTransport_t> t)
 {
 	modules_pool_.apply(
 		[&t] (ModuleInstance& inst)

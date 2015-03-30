@@ -41,7 +41,7 @@ public:
 
 	void set_routing(
 		const std::string& module_name,
-		const Transport<yami::incoming_message>::Routes_t& routing
+		const ServerTransport<yami::incoming_message>::Routes_t& routing
 	);
 
 	// first: "module::route"
@@ -52,15 +52,14 @@ private:
 };
 
 
-class YAMI : public Transport<yami::incoming_message>
+class YAMIServer : public ServerTransport<yami::incoming_message>
 {
 public:
-	typedef std::function<void(yami::incoming_message&)> DirectHandler_t;
 	typedef std::function<void(int, const char*)> IOErrorHandler_t;
 
-	YAMI() = delete;
-	explicit YAMI(const Options& options);
-	virtual ~YAMI();
+	YAMIServer() = delete;
+	explicit YAMIServer(const Options& options);
+	virtual ~YAMIServer();
 
 	void start();
 	void stop();
@@ -105,6 +104,42 @@ public:
 	{
 		im.reply();
 	}
+};
+
+
+
+class YAMIClient : public ClientTransport<yami::parameters>
+{
+public:
+	explicit YAMIClient(const std::string& address_,
+						const transport::Options& options);
+
+	virtual ~YAMIClient();
+
+	virtual
+	std::shared_ptr<IncomingMessage> 
+	call(const std::string& module,
+		 const std::string& route,
+		 const yami::parameters& parameters,
+		 int timeout = 0);
+
+	virtual
+	std::shared_ptr<IncomingMessage>
+	call(const std::string& module,
+		 const std::string& route,
+		 OutgoingMessage& msg,
+		 int timeout = 0);
+
+	virtual	void send_one_way(const std::string& module,
+							  const std::string& route,
+							  const yami::parameters& parameters);
+
+	virtual	void send_one_way(const std::string& module,
+							  const std::string& route,
+							  OutgoingMessage& msg);
+
+protected:
+	std::unique_ptr<yami::agent> agent_;
 };
 
 
