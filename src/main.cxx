@@ -22,6 +22,7 @@
 // nix
 #include "nix/db/connection.hxx"
 #include "nix/db/options.hxx"
+#include "nix/queue/options.hxx"
 #include "nix/logger.hxx"
 #include "nix/module/api.hxx"
 #include "nix/module/manager.hxx"
@@ -68,6 +69,9 @@ void setup_db_pool(std::shared_ptr<ObjectPool<Connection>> pool,
 void serve(std::shared_ptr<nix::Server> server);
 
 void termination_signal_handler(int sig);
+
+void setup_builtin_job_queue(std::shared_ptr<nix::module::JobQueue> jq,
+							 const ProgramOptions& po);
 
 
 std::mutex main_mtx;
@@ -132,6 +136,8 @@ int main(int argc, char** argv)
 			new nix::module::JobQueue(mod_api, 100)
 		);
 
+		setup_builtin_job_queue(job_queue_module, program_options);
+
 		module_manager->add_builtin(job_queue_module);
 
 		module_manager->register_routing(server);
@@ -181,8 +187,8 @@ void setup_modules(ModuleManager::Names_t& v,
 		fs::resolve_path(po.get<std::string>("basedir"))
 	);
 
-	std::string plugins_dir = 
-		fs::resolve_path(po.get<std::string>("pluginsdir"));
+	std::string modules_dir = 
+		fs::resolve_path(po.get<std::string>("modulesdir"));
 
 	std::ifstream modules_config(base_dir + "/etc/modules.load");
 	char line[256];
@@ -204,7 +210,6 @@ void setup_server(Options& options,
 	using nix::server::Options;
 
 	options.address = po.get<string>("address");
-	options.threads = po.get<int>("threads");
 
 	options.tcp_nonblocking = po.get<bool>("SERVER.tcp_nonblocking");
 	options.tcp_listen_backlog = po.get<int>("SERVER.tcp_listen_backlog");
@@ -249,6 +254,23 @@ void serve(std::shared_ptr<nix::Server> server)
 	lock.unlock();
 
 }
+
+void setup_builtin_job_queue(std::shared_ptr<nix::module::JobQueue> jq,
+							 const ProgramOptions& po)
+{
+	using namespace std;
+	std::string config_path(po.get<string>("config"));
+	if(po.is_verbose()) {
+		std::cout << "Reading queues configuration " << std::endl;
+	}
+
+	nix::queue::Options options;
+	options.parse(config_path);
+	for(auto& inst : options.get_instances()) {
+		jq->init_queue(inst);
+	}
+}
+
 
 void termination_signal_handler(int /* sig */)
 {

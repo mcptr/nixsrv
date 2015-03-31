@@ -49,6 +49,7 @@ public:
 private:
 	bool flushed_ = true;
 	bool is_forground_ = false;
+	bool is_debug_ = false;
 	std::mutex mtx_;
 	std::unique_ptr<std::ostream> log_stream_;
 	std::unique_ptr<std::fstream> fstream_;
@@ -96,7 +97,9 @@ void Logger::log_warn(const T& msg, bool do_flush)
 template <class T>
 void Logger::log_debug(const T& msg, bool do_flush)
 {
-	log(Level::LOG_LVL_DEBUG, msg, do_flush);
+	if(is_debug_) {
+		log(Level::LOG_LVL_DEBUG, msg, do_flush);
+	}
 }
 
 

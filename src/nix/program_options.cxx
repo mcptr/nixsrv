@@ -49,7 +49,7 @@ void ProgramOptions::parse(int argc, char** argv)
 			("dbconfig", po::value<string>(&db_config_path)->default_value(
 				base_dir + "/etc/config.ini", "$BASE_DIR/etc/db.ini"), "")
 			("basedir", po::value(&stropt)->default_value(base_dir), "base application directory")
-			("pluginsdir", po::value(&stropt)->default_value(base_dir + "/lib", "$BASE_DIR/lib"), "directory containing plugins (*.so)")
+			("modulesdir", po::value(&stropt)->default_value(base_dir + "/lib", "$BASE_DIR/lib"), "directory containing modules (*.so)")
 			("logdir", po::value(&stropt)->default_value(base_dir + "/logs", "$BASE_DIR/logs"), "directory to store logs to")
 			("pidbase", po::value(&stropt)->default_value(base_dir, "$BASE_DIR"), "directory for storing pidfile")
 			("pidname", po::value(&stropt)->default_value(base_dir + "/server.pid", "$BASE_DIR/$(pidbase)/server.pid"), "pid filename")
@@ -74,8 +74,6 @@ void ProgramOptions::parse(int argc, char** argv)
 		server.add_options()
 			("address,A", po::value(&stropt)->default_value("tcp://*:*"),
 			 "server address")
-			("threads,t", po::value(&intopt)->default_value(1),
-			 "dispatcher threads")
 			;
 
 		passwd* pwd = getpwuid(getuid());

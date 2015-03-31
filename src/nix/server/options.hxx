@@ -12,7 +12,6 @@ class Options
 public:
 	// server
 	std::string address = "tcp://*:*";
-	int threads = 1;
 
 	bool tcp_nonblocking = true;
 	int tcp_listen_backlog = 10;

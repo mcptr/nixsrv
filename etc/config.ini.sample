@@ -1,20 +1,15 @@
 basedir = ~/Devel/nix
-pluginsdir = ~/Devel/nix/lib
+modulessdir = ~/Devel/nix/lib
 logdir = ~/Devel/nix/var/log
 pidbase = ~/Devel/nix/var/run
 pidname = nix.localhost
 
-dbuser = nix
-dbname = 
-dbpass = 
-
-[TRANSPORT]
 address_family = tcp
 listen_address = 127.0.0.1
 port = 9876
 threads = 10
 
-[TRANSPORT-YAMI]
-tcp_listen_backlog = 50
+[SERVER]
+tcp_listen_backlog = 250
 tcp_nonblocking = 1
-dispatcher_threads = 10
+dispatcher_threads = 50

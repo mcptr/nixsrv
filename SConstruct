@@ -321,7 +321,7 @@ translation_units = {
 		"libs" : ["boost_program_options"],
 		"libpath" : boostenv["LIBPATH"],
 	},
-	#"queue" : {},
+	"queue/options" : {},
 	"response" : {
 		"env": combinedenv,
 	},

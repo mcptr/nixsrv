@@ -14,7 +14,6 @@ void Options::parse(const std::string& config_path)
 	int intopt;
 
 	po::options_description db_options;
-	po::variables_map vm;
 
 	db_options.add_options()
 		("global.databases",
@@ -27,9 +26,9 @@ void Options::parse(const std::string& config_path)
 		throw nix::InitializationError("No db config found (" + config_path + ")");
 	}
 
-	po::store(po::parse_config_file(cf, db_options, true), vm);
-	po::notify(vm);
-	istringstream databases(vm["global.databases"].as<string>());
+	po::store(po::parse_config_file(cf, db_options, true), vm_);
+	po::notify(vm_);
+	istringstream databases(vm_["global.databases"].as<string>());
 
 	std::vector<std::string> dblist;
 
@@ -75,8 +74,8 @@ void Options::parse(const std::string& config_path)
 	cf.clear();
 	cf.seekg(0, ios::beg);
 
-	po::store(po::parse_config_file(cf, db_options, true), vm);
-	po::notify(vm);
+	po::store(po::parse_config_file(cf, db_options, true), vm_);
+	po::notify(vm_);
 	cf.close();
 
 	for(auto& entry : dblist) {

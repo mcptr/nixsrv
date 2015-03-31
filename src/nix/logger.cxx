@@ -16,6 +16,8 @@ Logger::Logger()
 
 Logger::Logger(const ProgramOptions& options)
 {
+	is_debug_ = options.get<bool>("debug");
+
 	if(options.get<bool>("foreground")) {
 		is_forground_ = true;
 		log_stream_.reset(&std::cerr);

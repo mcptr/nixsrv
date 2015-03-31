@@ -20,6 +20,7 @@ public:
 
 protected:
 	const std::string id_;
+
 };
 
 

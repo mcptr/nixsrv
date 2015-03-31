@@ -8,7 +8,7 @@
 #include "nix/route.hxx"
 #include "nix/logger.hxx"
 #include "nix/module.hxx"
-#include "nix/queue.hxx"
+
 
 namespace nix {
 namespace server {

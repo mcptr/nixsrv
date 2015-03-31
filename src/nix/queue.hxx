@@ -63,6 +63,11 @@ public:
 		cv_.notify_one();
 	}
 
+	size_t size() const
+	{
+		return q_.size();
+	}
+
 protected:
 	std::queue<std::shared_ptr<T>> q_;
 	size_t queue_size_ = 0;
