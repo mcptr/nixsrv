@@ -6,8 +6,10 @@ namespace module {
 JobQueue::JobQueue(std::shared_ptr<ModuleAPI> api, size_t queue_size)
 	: Module(api, "JobQueue", 1)
 {
-	Route::Handler_t handler = [](IncomingMessage& im) {};
 	submitted_.reset(new Queue<Job>(queue_size));
+
+	Route::Handler_t handler = [](IncomingMessage& im) {};
+
 	std::shared_ptr<Route> submit(
 		new Route("job/submit", handler, Route::AUTH, Route::DEFERRED)
 	);
