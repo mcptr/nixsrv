@@ -37,11 +37,11 @@ void JobQueue::init_queue(std::shared_ptr<nix::queue::InstanceConfig> inst)
 	);
 
 	std::shared_ptr<Route> progress_publish(
-		new Route(prefix + "/progress/set", handler, Route::AUTH, Route::PUBLISH)
+		new Route(prefix + "/progress/set", handler, Route::API_PRIVATE, Route::PUBLISH)
 	);
 
 	std::shared_ptr<Route> result_set(
-		new Route(prefix + "/result/set", handler, Route::AUTH, Route::SYNC)
+		new Route(prefix + "/result/set", handler, Route::API_PRIVATE, Route::SYNC)
 	);
 
 	std::shared_ptr<Route> result_get(
