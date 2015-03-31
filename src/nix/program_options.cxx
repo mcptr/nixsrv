@@ -19,7 +19,7 @@ void ProgramOptions::parse(int argc, char** argv)
 	try {
 		po::options_description flags("Generic");
 		po::options_description generic("Startup options");
-		po::options_description transport("Transport options");
+		po::options_description server("Server options");
 
 		po::options_description config_file_hidden(
 			"Configuration file based options"
@@ -52,7 +52,7 @@ void ProgramOptions::parse(int argc, char** argv)
 			("pluginsdir", po::value(&stropt)->default_value(base_dir + "/lib", "$BASE_DIR/lib"), "directory containing plugins (*.so)")
 			("logdir", po::value(&stropt)->default_value(base_dir + "/logs", "$BASE_DIR/logs"), "directory to store logs to")
 			("pidbase", po::value(&stropt)->default_value(base_dir, "$BASE_DIR"), "directory for storing pidfile")
-			("pidname", po::value(&stropt)->default_value(base_dir + "/daemon.pid", "$BASE_DIR/$(pidbase)/daemon.pid"), "pid filename")
+			("pidname", po::value(&stropt)->default_value(base_dir + "/server.pid", "$BASE_DIR/$(pidbase)/server.pid"), "pid filename")
 			("verbose,v",
 			 po::value<bool>()->implicit_value(true)->zero_tokens()->default_value(false),
 			 "verbose run"
@@ -71,46 +71,35 @@ void ProgramOptions::parse(int argc, char** argv)
 			)
 			;
 
-		transport.add_options()
-			(
-				"address_family,a", po::value<string>(),
-				"address family (tcp, unix)"
-			)
-			(
-				"listen_address,l", po::value<string>(),
-				"address to listen on"
-			)
-			(
-				"port,p", po::value<int>(), "port to use"
-			)
-			(
-				"threads,t", po::value<int>(),
-				"dispatcher threads"
-			)
+		server.add_options()
+			("address,A", po::value(&stropt)->default_value("tcp://*:*"),
+			 "server address")
+			("threads,t", po::value(&intopt)->default_value(1),
+			 "dispatcher threads")
 			;
 
 		passwd* pwd = getpwuid(getuid());
 		string username(pwd->pw_name);
 
 		config_file_hidden.add_options()
-			("TRANSPORT-YAMI.tcp_listen_backlog",
-			 po::value(&intopt)->default_value(10), "TRANSPORT-YAMI.tcp_listen_backlog"
+			("SERVER.tcp_listen_backlog",
+			 po::value(&intopt)->default_value(10), "SERVER.tcp_listen_backlog"
 			)
-			("TRANSPORT-YAMI.tcp_nonblocking",
-			 po::value(&boolopt)->default_value(true), "TRANSPORT-YAMI.tcp_nonblocking"
+			("SERVER.tcp_nonblocking",
+			 po::value(&boolopt)->default_value(true), "SERVER.tcp_nonblocking"
 			)
-			("TRANSPORT-YAMI.dispatcher_threads",
-			 po::value(&intopt)->default_value(10), "TRANSPORT-YAMI.dispatcher_threads"
+			("SERVER.dispatcher_threads",
+			 po::value(&intopt)->default_value(10), "SERVER.dispatcher_threads"
 			)
 			;
 
-		all_.add(flags).add(generic).add(transport);
+		all_.add(flags).add(generic).add(server);
 
 		po::store(po::command_line_parser(argc, argv).options(all_).run(), vm_);
 		po::notify(vm_);
 
 		if(!has_help()) {
-			config_file_hidden.add(generic).add(transport);
+			config_file_hidden.add(generic).add(server);
 			if(vm_["debug"].as<bool>()) {
 				std::cout << "Reading config file: " << config_path << std::endl;
 			}

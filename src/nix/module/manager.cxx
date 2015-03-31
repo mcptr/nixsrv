@@ -1,6 +1,5 @@
 #include <memory>
 
-#include "nix/impl_types.hxx"
 #include "nix/object_pool.hxx"
 #include "manager.hxx"
 
@@ -8,13 +7,25 @@
 namespace nix {
 
 
-ModuleManager::ModuleManager(ModuleAPI& api,
-							 Logger& logger,
-							 bool fatal)
+ModuleManager::ModuleManager(std::shared_ptr<ModuleAPI> api,
+			  std::shared_ptr<Logger> logger,
+			  bool fatal)
 	: api_(api),
 	  logger_(logger),
 	  fatal_(fatal)
 {
+}
+
+ModuleManager::~ModuleManager()
+{
+	logger_->log_debug("~ModuleManager()");
+	for(auto& it : builtins_) {
+		logger_->log_debug("Deleting builtin module: " + it->get_ident());
+		it.reset();
+	}
+
+	modules_pool_.clear();
+
 }
 
 void ModuleManager::load(const Names_t& modules)
@@ -41,12 +52,30 @@ void ModuleManager::unload()
 	modules_pool_.clear();
 }
 
-void ModuleManager::register_routing(std::shared_ptr<impl::ServerTransport_t> t)
+void ModuleManager::add_builtin(std::shared_ptr<Module> module)
 {
+	builtins_.push_back(module);
+}
+
+
+void ModuleManager::register_routing(std::shared_ptr<nix::Server> server)
+{
+	for(auto& it : builtins_) {
+		logger_->log_debug(
+			"ModuleManager::register_routing(): " +
+			it->get_ident()
+		);
+		server->register_module(it);
+	}
+
 	modules_pool_.apply(
-		[&t] (ModuleInstance& inst)
+		[this, &server] (ModuleInstance& inst)
 		{ 
-			t->register_module(inst.module());
+			this->logger_->log_debug(
+				"ModuleManager::register_routing(): " +
+				inst.module()->get_ident()
+			);
+			server->register_module(inst.module());
 		}
 	);
 }

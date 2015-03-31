@@ -17,7 +17,7 @@ class ModuleInstance
 {
 public:
 	ModuleInstance() = delete;
-	ModuleInstance(ModuleAPI& api,
+	ModuleInstance(std::shared_ptr<ModuleAPI> api,
 				   const std::string& lib_path,
 				   bool fatal = false);
 	~ModuleInstance();
@@ -29,7 +29,7 @@ private:
 	std::shared_ptr<Module> module_ptr_;
 	std::unique_ptr<long> lib_handle_;
 
-	ModuleAPI& api_;
+	std::shared_ptr<ModuleAPI> api_;
 	const std::string lib_path_;
 	bool fatal_;
 };

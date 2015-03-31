@@ -38,7 +38,7 @@ class Dirs(object):
 class Setup(object):
 	base_cxxflags = Split(" ".join([
 		"-std=c++11 -Wall -Wextra -pedantic -O2",
-		"-pipe -pthread -finline-functions -L/usr/lib/gcc/x86_64-linux-gnu/4.8"
+		"-pipe -pthread -finline-functions"
 	]))
 	base_libs = []
 	base_libpath = ["/usr/lib", "/usr/local/lib"]
@@ -289,6 +289,7 @@ translation_units = {
 	"db/connection" : {},
 	"db/instance_config" : {},
 	"db/options" : {},
+	"job" : {},
 	"message/object" : {
 		"env": combinedenv,
 	},
@@ -305,6 +306,9 @@ translation_units = {
 		"env": combinedenv,
 	},
 	"module/api" : {},
+	"module/builtin/job_queue" : {
+		"env": combinedenv,
+	},
 	"module/instance" : {
 		"env": combinedenv,
 	},
@@ -317,16 +321,23 @@ translation_units = {
 		"libs" : ["boost_program_options"],
 		"libpath" : boostenv["LIBPATH"],
 	},
+	#"queue" : {},
 	"response" : {
 		"env": combinedenv,
 	},
 	"route" : {
 		"env": combinedenv,
 	},
-	"transport/options" : {},
-	"transport/yami" : {
-		"env" : yamienv,
+	"server" : {
+		"env": combinedenv,
 	},
+	"server/dispatcher" : {
+		"env": combinedenv,
+	},
+	# "transport/options" : {},
+	# "transport/yami" : {
+	# 	"env" : yamienv,
+	# },
 	"util/fs" : {},
 	"util/string" : {},
 	# ######################################################################

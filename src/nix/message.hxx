@@ -20,7 +20,7 @@ public:
 	typedef typename std::function<void(const Element_t&)> IterFunc_t;
 
 	Message() = default;
-	Message(const std::string& id, int version = 0);
+	Message(const std::string& id, int version = 0);\
 	virtual ~Message() = default;
 	const std::string& get_id() const;
 	int get_version() const;

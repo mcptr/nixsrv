@@ -3,51 +3,46 @@
 
 #include <string>
 #include <functional>
+#include <iostream>
 
-#include "nix/impl_types.hxx"
+#include "nix/message/incoming.hxx"
 
 namespace nix {
-
-
-// fwd
-class Response;
 
 
 class Route
 {
 public:
-	typedef enum { ONE_WAY, TWO_WAY, PUBSUB, CACHE, BROKER, QUEUE } Method_t;
+	typedef enum { SYNC, ASYNC, DEFERRED, PUBLISH } ProcessingType_t;
 
 	typedef enum { AUTH, ANY, RESTRICTED,
 				   API_PUBLIC, API_PRIVATE,
 				   INTERNAL } AccessModifier_t;
 
-	typedef std::function<
-		void(const impl::Request_t&, Response&)
-		> Handler_t;
+	typedef std::function<void(IncomingMessage&)> Handler_t;
 
 	Route() = delete;
 
 	Route(const std::string& route,
-		  Method_t method,
 		  Handler_t& handler,
 		  AccessModifier_t am = RESTRICTED,
+		  ProcessingType_t processing_type = SYNC,
 		  const std::string& description = "");
 
 	virtual ~Route() = default;
 
-	void handle(const impl::Request_t& req, Response& res) const;
+	void handle(IncomingMessage& msg) const;
 
 	inline const std::string& get_route() const { return route_; }
-	inline Method_t get_method() const { return method_; }
 	inline AccessModifier_t get_access_modifier() const { return am_; }
+	inline ProcessingType_t get_processing_type() const { return processing_type_; }
 	inline const std::string& get_description() const { return description_; }
 
 private:
 	const std::string route_;
-	Method_t method_;
 	Handler_t handler_;
 	AccessModifier_t am_;
+	ProcessingType_t processing_type_;
 	const std::string description_;
 };
 

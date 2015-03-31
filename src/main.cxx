@@ -19,9 +19,6 @@
 #include <cstdlib> // bsd
 #include <csignal>
 
-// implementation type (for compile time)
-#include "nix/impl_types.hxx"
-
 // nix
 #include "nix/db/connection.hxx"
 #include "nix/db/options.hxx"
@@ -30,8 +27,12 @@
 #include "nix/module/manager.hxx"
 #include "nix/object_pool.hxx"
 #include "nix/program_options.hxx"
-#include "nix/transport.hxx"
-#include "nix/transport/options.hxx"
+#include "nix/server.hxx"
+#include "nix/options.hxx"
+
+// bulitin modules
+#include "nix/module/builtin/job_queue.hxx"
+
 
 // util
 #include "nix/util/fs.hxx"
@@ -47,7 +48,7 @@ using nix::ModuleAPI;
 using nix::ObjectPool;
 using nix::ProgramOptions;
 using nix::db::Connection;
-using nix::transport::Options;
+using nix::server::Options;
 
 
 
@@ -55,16 +56,16 @@ void setup_modules(ModuleManager::Names_t& v,
 				   const ProgramOptions& po);
 
 
-void setup_transport(Options& options,
-					 const ProgramOptions& po);
+void setup_server(Options& options,
+				  const ProgramOptions& po);
 
 
-void setup_db_pool(ObjectPool<Connection>& pool,
+void setup_db_pool(std::shared_ptr<ObjectPool<Connection>> pool,
 				   const ProgramOptions& po);
 
-void inject_transport_handlers(std::shared_ptr<nix::impl::ServerTransport_t> transport);
+//void inject_server_handlers(std::shared_ptr<nix::Server> server);
 
-void serve(std::shared_ptr<nix::impl::ServerTransport_t> transport);
+void serve(std::shared_ptr<nix::Server> server);
 
 void termination_signal_handler(int sig);
 
@@ -80,7 +81,8 @@ int main(int argc, char** argv)
 	srand(time(NULL));
 
 	ProgramOptions program_options;
-	std::shared_ptr<nix::impl::ServerTransport_t> transport;
+	std::shared_ptr<nix::Server> server;
+	std::shared_ptr<ModuleManager> module_manager;
 
 	try {
 		program_options.parse(argc, argv);
@@ -95,37 +97,44 @@ int main(int argc, char** argv)
 		}
 
 		//--------------------------------------------------------------
-		Logger logger(program_options);
+		std::shared_ptr<Logger> logger(new Logger(program_options));
 
 		ModuleManager::Names_t modules;
 		setup_modules(modules, program_options);
 
-		ObjectPool<Connection> db_pool; // to be fixed
+		std::shared_ptr<ObjectPool<Connection>> db_pool(
+			new ObjectPool<Connection>()); // to be fixed
+
 		setup_db_pool(db_pool, program_options);
 
-		ModuleAPI mod_api(logger, db_pool);
+		std::shared_ptr<ModuleAPI> mod_api(new ModuleAPI(db_pool, logger));
 
-		ModuleManager module_manager(
-			mod_api,
-			logger,
-			program_options.get<bool>("fatal")
+		module_manager.reset(
+			new ModuleManager(mod_api,
+							  logger,
+							  program_options.get<bool>("fatal")));
+
+		module_manager->load(modules);
+
+		Options server_options;
+		setup_server(server_options, program_options);
+
+		server.reset(new nix::Server(server_options, logger));
+
+		// server->register_io_error_handler(
+		// 	[&logger](int err, const char* errmsg) -> void
+		// 	{
+		// 		logger.log_error(errmsg);
+		// 	}
+		// );
+
+		std::shared_ptr<nix::module::JobQueue> job_queue_module(
+			new nix::module::JobQueue(mod_api, 100)
 		);
 
-		module_manager.load(modules);
+		module_manager->add_builtin(job_queue_module);
 
-		Options transport_options;
-		setup_transport(transport_options, program_options);
-
-		transport.reset(new nix::impl::ServerTransport_t(transport_options));
-
-		transport->register_io_error_handler(
-			[&logger](int err, const char* errmsg) -> void
-			{
-				logger.log_error(errmsg);
-			}
-		);
-
-		module_manager.register_routing(transport);
+		module_manager->register_routing(server);
 
 	}
 	catch(std::exception& e) {
@@ -134,7 +143,7 @@ int main(int argc, char** argv)
 	}
 
 	if(program_options.get<bool>("debug")) {
-		transport->register_object("echo", nix::direct_handlers::echo);
+		//server->register_object("echo", nix::direct_handlers::echo);
 	}
 
 	std::signal(SIGINT, termination_signal_handler);
@@ -148,10 +157,12 @@ int main(int argc, char** argv)
 		}
 	}
 
-	threads.push_back(std::thread(serve, transport));
+	threads.push_back(std::thread(serve, server));
 	for(auto& th : threads) {
 		th.join();
 	}
+
+	std::cout << std::endl;
 
 	return EXIT_SUCCESS;
 }
@@ -185,40 +196,22 @@ void setup_modules(ModuleManager::Names_t& v,
 	modules_config.close();
 }
 
-void setup_transport(Options& options,
+void setup_server(Options& options,
 					 const ProgramOptions& po)
 {
 	using std::string;
 	using namespace nix;
-	using nix::transport::Options;
+	using nix::server::Options;
 
-	options.listen_address = po.get<string>("listen_address");
-	options.port = po.get<int>("port");
+	options.address = po.get<string>("address");
 	options.threads = po.get<int>("threads");
 
-	options.tcp_nonblocking = po.get<bool>("TRANSPORT-YAMI.tcp_nonblocking");
-	options.tcp_listen_backlog = po.get<int>("TRANSPORT-YAMI.tcp_listen_backlog");
-	options.dispatcher_threads = po.get<int>("TRANSPORT-YAMI.dispatcher_threads");
-
-	string address_family(po.get<string>("address_family"));
-	util::string::to_lower(util::string::trim(address_family));
-
-
-	if(address_family.compare("unix") == 0) {
-		options.address_family = Options::UNIX;
-	}
-	else if(address_family.compare("tcp") == 0) {
-		options.address_family = Options::TCP;
-	}
-	else if(address_family.compare("udp") == 0) {
-		options.address_family = Options::UDP;
-	}
-	else if(address_family.compare("inproc") == 0) {
-		options.address_family = Options::INPROC;
-	}
+	options.tcp_nonblocking = po.get<bool>("SERVER.tcp_nonblocking");
+	options.tcp_listen_backlog = po.get<int>("SERVER.tcp_listen_backlog");
+	options.dispatcher_threads = po.get<int>("SERVER.dispatcher_threads");
 }
 
-void setup_db_pool(ObjectPool<Connection>& pool,
+void setup_db_pool(std::shared_ptr<ObjectPool<Connection>> pool,
 				   const ProgramOptions& po)
 {
 	using namespace std;
@@ -242,17 +235,17 @@ void setup_db_pool(ObjectPool<Connection>& pool,
 	}
 }
 
-void serve(std::shared_ptr<nix::impl::ServerTransport_t> transport)
+void serve(std::shared_ptr<nix::Server> server)
 {
 	std::unique_lock<std::mutex> lock(main_mtx);
 
 	while(!signaled) {
-		transport->start();
+		server->start();
 		main_cv.wait(lock);
 	}
 
-	transport->stop();
-	transport.reset();
+	server->stop();
+	server.reset();
 	lock.unlock();
 
 }

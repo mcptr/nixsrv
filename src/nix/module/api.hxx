@@ -12,12 +12,12 @@ namespace nix {
 class ModuleAPI
 {
 public:
-	ModuleAPI(Logger& logger_ref,
-			  ObjectPool<db::Connection>& db_pool_ref);
+	ModuleAPI(std::shared_ptr<ObjectPool<db::Connection>> _db_pool,
+			  std::shared_ptr<Logger> _logger);
 
 	// refs
-	Logger& logger;
-	ObjectPool<db::Connection>& db_pool;
+	std::shared_ptr<ObjectPool<db::Connection>> db_pool;
+	std::shared_ptr<Logger> logger;
 };
 
 

@@ -99,12 +99,13 @@ public:
 					std::cv_status status = 
 						cv_.wait_for(lock, std::chrono::milliseconds(timeout));
 					if(status == std::cv_status::timeout) {
-						// will result in nullptr
-						break;
+						lock.unlock();
+						return false;
 					}
 				}
 			}
 		}
+
 		lock.unlock();
 		return !!ptr;
 	}

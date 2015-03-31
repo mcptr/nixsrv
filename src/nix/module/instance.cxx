@@ -8,7 +8,7 @@
 namespace nix {
 
 
-ModuleInstance::ModuleInstance(ModuleAPI& api,
+ModuleInstance::ModuleInstance(std::shared_ptr<ModuleAPI> api,
 							   const std::string& lib_path,
 							   bool fatal)
 	: api_(api),
@@ -47,7 +47,7 @@ bool ModuleInstance::load(std::string& err_msg)
 		return false;
 	}
 
-	module_ptr_ = creator(api_);
+	module_ptr_ = creator(*(api_.get()));
 	lib_handle_.reset((long*)h); // FIXME
 	return !!module_ptr_;
 }

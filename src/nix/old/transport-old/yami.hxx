@@ -52,10 +52,12 @@ private:
 };
 
 
-class YAMIServer : public ServerTransport<yami::incoming_message>
+class YAMIServer
 {
 public:
-	typedef std::function<void(int, const char*)> IOErrorHandler_t;
+	typedef std::vector<std::shared_ptr<const Route>> Routes_t;
+	typedef std::function<void(Message_t&)> DirectHandler_t;
+
 
 	YAMIServer() = delete;
 	explicit YAMIServer(const Options& options);
@@ -68,15 +70,17 @@ public:
 
 	virtual
 	void register_object(const std::string& name, DirectHandler_t handler);
-	void register_io_error_handler(IOErrorHandler_t handler);
 
 private:
 	std::unique_ptr<yami::agent> agent_;
 	std::string build_address() const;
 	YAMIRequestDispatcher dispatcher_;
 	std::string resolved_address_;
-
+	const transport::Options& options_;
 	yami::activity_statistics_monitor stats_callback_;
+
+	Routes_t routing_;
+
 };
 
 

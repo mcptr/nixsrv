@@ -5,12 +5,11 @@
 #include <string>
 #include <memory>
 
-#include "nix/impl_types.hxx"
 #include "nix/module.hxx"
 #include "nix/db/connection.hxx"
 #include "nix/logger.hxx"
 #include "nix/object_pool.hxx"
-#include "nix/transport.hxx"
+#include "nix/server.hxx"
 
 #include "api.hxx"
 #include "instance.hxx"
@@ -26,20 +25,26 @@ public:
 
 
 	ModuleManager() = delete;
-	ModuleManager(ModuleAPI& api,
-				  Logger& logger,
+	ModuleManager(std::shared_ptr<ModuleAPI> api,
+				  std::shared_ptr<Logger> logger,
 				  bool fatal = false);
+
+
+	virtual ~ModuleManager();
 
 	void load(const Names_t& modules);
 	void load(const std::string& module_path);
 	void unload();
 
-	void register_routing(std::shared_ptr<impl::ServerTransport_t> t);
+	void add_builtin(std::shared_ptr<Module> module);
+
+	void register_routing(std::shared_ptr<nix::Server> server);
 private:
 	ObjectPool<ModuleInstance> modules_pool_;
+	std::vector<std::shared_ptr<Module>> builtins_;
 
-	ModuleAPI& api_;
-	Logger& logger_;
+	std::shared_ptr<ModuleAPI> api_;
+	std::shared_ptr<Logger> logger_;
 	bool fatal_;
 };
 
