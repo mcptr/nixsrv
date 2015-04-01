@@ -33,6 +33,7 @@
 
 // bulitin modules
 #include "nix/module/builtin/job_queue.hxx"
+#include "nix/module/builtin/debug.hxx"
 
 
 // util
@@ -135,10 +136,13 @@ int main(int argc, char** argv)
 		std::shared_ptr<nix::module::JobQueue> job_queue_module(
 			new nix::module::JobQueue(mod_api, 100)
 		);
-
 		setup_builtin_job_queue(job_queue_module, program_options);
-
 		module_manager->add_builtin(job_queue_module);
+
+		std::shared_ptr<nix::module::Debug> debug_module(
+			new nix::module::Debug(mod_api)
+		);
+		module_manager->add_builtin(debug_module);
 
 		module_manager->register_routing(server);
 
@@ -149,7 +153,7 @@ int main(int argc, char** argv)
 	}
 
 	if(program_options.get<bool>("debug")) {
-		//server->register_object("echo", nix::direct_handlers::echo);
+		server->register_object("echo", nix::direct_handlers::echo);
 	}
 
 	std::signal(SIGINT, termination_signal_handler);
@@ -167,6 +171,10 @@ int main(int argc, char** argv)
 	for(auto& th : threads) {
 		th.join();
 	}
+
+	// serve(server);
+	// int dummy;
+	// std::cin >> dummy;
 
 	std::cout << std::endl;
 

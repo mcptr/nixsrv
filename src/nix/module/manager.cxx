@@ -25,7 +25,6 @@ ModuleManager::~ModuleManager()
 	}
 
 	modules_pool_.clear();
-
 }
 
 void ModuleManager::load(const Names_t& modules)

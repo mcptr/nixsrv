@@ -26,6 +26,7 @@ public:
 	virtual Object& set(const std::string& k, const std::string& v);
 	virtual Object& set(const std::string& k, Array& v);
  	virtual Object& set(const std::string& k, Element& v);
+	
 };
 
 

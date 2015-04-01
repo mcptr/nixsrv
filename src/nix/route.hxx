@@ -1,11 +1,13 @@
 #ifndef NIX_ROUTING_ROUTE_HXX
 #define NIX_ROUTING_ROUTE_HXX
 
+#include <memory>
 #include <string>
 #include <functional>
 #include <iostream>
 
 #include "nix/message/incoming.hxx"
+
 
 namespace nix {
 
@@ -13,25 +15,28 @@ namespace nix {
 class Route
 {
 public:
-	typedef enum { SYNC, ASYNC, DEFERRED, PUBLISH } ProcessingType_t;
+	typedef enum { SYNC, ASYNC, FUTURE, PUBLISH } ProcessingType_t;
 
-	typedef enum { AUTH, ANY, RESTRICTED,
-				   API_PUBLIC, API_PRIVATE,
-				   INTERNAL } AccessModifier_t;
 
-	typedef std::function<void(IncomingMessage&)> Handler_t;
+	// ANY - allow from all - unauthenticated
+	// PUBLIC - allow any public api_key
+	// PRIVATE - for use by servers
+	// ADMIN - for operational commands
+	typedef enum { ANY, PUBLIC, API_PRIVATE, ADMIN } AccessModifier_t;
+
+	typedef std::function<void(std::shared_ptr<IncomingMessage>)> Handler_t;
 
 	Route() = delete;
 
 	Route(const std::string& route,
-		  Handler_t& handler,
-		  AccessModifier_t am = RESTRICTED,
+		  Handler_t handler,
+		  AccessModifier_t am = API_PRIVATE,
 		  ProcessingType_t processing_type = SYNC,
 		  const std::string& description = "");
 
 	virtual ~Route() = default;
 
-	void handle(IncomingMessage& msg) const;
+	void handle(std::shared_ptr<IncomingMessage> msg) const;
 
 	inline const std::string& get_route() const { return route_; }
 	inline AccessModifier_t get_access_modifier() const { return am_; }

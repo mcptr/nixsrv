@@ -21,12 +21,12 @@ OutgoingMessage::OutgoingMessage(const std::string& id, Object& data, int versio
 
 void OutgoingMessage::set_content(Object& v)
 {
-	this->content_.append("message", v.get_obj());
+	this->content_.append("content", v.get_obj());
 }
-	
+
 void OutgoingMessage::set_content(Array& v)
 {
-	this->content_.appendArray("message", v.get_obj());
+	this->content_.appendArray("content", v.get_obj());
 }
 
 void OutgoingMessage::_set_meta()

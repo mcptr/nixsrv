@@ -5,7 +5,7 @@ namespace nix {
 
 
 Route::Route(const std::string& route,
-			 Handler_t& handler,
+			 Handler_t handler,
 			 AccessModifier_t am,
 			 ProcessingType_t processing_type,
 			 const std::string& description)
@@ -17,7 +17,7 @@ Route::Route(const std::string& route,
 {
 }
 
-void Route::handle(IncomingMessage& msg) const
+void Route::handle(std::shared_ptr<IncomingMessage> msg) const
 {
 	handler_(msg);
 }

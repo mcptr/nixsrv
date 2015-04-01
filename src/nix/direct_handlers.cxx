@@ -7,7 +7,7 @@ namespace direct_handlers {
 
 void echo(yami::incoming_message& im)
 {
-	im.reply(im.get_parameters());
+	im.reply();//im.get_parameters());
 }
 
 

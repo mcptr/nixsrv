@@ -281,6 +281,9 @@ extend_env(testsenv, [dbenv, yamienv, boostenv, combinedenv])
 # ------------------------------------------------------------------------
 
 translation_units = {
+	"core/auth" : {
+		"env": yamienv,
+	},
 	# ------------------------
 	"direct_handlers" : {
 		"env": combinedenv,
@@ -307,6 +310,9 @@ translation_units = {
 	},
 	"module/api" : {},
 	"module/builtin/job_queue" : {
+		"env": combinedenv,
+	},
+	"module/builtin/debug" : {
 		"env": combinedenv,
 	},
 	"module/instance" : {

@@ -28,12 +28,12 @@ void JobQueue::init_queue(std::shared_ptr<nix::queue::InstanceConfig> inst)
 		new Queue<Job>(inst->size)
 	);
 
-	Route::Handler_t handler = [](IncomingMessage& im) {};
+	Route::Handler_t handler = [](std::shared_ptr<IncomingMessage> im) {};
 
 	std::string prefix = "job/" + inst->name;
 
 	std::shared_ptr<Route> submit(
-		new Route(prefix + "/submit", handler, Route::AUTH, Route::DEFERRED)
+		new Route(prefix + "/submit", handler, Route::PUBLIC, Route::FUTURE)
 	);
 
 	std::shared_ptr<Route> progress_publish(
@@ -45,7 +45,11 @@ void JobQueue::init_queue(std::shared_ptr<nix::queue::InstanceConfig> inst)
 	);
 
 	std::shared_ptr<Route> result_get(
-		new Route(prefix + "/result/get", handler, Route::AUTH, Route::SYNC)
+		new Route(prefix + "/result/get", handler, Route::PUBLIC, Route::SYNC)
+	);
+
+	std::shared_ptr<Route> queue_clear(
+		new Route(prefix + "/clear", handler, Route::ADMIN, Route::SYNC)
 	);
 
 	routes_.push_back(submit);

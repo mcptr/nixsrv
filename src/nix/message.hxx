@@ -22,8 +22,24 @@ public:
 	Message() = default;
 	Message(const std::string& id, int version = 0);\
 	virtual ~Message() = default;
+
 	const std::string& get_id() const;
 	int get_version() const;
+
+	const std::string& get_error_msg() const;
+	int get_error_code() const;
+
+	void set_error_code(int code)
+	{
+		this->content_.append("@error_code", code);
+	}
+
+	void set_error_msg(const std::string& msg)
+	{
+		this->content_.append("@error", msg);
+	}
+
+
 	std::string to_string();
 	const T& get_raw() const;
 
@@ -81,6 +97,8 @@ protected:
 	int version_;
 	T content_;
 };
+
+
 
 template<class T, class ElementT>
 Message<T, ElementT>::Message(const std::string& id, int version)

@@ -4,7 +4,7 @@
 #include <yami4-cpp/yami.h>
 #include <string>
 #include <memory>
-
+#include <functional>
 #include "nix/module.hxx"
 
 #include "server/options.hxx"
@@ -16,7 +16,10 @@ namespace nix {
 
 class Server {
 public:
+	typedef std::function<void(yami::incoming_message&)> DirectHandler_t;
+
 	Server() = delete;
+	Server(const Server& other) = delete;
 	explicit Server(const server::Options& options, std::shared_ptr<Logger> logger);
 	virtual ~Server();
 
@@ -25,8 +28,8 @@ public:
 
 	void register_module(std::shared_ptr<const Module> inst);
 
-	//virtual
-	//void register_object(const std::string& name, DirectHandler_t handler);
+	virtual	void register_object(const std::string& name,
+								 DirectHandler_t handler);
 
 private:
 	const std::string address_;

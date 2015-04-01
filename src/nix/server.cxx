@@ -1,4 +1,5 @@
 #include <string>
+#include <iostream>
 
 #include "server.hxx"
 
@@ -48,21 +49,16 @@ void Server::stop()
 
 void Server::register_module(std::shared_ptr<const Module> inst)
 {
-	// dispatcher_.set_routing(
-	// 	inst->get_ident(),
-	// 	inst->get_routing()
-	// );
 	dispatcher_->add_routes(inst->get_ident(), inst->get_routing());
-	
-	// agent_->register_object(inst->get_ident(), dispatcher_);
+	logger_->log_debug("Registering object: " + inst->get_ident());
+	agent_->register_object(inst->get_ident(), *dispatcher_);
 }
 
-// void Server::register_object(
-// 	const std::string& name,
-// 	DirectHandler_t handler)
-// {
-// 	agent_->register_object(name, handler);
-// }
+void Server::register_object(const std::string& name,
+							 DirectHandler_t handler)
+{
+	agent_->register_object(name, handler);
+}
 
 
 } // nix
