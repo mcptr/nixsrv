@@ -1,3 +1,5 @@
+#include "nix/common.hxx"
+
 #include "job_queue.hxx"
 
 namespace nix {
@@ -11,18 +13,19 @@ JobQueue::JobQueue(std::shared_ptr<ModuleAPI> api, size_t queue_size)
 JobQueue::~JobQueue()
 {
 	for(auto& it : queues_) {
-		api_->logger->log_debug(
-			"Deleting queue: " + it.first 
-			+ "(" + std::to_string(it.second->size()) + " jobs left)"
-		);
+		LOG(DEBUG) << "Deleting queue: " << it.first 
+				   << "("
+				   << std::to_string(it.second->size())
+				   << " jobs left)";
 		delete it.second;
 	}
 }
 
 void JobQueue::init_queue(std::shared_ptr<nix::queue::InstanceConfig> inst)
 {
-	api_->logger->log_debug("JobQueue::init_queue(): " + inst->name +
-							" / size " + std::to_string(inst->size));
+	LOG(DEBUG) << inst->name
+			   << " / size " << std::to_string(inst->size);
+
 	queues_.emplace(
 		inst->name, 
 		new Queue<Job>(inst->size)

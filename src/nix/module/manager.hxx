@@ -7,7 +7,6 @@
 
 #include "nix/module.hxx"
 #include "nix/db/connection.hxx"
-#include "nix/logger.hxx"
 #include "nix/object_pool.hxx"
 #include "nix/server.hxx"
 
@@ -26,7 +25,6 @@ public:
 
 	ModuleManager() = delete;
 	ModuleManager(std::shared_ptr<ModuleAPI> api,
-				  std::shared_ptr<Logger> logger,
 				  bool fatal = false);
 
 
@@ -39,13 +37,16 @@ public:
 	void add_builtin(std::shared_ptr<Module> module);
 
 	void register_routing(std::shared_ptr<nix::Server> server);
+
+	void start_all();
+	void stop_all();
 private:
 	ObjectPool<ModuleInstance> modules_pool_;
 	std::vector<std::shared_ptr<Module>> builtins_;
 
 	std::shared_ptr<ModuleAPI> api_;
-	std::shared_ptr<Logger> logger_;
 	bool fatal_;
+	bool running_ = false;
 };
 
 

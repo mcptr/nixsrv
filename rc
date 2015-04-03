@@ -7,7 +7,7 @@ PID=`pidof $PROGNAME`
 PROG="$MY_DIR/bin/$PROGNAME"
 PIDPATH="$MY_DIR/var/pid/srv.pid"
 
-export LD_LIBRARY_PATH=/usr/local/lib64/soci:/usr/local/lib64/yami4
+export LD_LIBRARY_PATH=/usr/local/lib64/soci:/usr/local/lib64/yami4:$MY_DIR/lib/external/*
 
 DBTYPE=${DBTYPE:-postgresql}
 

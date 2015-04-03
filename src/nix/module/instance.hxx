@@ -21,7 +21,7 @@ public:
 				   const std::string& lib_path,
 				   bool fatal = false);
 	~ModuleInstance();
-	std::shared_ptr<const Module> module() const;
+	std::shared_ptr<Module> module();
 
 	bool load(std::string& err_msg);
 	bool unload(std::string& err_msg);

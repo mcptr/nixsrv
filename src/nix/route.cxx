@@ -17,9 +17,9 @@ Route::Route(const std::string& route,
 {
 }
 
-void Route::handle(std::shared_ptr<IncomingMessage> msg) const
+void Route::handle(std::unique_ptr<IncomingMessage> msg) const
 {
-	handler_(msg);
+	handler_(std::move(msg));
 }
 
 } // nix

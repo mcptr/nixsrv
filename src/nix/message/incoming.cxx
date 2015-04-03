@@ -1,5 +1,6 @@
 #include "incoming.hxx"
-
+#include "nix/common.hxx"
+#include <exception>
 
 namespace nix {
 
@@ -35,17 +36,32 @@ void IncomingMessage::reply(OutgoingMessage& msg)
 {
 	yami::parameters params;
 	params.set_string("message", msg.to_string());
-	msg_.reply(params);
+	try {
+		msg_.reply(params);
+	}
+	catch(yami::yami_runtime_error& e) {
+		LOG(DEBUG) << "Exception: " << e.what();
+	}
 }
 
 void IncomingMessage::reply()
 {
-	msg_.reply();
+	try {
+		msg_.reply();
+	}
+	catch(yami::yami_runtime_error& e) {
+		LOG(DEBUG) << "Exception: " << e.what();
+	}
 }
 
 void IncomingMessage::reject()
 {
-	msg_.reject();
+	try {
+		msg_.reject();
+	}
+	catch(yami::yami_runtime_error& e) {
+		LOG(DEBUG) << "Exception: " << e.what();
+	}
 }
 
 

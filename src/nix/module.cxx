@@ -1,4 +1,5 @@
 #include "module.hxx"
+#include "nix/common.hxx"
 
 
 namespace nix {
@@ -13,7 +14,7 @@ Module::Module(std::shared_ptr<ModuleAPI> api, const std::string& id, int versio
 
 Module::~Module()
 {
-	api_->logger->log_debug("~Module(): " + this->get_ident());
+	LOG(DEBUG) << this->get_ident();
 }
 
 const std::string& Module::get_ident() const
@@ -29,6 +30,16 @@ int Module::get_version() const
 void Module::deleter(Module *ptr)
 {
 	delete ptr;
+}
+
+void Module::start()
+{
+	/* default impl does nothing */
+}
+
+void Module::stop()
+{
+	/* default impl does nothing */
 }
 
 

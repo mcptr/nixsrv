@@ -36,7 +36,7 @@ int main(int argc, char * argv[])
 	yami::agent client_agent;
 
 	yami::parameters params;
-	for(int i = 0; i < 1; i++) {
+	for(int i = 0; i < 10000; i++) {
 		std::unique_ptr<yami::outgoing_message> om(
 			client_agent.send(server_address, "Debug", "debug_async", params)
 		);

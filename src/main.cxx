@@ -4,26 +4,28 @@
 #include <ctime>
 #include <memory>
 #include <functional>
-
-// for testing
+#include <fstream>
 #include <thread>
-#include <chrono>
 #include <vector>
-#include <functional>
-#include <sstream>
 #include <mutex>
 #include <condition_variable>
+
+// os
+#include <sys/stat.h>
+#include <sys/types.h>
+
 
 // daemon
 #include <unistd.h> // linux
 #include <cstdlib> // bsd
 #include <csignal>
 
+
 // nix
+#include "nix/common.hxx"
 #include "nix/db/connection.hxx"
 #include "nix/db/options.hxx"
 #include "nix/queue/options.hxx"
-#include "nix/logger.hxx"
 #include "nix/module/api.hxx"
 #include "nix/module/manager.hxx"
 #include "nix/object_pool.hxx"
@@ -43,8 +45,7 @@
 // devel
 #include "nix/direct_handlers.hxx"
 
-
-using nix::Logger;
+ 
 using nix::ModuleManager;
 using nix::ModuleAPI;
 using nix::ObjectPool;
@@ -52,6 +53,8 @@ using nix::ProgramOptions;
 using nix::db::Connection;
 using nix::server::Options;
 
+
+std::string get_log_file_path(const ProgramOptions& options);
 
 
 void setup_modules(ModuleManager::Names_t& v,
@@ -81,62 +84,83 @@ int signaled = false;
 
 std::vector<std::thread> threads;
 
+INITIALIZE_EASYLOGGINGPP
+
+void crash_handler(int sig) {
+	LOG(ERROR) << "Crashed";
+	el::Helpers::logCrashReason(sig, true);
+	el::Helpers::crashAbort(sig);
+}
+
+
 int main(int argc, char** argv)
 {
 	srand(time(NULL));
 
-	ProgramOptions program_options;
+	ProgramOptions po;
 	std::shared_ptr<nix::Server> server;
 	std::shared_ptr<ModuleManager> module_manager;
-
+	
 	try {
-		program_options.parse(argc, argv);
+		po.parse(argc, argv);
 		
-		if(program_options.has_help()) {
-			program_options.display_help();
+		if(po.has_help()) {
+			po.display_help();
 			return 0;
 		}
 
-		if(program_options.get<bool>("debug")) {
-			program_options.dump_variables_map();
+		if(po.get<bool>("debug")) {
+			po.dump_variables_map();
 		}
 
 		//--------------------------------------------------------------
-		std::shared_ptr<Logger> logger(new Logger(program_options));
+		bool is_foreground = po.get<bool>("foreground");
+
+		std::string base_dir(
+			nix::util::fs::resolve_path(po.get<std::string>("basedir"))
+		);
+
+		std::string logger_config_path = base_dir + "/etc/log.conf";
+		el::Configurations conf(logger_config_path);
+
+		conf.setGlobally(
+			el::ConfigurationType::ToStandardOutput,
+			is_foreground ? "true" : "false");
+
+		conf.setGlobally(
+			el::ConfigurationType::Filename,
+			get_log_file_path(po));
+
+		el::Loggers::reconfigureAllLoggers(conf);
+		el::Helpers::setCrashHandler(crash_handler);
+
+		// logging configuration end
 
 		ModuleManager::Names_t modules;
-		setup_modules(modules, program_options);
+		setup_modules(modules, po);
 
 		std::shared_ptr<ObjectPool<Connection>> db_pool(
 			new ObjectPool<Connection>()); // to be fixed
 
-		setup_db_pool(db_pool, program_options);
+		setup_db_pool(db_pool, po);
 
-		std::shared_ptr<ModuleAPI> mod_api(new ModuleAPI(db_pool, logger));
+		std::shared_ptr<ModuleAPI> mod_api(new ModuleAPI(db_pool));
 
 		module_manager.reset(
 			new ModuleManager(mod_api,
-							  logger,
-							  program_options.get<bool>("fatal")));
+							  po.get<bool>("fatal")));
 
 		module_manager->load(modules);
 
 		Options server_options;
-		setup_server(server_options, program_options);
+		setup_server(server_options, po);
 
-		server.reset(new nix::Server(server_options, logger));
-
-		// server->register_io_error_handler(
-		// 	[&logger](int err, const char* errmsg) -> void
-		// 	{
-		// 		logger.log_error(errmsg);
-		// 	}
-		// );
+		server.reset(new nix::Server(server_options));
 
 		std::shared_ptr<nix::module::JobQueue> job_queue_module(
 			new nix::module::JobQueue(mod_api, 100)
 		);
-		setup_builtin_job_queue(job_queue_module, program_options);
+		setup_builtin_job_queue(job_queue_module, po);
 		module_manager->add_builtin(job_queue_module);
 
 		std::shared_ptr<nix::module::Debug> debug_module(
@@ -145,6 +169,7 @@ int main(int argc, char** argv)
 		module_manager->add_builtin(debug_module);
 
 		module_manager->register_routing(server);
+		module_manager->start_all();
 
 	}
 	catch(std::exception& e) {
@@ -152,14 +177,15 @@ int main(int argc, char** argv)
 		return EXIT_FAILURE;
 	}
 
-	if(program_options.get<bool>("debug")) {
+	if(po.get<bool>("debug")) {
 		server->register_object("echo", nix::direct_handlers::echo);
 	}
 
 	std::signal(SIGINT, termination_signal_handler);
 	std::signal(SIGTERM, termination_signal_handler);
 
-	if(!program_options.get<bool>("foreground")) {
+	bool is_foreground = po.get<bool>("foreground");
+	if(!is_foreground) {
 		int attached = daemon(1, 1);
 		if(attached) {
 			std::cerr << "daemon() failed: " << std::endl;
@@ -176,7 +202,9 @@ int main(int argc, char** argv)
 	// int dummy;
 	// std::cin >> dummy;
 
-	std::cout << std::endl;
+	if(!is_foreground) {
+		std::cout << std::endl;
+	}
 
 	return EXIT_SUCCESS;
 }
@@ -279,6 +307,39 @@ void setup_builtin_job_queue(std::shared_ptr<nix::module::JobQueue> jq,
 	}
 }
 
+std::string get_log_file_path(const ProgramOptions& po)
+{
+	std::string log_dir(
+		nix::util::fs::resolve_path(
+			po.get<std::string>("logdir")
+		)
+	);
+	
+	if(!nix::util::fs::path_exists(log_dir)) {
+		mode_t mode = S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH;
+		if(mkdir(log_dir.c_str(), mode) != 0) {
+			throw nix::InitializationError(
+				"Cannot create log directory: " + log_dir);
+		}
+
+		if(!po.get<bool>("foreground")) {
+			std::cout << "Created log directory: "
+					  << log_dir << std::endl;
+		}
+	}
+
+	std::string log_path = log_dir + "/error.log";
+
+	// test if we can open the error.log for writing
+	std::ofstream fh;
+	fh.open(log_path, std::ios::out | std::ios::app | std::ios::binary);
+	if(!fh.is_open()) {
+		throw nix::InitializationError(
+			"Cannot open log file: " + log_path);
+	}
+	
+	return log_path;
+}
 
 void termination_signal_handler(int /* sig */)
 {

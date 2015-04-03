@@ -23,3 +23,8 @@ doc/doxy
 var/
 __pycache__
 .emacs*
+core
+doc/
+old/
+lib/
+src/external/g3log

@@ -24,7 +24,7 @@ ModuleInstance::~ModuleInstance()
 	unload(err);
 }
 
-std::shared_ptr<const Module> ModuleInstance::module() const
+std::shared_ptr<Module> ModuleInstance::module()
 {
 	return module_ptr_;
 }

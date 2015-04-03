@@ -38,7 +38,7 @@ class Dirs(object):
 class Setup(object):
 	base_cxxflags = Split(" ".join([
 		"-std=c++11 -Wall -Wextra -pedantic -O2",
-		"-pipe -pthread -finline-functions"
+		"-pipe -pthread -finline-functions -Wreorder"
 	]))
 	base_libs = []
 	base_libpath = ["/usr/lib", "/usr/local/lib"]
@@ -70,7 +70,7 @@ class Setup(object):
 	def setup_cpp_defines(self):
 		sql_backend = "USE_SQL_BACKEND"
 		opt2define = {
-			"debug" : ["DEBUG"],
+			"debug" : ["DEBUG_BUILD"],
 			"mysql" : ["MYSQL_BACKEND", sql_backend],
 			"postgresql" : ["PGSQL_BACKEND", sql_backend],
 			"mongodb" : ["MONGODB_BACKEND"],
@@ -119,7 +119,10 @@ def resolve_libpath(directory, fatal = True):
 			"/usr/lib", "/usr/lib64"
 		],
 	}
-	search_paths = __base[THIS_PLATFORM]
+
+	custom_lib_paths = ["lib/external"]
+
+	search_paths = __base[THIS_PLATFORM] + custom_lib_paths
 	for sp in search_paths:
 		candidate = "%s/%s" % (sp, directory)
 		if os.path.isdir(candidate):
@@ -161,7 +164,7 @@ baseenv = Environment(
 baseenv['ENV']['TERM'] = os.environ['TERM']
 
 extend_env(baseenv, {
-	"CPPPATH" : [resolve_include("mongo")],
+	"CPPPATH" : [resolve_include("mongo"), "src/external/include"],
 	"LIBS" : ["mongoclient"],
 	"LIBPATH" : [resolve_libpath("mongo")]
 })
@@ -315,13 +318,15 @@ translation_units = {
 	"module/builtin/debug" : {
 		"env": combinedenv,
 	},
+	"module/builtin/debug/worker" : {
+		"env": combinedenv,
+	},
 	"module/instance" : {
 		"env": combinedenv,
 	},
 	"module/manager" : {
 		"env": combinedenv,
 	},
-	"logger" : {},
 	"options" : {},
 	"program_options" : {
 		"libs" : ["boost_program_options"],

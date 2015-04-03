@@ -24,7 +24,7 @@ public:
 	// ADMIN - for operational commands
 	typedef enum { ANY, PUBLIC, API_PRIVATE, ADMIN } AccessModifier_t;
 
-	typedef std::function<void(std::shared_ptr<IncomingMessage>)> Handler_t;
+	typedef std::function<void(std::unique_ptr<IncomingMessage>)> Handler_t;
 
 	Route() = delete;
 
@@ -36,7 +36,7 @@ public:
 
 	virtual ~Route() = default;
 
-	void handle(std::shared_ptr<IncomingMessage> msg) const;
+	void handle(std::unique_ptr<IncomingMessage> msg) const;
 
 	inline const std::string& get_route() const { return route_; }
 	inline AccessModifier_t get_access_modifier() const { return am_; }

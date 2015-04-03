@@ -7,7 +7,6 @@
 
 #include "nix/core/auth.hxx"
 #include "nix/route.hxx"
-#include "nix/logger.hxx"
 #include "nix/module.hxx"
 
 
@@ -21,9 +20,8 @@ public:
 	typedef std::map<const std::string,
 					 std::shared_ptr<Route>> Routing_t;
 
-	Dispatcher() = delete;
-	Dispatcher(std::shared_ptr<Logger> logger);
-	virtual ~Dispatcher();
+	Dispatcher() = default;
+	virtual ~Dispatcher() = default;
 
 	void add_routes(const std::string& module,
 					const Module::Routes_t& routes);
@@ -34,7 +32,6 @@ public:
 void operator()(yami::incoming_message& msg);
 
 protected:
-	std::shared_ptr<Logger> logger_;
 	Routing_t routing_;
 	nix::core::Auth auth_;
 };

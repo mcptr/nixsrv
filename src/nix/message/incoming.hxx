@@ -20,7 +20,7 @@ public:
 	void reply();
 	void reject();
 protected:
-	yami::incoming_message& msg_;
+	yami::incoming_message msg_;
 	virtual std::string _to_string();
 };
 

@@ -20,7 +20,7 @@ public:
 
 	Server() = delete;
 	Server(const Server& other) = delete;
-	explicit Server(const server::Options& options, std::shared_ptr<Logger> logger);
+	explicit Server(const server::Options& options);
 	virtual ~Server();
 
 	void start();
@@ -33,11 +33,9 @@ public:
 
 private:
 	const std::string address_;
-	std::shared_ptr<Logger> logger_;
 	std::unique_ptr<yami::agent> agent_;
 	std::string resolved_address_;
-
-	std::shared_ptr<server::Dispatcher> dispatcher_;
+	server::Dispatcher dispatcher_;
 };
 
 

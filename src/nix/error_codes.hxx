@@ -5,7 +5,11 @@ namespace nix {
 namespace error_code {
 
 
-const int auth_unauthorized = 101;
+// 1000 (auth failures)
+const int auth_unauthorized = 1001;
+
+// 2000 (temporary problem)
+const int temp_limit_reached = 2001;
 
 
 } // error_code

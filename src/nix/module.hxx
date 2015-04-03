@@ -35,6 +35,9 @@ public:
 	{
 		return routes_;
 	}
+	
+	virtual void start();
+	virtual void stop();
 protected:
 	std::shared_ptr<ModuleAPI> api_;
 	Routes_t routes_;

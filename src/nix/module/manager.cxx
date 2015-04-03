@@ -1,5 +1,6 @@
 #include <memory>
 
+#include "nix/common.hxx"
 #include "nix/object_pool.hxx"
 #include "manager.hxx"
 
@@ -8,19 +9,17 @@ namespace nix {
 
 
 ModuleManager::ModuleManager(std::shared_ptr<ModuleAPI> api,
-			  std::shared_ptr<Logger> logger,
 			  bool fatal)
 	: api_(api),
-	  logger_(logger),
 	  fatal_(fatal)
 {
 }
 
 ModuleManager::~ModuleManager()
 {
-	logger_->log_debug("~ModuleManager()");
+	stop_all();
 	for(auto& it : builtins_) {
-		logger_->log_debug("Deleting builtin module: " + it->get_ident());
+		LOG(DEBUG) << "Deleting builtin module: " << it->get_ident();
 		it.reset();
 	}
 
@@ -51,6 +50,49 @@ void ModuleManager::unload()
 	modules_pool_.clear();
 }
 
+void ModuleManager::start_all()
+{
+	for(auto& it : builtins_) {
+		LOG(DEBUG) << "Starting builtin module: " << it->get_ident();
+		it->start();
+	}
+
+	modules_pool_.apply(
+		[] (ModuleInstance& inst) 
+		{ 
+			LOG(DEBUG) << "Starting module: " 
+					   << inst.module()->get_ident();
+			inst.module()->start();
+		}
+	);
+
+	running_ = true;
+}
+
+void ModuleManager::stop_all()
+{
+	if(!running_) {
+		return;
+	}
+
+	for(auto& it : builtins_) {
+		LOG(DEBUG) << "Stoping builtin module: "  << it->get_ident();
+		it->stop();
+	}
+
+	modules_pool_.apply(
+		[] (ModuleInstance& inst)
+		{ 
+			LOG(DEBUG) << "StartingSopting module: "
+					   << inst.module()->get_ident();
+			inst.module()->stop();
+		}
+	);
+
+	running_ = false;
+}
+
+
 void ModuleManager::add_builtin(std::shared_ptr<Module> module)
 {
 	builtins_.push_back(module);
@@ -60,20 +102,14 @@ void ModuleManager::add_builtin(std::shared_ptr<Module> module)
 void ModuleManager::register_routing(std::shared_ptr<nix::Server> server)
 {
 	for(auto& it : builtins_) {
-		logger_->log_debug(
-			"ModuleManager::register_routing(): " +
-			it->get_ident()
-		);
+		LOG(DEBUG) << it->get_ident();
 		server->register_module(it);
 	}
 
 	modules_pool_.apply(
-		[this, &server] (ModuleInstance& inst)
+		[&server] (ModuleInstance& inst)
 		{ 
-			this->logger_->log_debug(
-				"ModuleManager::register_routing(): " +
-				inst.module()->get_ident()
-			);
+			LOG(DEBUG) << inst.module()->get_ident();
 			server->register_module(inst.module());
 		}
 	);
