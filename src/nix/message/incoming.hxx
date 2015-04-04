@@ -3,25 +3,24 @@
 
 #include <yami4-cpp/yami.h>
 #include "nix/message.hxx"
-#include "nix/message/outgoing.hxx"
 
 
 namespace nix {
 
 
-class IncomingMessage : public Message<mongo::BSONObj, mongo::BSONElement>
+class IncomingMessage : public Message
 {
 public:
 	IncomingMessage() = delete;
 	IncomingMessage(yami::incoming_message& msg);
 	virtual ~IncomingMessage() = default;
-	virtual bool parse(const std::string& input, bool validate_msg = false);
-	void reply(OutgoingMessage& msg);
 	void reply();
-	void reject();
+	void reply(Message& msg);
+	void reply_with_error(int error_code, const std::string& msg);
+	void reject(const std::string& reason = std::string());
+	void reject(int error_code, const std::string& reason = std::string());
 protected:
 	yami::incoming_message msg_;
-	virtual std::string _to_string();
 };
 
 

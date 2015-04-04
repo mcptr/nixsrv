@@ -92,6 +92,7 @@ def resolve_include(path, **kwargs):
 		"linux" : ["/usr/local", "/usr"],
 		"freebsd" : ["/usr/local", "/usr"],
 	}
+
 	search_paths = __base.get(THIS_PLATFORM)
 	for sp in search_paths:
 		candidates = [os.path.join(sp, "include", path)]
@@ -164,9 +165,9 @@ baseenv = Environment(
 baseenv['ENV']['TERM'] = os.environ['TERM']
 
 extend_env(baseenv, {
-	"CPPPATH" : [resolve_include("mongo"), "src/external/include"],
-	"LIBS" : ["mongoclient"],
-	"LIBPATH" : [resolve_libpath("mongo")]
+	"CPPPATH" : ["src/external/include"], # resolve_include("jsoncpp")],
+	"LIBS" : ["jsoncpp"],
+	"LIBPATH" : [resolve_libpath("jsoncpp")]
 })
 
 # ------------------------------------------------------------------------
@@ -296,16 +297,10 @@ translation_units = {
 	"db/instance_config" : {},
 	"db/options" : {},
 	"job" : {},
-	"message/object" : {
-		"env": combinedenv,
-	},
-	"message/array" : {
+	"message" : {
 		"env": combinedenv,
 	},
 	"message/incoming" : {
-		"env": combinedenv,
-	},
-	"message/outgoing" : {
 		"env": combinedenv,
 	},
 	"module" : {
@@ -333,9 +328,6 @@ translation_units = {
 		"libpath" : boostenv["LIBPATH"],
 	},
 	"queue/options" : {},
-	"response" : {
-		"env": combinedenv,
-	},
 	"route" : {
 		"env": combinedenv,
 	},

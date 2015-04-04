@@ -1,228 +1,139 @@
 #ifndef NIX_MESSAGE_HXX
 #define NIX_MESSAGE_HXX
 
-#include <iostream>
+#include <jsoncpp/reader.h>
+#include <jsoncpp/writer.h>
+#include <jsoncpp/value.h>
+#include <memory>
+//#include <fstream>
 #include <string>
-#include <functional>
-#include <mongo/bson/bson.h>
-#include <mongo/db/json.h>
+#include <exception>
+
+#include "nix/util/string.hxx"
 
 
 namespace nix {
 
 
-template<class T, class ElementT>
 class Message
 {
 public:
-	typedef T Object_t;
-	typedef ElementT Element_t;
-	typedef typename std::function<void(const Element_t&)> IterFunc_t;
-
-	Message() = default;
-	Message(const std::string& id, int version = 0);\
+	Message();
+	explicit Message(Json::Value& root);
+	explicit Message(const std::string& json_string);
 	virtual ~Message() = default;
 
-	const std::string& get_id() const;
-	int get_version() const;
+	virtual void parse(const std::string& json_string) final;
 
-	const std::string& get_error_msg() const;
-	int get_error_code() const;
-
-	void set_error_code(int code)
+	inline Json::Value& raw()
 	{
-		this->content_.append("@error_code", code);
+		return root_;
 	}
 
-	void set_error_msg(const std::string& msg)
+	inline const Json::Value& raw_const() const
 	{
-		this->content_.append("@error", msg);
+		return root_;
 	}
 
+	Json::Value get_raw_value(const std::string& k);
 
-	std::string to_string();
-	const T& get_raw() const;
+	// value getters
+	virtual std::string get(const std::string& k, const char* default_value) const;
+	virtual std::string get(const std::string& k, const std::string& default_value) const;
+	virtual int get(const std::string& k, int default_value) const;
+	virtual double get(const std::string& k, double default_value) const;
+	virtual long long get(const std::string& k, long long default_value) const;
+	virtual bool get(const std::string& k, bool default_value) const;
 
-	// field getters
-	int get_integer(const std::string& k, int dflt = 0L) const;
-	long long get_long(const std::string& k, long long dflt = 0) const;
-	std::string get_string(const std::string& k, const std::string& dflt = "") const;
-	double get_double(const std::string& k, double dlft = 0) const;
-	bool get_bool(const std::string& k, bool dflt = false) const;
-	bool is_null(const std::string& k) const;
+	// value setters
+	void set_object(const std::string& k);
+	void set_array(const std::string& k);
+	void set_null(const std::string& k);
+
+	void append_null(const std::string& k);
+	void remove(const std::string&k);
+
+	// value check
 	bool exists(const std::string& k) const;
+	bool is_null(const std::string& k) const;
+	bool is_array(const std::string& k) const;
 
-	void iter(const std::string& k, IterFunc_t f);
+	void set_error_code(int error_code);
+	void set_error_msg(const std::string& msg);
+	void set_error(int error_code, const std::string& msg);
 
-	virtual bool validate() const;
-	
-	Element_t get_object(const std::string& k, const Element_t& dflt = Element_t()) const
+	template< class T>
+	void set(const std::string& k, const T& value)
 	{
-		Element_t el = this->content_.getFieldDotted(k);
-		if(el.eoo()) {
-			return dflt;
+		std::vector<std::string> keys;
+		nix::util::string::split(k, keys, ".");
+
+		Json::Value* ptr = &root_;
+		for(auto it = keys.begin(); it != keys.end() - 1; it++) {
+			if(!ptr->isMember(*it)) {
+				(*ptr)[*it] = Json::objectValue;
+			}
+			else if(!ptr->isObject()) {
+				throw std::runtime_error(
+					"Not an object. Cannot set value for key: " + k);
+			}
+			ptr = &((*ptr)[*it]);
 		}
-		
-		return el;
+
+		std::string last = keys.back();
+		ptr->removeMember(last);
+		(*ptr)[last] = value;
 	}
 
-	Element_t get_array(const std::string& k, const Element_t& dflt = Element_t()) const
+
+	template< class T>
+	void append(const std::string& k, const T& value)
 	{
-		return this->get_object(k, dflt);
+		std::vector<std::string> keys;
+		nix::util::string::split(k, keys, ".");
+
+		Json::Value* ptr = &root_;
+		for(auto it = keys.begin(); it != keys.end(); it++) {
+			if(!ptr->isMember(*it)) {
+				(*ptr)[*it] = Json::objectValue;
+			}
+			else if(!ptr->isObject()) {
+				throw std::runtime_error(
+					"Not an object. Cannot traverse. " + k);
+			}
+			ptr = &((*ptr)[*it]);
+		}
+
+		if(ptr->empty()) {
+			*ptr = Json::arrayValue;
+		}
+
+		if(ptr->isArray()) {
+			ptr->append(value);
+		}
+		else {
+			throw std::runtime_error("Not an array: " + k);
+		}
 	}
 
-	// unsafe
-	template <class FieldT>
-	const FieldT get_field(const std::string& k, const FieldT& dflt = FieldT()) const
+	std::string to_string(bool pretty = false) const;
+
+	friend std::ostream& operator<<(std::ostream& os, const Message& msg)
 	{
-		Element_t el = this->content_.getFieldDotted(k);
-		if(el.eoo()) {
-			return dflt;
-		}
-		
-		FieldT out;
-		try {
-			el.Val(out);
-		}
-		catch(std::exception &e) {
-			
-		}
-		return out;
+		return os << msg.to_string();
+	}
+
+	friend std::istream& operator>>(std::istream& is, Message& msg)
+	{
+		is >> msg.root_;
+		return is;
 	}
 
 protected:
-	virtual std::string _to_string() = 0;
+	Json::Value root_;
 
-	std::string id_;
-	int version_;
-	T content_;
+	bool find(const std::string& k, Json::Value& dest) const;
 };
-
-
-
-template<class T, class ElementT>
-Message<T, ElementT>::Message(const std::string& id, int version)
-	: id_(id.length() ? id : "Message"), version_(version)
-{
-}
-
-template<class T, class ElementT>
-const std::string& Message<T, ElementT>::get_id() const
-{
-	return this->id_;
-}
-
-template<class T, class ElementT>
-int Message<T, ElementT>::get_version() const
-{
-	return this->version_;
-}
-
-template<class T, class ElementT>
-std::string Message<T, ElementT>::to_string()
-{
-	return this->_to_string();
-}
-
-template<class T, class ElementT>
-const T& Message<T, ElementT>::get_raw() const
-{
-	return this->content_;
-}
-
-template<class T, class ElementT>
-void Message<T, ElementT>::iter(const std::string& k, IterFunc_t f)
-{
-	mongo::BSONObjIterator it(this->content_.getObjectField(k.c_str()));
-	while(it.more()) {
-		f(it.next());
-	}
-}
-
-template<class T, class ElementT>
-bool Message<T, ElementT>::validate() const
-{
-	//2DO: implement external json schema based validator 
-	return true;
-}
-
-template<class T, class ElementT>
-int Message<T, ElementT>::get_integer(const std::string& k, int dflt) const
-{
-	int v = dflt;
-	Element_t el = this->content_.getFieldDotted(k);
-	if(el.type() == mongo::BSONType::NumberInt) {
-		v = el.numberInt();
-	}
-	return v;
-}
-
-template<class T, class ElementT>
-long long Message<T, ElementT>::get_long(const std::string& k, long long dflt) const
-{
-	long long v = dflt;
-	Element_t el = this->content_.getFieldDotted(k);
-	if(el.type() == mongo::BSONType::NumberLong || el.type() == mongo::BSONType::NumberInt) {
-		v = el.numberLong();
-	}
-	return v;
-}
-
-template<class T, class ElementT>
-double Message<T, ElementT>::get_double(const std::string& k, double dflt) const
-{
-	double v = dflt;
-	Element_t el = this->content_.getFieldDotted(k);
-	if(el.type() == mongo::BSONType::NumberDouble) {
-		v = el.numberDouble();
-	}
-	return v;
-}
-
-template<class T, class ElementT>
-bool Message<T, ElementT>::get_bool(const std::string& k, bool dflt) const
-{
-	bool v(dflt);
-	Element_t el = this->content_.getFieldDotted(k);
-	if(el.type() == mongo::BSONType::Bool) {
-		v = el.boolean();
-	}
-	else if(el.type() == mongo::BSONType::NumberInt) {
-		v = (el.numberInt() != 0);
-	}
-	else if(el.type() == mongo::BSONType::NumberLong) {
-	        v = (el.numberLong() != 0);
-	}
-	else if(el.type() == mongo::BSONType::NumberDouble) {
-	        v = (el.numberDouble() != 0);
-	}
-
-	return v;
-}
-
-template<class T, class ElementT>
-std::string Message<T, ElementT>::get_string(const std::string& k, const std::string& dflt) const
-{
-	std::string v(dflt);
-	Element_t el = this->content_.getFieldDotted(k);
-	if(el.type() == mongo::BSONType::String) {
-		v = el.str();
-	}
-	return v;
-}
-
-template<class T, class ElementT>
-bool Message<T, ElementT>::is_null(const std::string& k) const
-{
-	return this->content_.getFieldDotted(k).isNull();
-	
-}
-
-template<class T, class ElementT>
-bool Message<T, ElementT>::exists(const std::string& k) const
-{
-	return this->content_.getFieldDotted(k).ok();
-}
 
 
 } // nix

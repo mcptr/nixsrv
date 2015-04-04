@@ -1,6 +1,7 @@
 #ifndef NIX_AUTH_HXX
 #define NIX_AUTH_HXX
 
+#include <unordered_map>
 
 #include "nix/message/incoming.hxx"
 #include "nix/route.hxx"

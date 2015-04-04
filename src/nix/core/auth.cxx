@@ -21,8 +21,8 @@ bool Auth::check_access(const nix::IncomingMessage& msg,
 		return true;
 	}
 
-	std::string msg_key = msg.get_string("@api_key", "");
-	if(!msg_key.length()) {
+	std::string msg_key = msg.get("@api_key", "");
+	if(msg_key.empty()) {
 		error_msg = "No api_key found";
 		return false;
 	}

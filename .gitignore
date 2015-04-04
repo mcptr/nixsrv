@@ -27,4 +27,4 @@ core
 doc/
 old/
 lib/
-src/external/g3log
+unused/

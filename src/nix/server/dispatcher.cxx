@@ -1,9 +1,8 @@
 #include "dispatcher.hxx"
 
 #include "nix/common.hxx"
+#include "nix/message.hxx"
 #include "nix/message/incoming.hxx"
-#include "nix/message/outgoing.hxx"
-#include "nix/message/object.hxx"
 #include "nix/error_codes.hxx"
 
 
@@ -46,12 +45,12 @@ void Dispatcher::operator()(yami::incoming_message& msg)
 		);
 
 		if(has_message) {
-			im->parse(msg_params.get_string("message"), true);
+			im->parse(msg_params.get_string("message"));
 		}
 
 		std::string auth_error;
 		if(!auth_.check_access(*im, *(it->second.get()), auth_error)) {
-			OutgoingMessage out_msg("AuthError");
+			Message out_msg("AuthError");
 			out_msg.set_error_code(nix::error_code::auth_unauthorized);
 			out_msg.set_error_msg(auth_error);
 

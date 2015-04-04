@@ -6,7 +6,7 @@
 #include "nix/common.hxx"
 #include "nix/exception.hxx"
 #include "nix/message/incoming.hxx"
-#include "nix/message/outgoing.hxx"
+#include "nix/message.hxx"
 #include "nix/route.hxx"
 
 #include "nix/direct_handlers.hxx"

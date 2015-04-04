@@ -38,10 +38,7 @@ def call(agent, mod, route, params):
 			# print_lock.release()
 			pass
 		elif state[0] == yami.OutgoingMessage.REJECTED:
-			print(
-				"The message has been rejected:",
-				msg.get_exception_msg()
-			)
+			print("REJECTED", msg.get_exception_msg())
 		else:
 			print("The message has been abandoned.")
 

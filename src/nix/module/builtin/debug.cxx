@@ -4,7 +4,7 @@
 
 #include "nix/common.hxx"
 #include "nix/route.hxx"
-#include "nix/message/object.hxx"
+#include "nix/message.hxx"
 
 #include "debug.hxx"
 
@@ -34,8 +34,8 @@ Debug::Debug(std::shared_ptr<ModuleAPI> api)
 void Debug::start()
 {
 	LOG(DEBUG) << "Creating queue";
-	q_.reset(new Queue<IncomingMessage>(10));
-	for(int i = 0; i < 3; i++) {
+	q_.reset(new Queue<IncomingMessage>(5));
+	for(int i = 0; i < 2; i++) {
 		LOG(DEBUG) << "Creating worker";
 		workers_.push_back(debug::Worker(q_, i));
 	}
@@ -66,8 +66,7 @@ void Debug::stop()
 void Debug::debug_sync(std::unique_ptr<IncomingMessage> msg)
 {
 	replies_++;
-	OutgoingMessage out("Debug");
-	msg->reply(out);
+	msg->reply();
 }
 
 void Debug::debug_async(std::unique_ptr<IncomingMessage> msg)
@@ -76,10 +75,10 @@ void Debug::debug_async(std::unique_ptr<IncomingMessage> msg)
 	q_->push(std::move(msg), success);
 	if(!success) {
 		LOG(DEBUG) << "Queue full";
-		nix::OutgoingMessage om("debug_async");
-		om.set_error_code(nix::error_code::temp_limit_reached);
-		om.set_error_msg("Temporary failure: request queue full");
-		msg->reply(om);
+		msg->reject(
+			nix::error_code::temp_limit_reached,
+			"Temporary failure: request queue full"
+		);
 	}
 }
 
