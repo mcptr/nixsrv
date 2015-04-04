@@ -352,6 +352,9 @@ translation_units = {
 	"module/builtin/debug/worker" : {
 		"env": combinedenv,
 	},
+	"module/builtin/service/cache" : {
+		"env": combinedenv,
+	},
 	"module/builtin/service/job_queue" : {
 		"env": combinedenv,
 	},

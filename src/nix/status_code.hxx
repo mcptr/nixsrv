@@ -7,6 +7,7 @@ namespace nix {
 
 typedef enum 
 {
+	null_value = -1,
 	ok = 0,
 	fail,
 

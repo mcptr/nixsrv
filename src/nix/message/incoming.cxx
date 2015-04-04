@@ -29,6 +29,9 @@ void IncomingMessage::reply(Message& msg)
 {
 	yami::parameters params;
 	params.set_string("message", msg.to_string());
+	clear();
+	set_status(nix::ok);
+
 	try {
 		msg_.reply(params);
 	}

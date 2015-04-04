@@ -54,7 +54,7 @@ void Resolver::bind(std::unique_ptr<IncomingMessage> msg)
 void Resolver::resolve(std::unique_ptr<IncomingMessage> msg)
 {
 	std::string node = nodes_[msg->get("node", "")];
-	if(!node.empty()) {
+	if(node.empty()) {
 		msg->reject(nix::fail, "Unknown node.");
 	}
 	else {
@@ -66,8 +66,7 @@ void Resolver::resolve(std::unique_ptr<IncomingMessage> msg)
 
 void Resolver::unbind(std::unique_ptr<IncomingMessage> msg)
 {
-	nodes_.erase( nodes_[msg->get("node", "")]);
-	msg->reply();
+	nodes_.erase(msg->get("node", ""));
 }
 
 

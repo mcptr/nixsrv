@@ -37,6 +37,7 @@
 #include "nix/module/builtin/debug.hxx"
 #include "nix/module/builtin/service/job_queue.hxx"
 #include "nix/module/builtin/service/resolver.hxx"
+#include "nix/module/builtin/service/cache.hxx"
 
 
 // util
@@ -181,6 +182,14 @@ int main(int argc, char** argv)
 			);
 			setup_builtin_job_queue(job_queue_module, po);
 			module_manager->add_builtin(job_queue_module);
+		}
+
+		// MODULE: cache
+		if(po.get<bool>("enable-cache")) {
+			std::shared_ptr<nix::module::Cache> cache_module(
+				new nix::module::Cache(mod_api)
+			);
+			module_manager->add_builtin(cache_module);
 		}
 
 		module_manager->register_routing(server);

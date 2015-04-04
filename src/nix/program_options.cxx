@@ -80,7 +80,10 @@ void ProgramOptions::parse(int argc, char** argv)
 		builtins.add_options()
 			("enable-debug",
 			 po::value<bool>()->implicit_value(true)->zero_tokens()->default_value(false),
-			 "enable resolver module")
+			 "enable debug module")
+			("enable-cache",
+			 po::value<bool>()->implicit_value(true)->zero_tokens()->default_value(false),
+			 "enable cache module")
 			("enable-resolver",
 			 po::value<bool>()->implicit_value(true)->zero_tokens()->default_value(false),
  			 "enable resolver module"
