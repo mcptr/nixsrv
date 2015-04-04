@@ -20,6 +20,7 @@ void ProgramOptions::parse(int argc, char** argv)
 		po::options_description flags("Generic");
 		po::options_description generic("Startup options");
 		po::options_description server("Server options");
+		po::options_description builtins("Builtins");
 
 		po::options_description config_file_hidden(
 			"Configuration file based options"
@@ -76,6 +77,20 @@ void ProgramOptions::parse(int argc, char** argv)
 			 "server address")
 			;
 
+		builtins.add_options()
+			("enable-debug",
+			 po::value<bool>()->implicit_value(true)->zero_tokens()->default_value(false),
+			 "enable resolver module")
+			("enable-resolver",
+			 po::value<bool>()->implicit_value(true)->zero_tokens()->default_value(false),
+ 			 "enable resolver module"
+			)
+			("enable-job-queue",
+			 po::value<bool>()->implicit_value(true)->zero_tokens()->default_value(false),
+			 "enable job queue module")
+			;
+
+
 		passwd* pwd = getpwuid(getuid());
 		string username(pwd->pw_name);
 
@@ -91,13 +106,13 @@ void ProgramOptions::parse(int argc, char** argv)
 			)
 			;
 
-		all_.add(flags).add(generic).add(server);
+		all_.add(flags).add(generic).add(server).add(builtins);
 
 		po::store(po::command_line_parser(argc, argv).options(all_).run(), vm_);
 		po::notify(vm_);
 
 		if(!has_help()) {
-			config_file_hidden.add(generic).add(server);
+			config_file_hidden.add(generic).add(server).add(builtins);
 			if(vm_["debug"].as<bool>()) {
 				std::cout << "Reading config file: " << config_path << std::endl;
 			}

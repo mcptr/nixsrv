@@ -2,6 +2,8 @@
 #define NIX_MESSAGE_INCOMING_HXX
 
 #include <yami4-cpp/yami.h>
+
+#include "nix/common.hxx"
 #include "nix/message.hxx"
 
 
@@ -16,9 +18,9 @@ public:
 	virtual ~IncomingMessage() = default;
 	void reply();
 	void reply(Message& msg);
-	void reply_with_error(int error_code, const std::string& msg);
+	void reply_with_error(nix::StatusCode_t status, const std::string& msg);
 	void reject(const std::string& reason = std::string());
-	void reject(int error_code, const std::string& reason = std::string());
+	void reject(nix::StatusCode_t status, const std::string& reason = std::string());
 protected:
 	yami::incoming_message msg_;
 };

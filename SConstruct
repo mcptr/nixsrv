@@ -346,13 +346,16 @@ translation_units = {
 		"env": combinedenv,
 	},
 	"module/api" : {},
-	"module/builtin/job_queue" : {
-		"env": combinedenv,
-	},
 	"module/builtin/debug" : {
 		"env": combinedenv,
 	},
 	"module/builtin/debug/worker" : {
+		"env": combinedenv,
+	},
+	"module/builtin/service/job_queue" : {
+		"env": combinedenv,
+	},
+	"module/builtin/service/resolver" : {
 		"env": combinedenv,
 	},
 	"module/instance" : {

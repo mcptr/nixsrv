@@ -1,6 +1,8 @@
-#include "incoming.hxx"
-#include "nix/common.hxx"
 #include <exception>
+#include "nix/common.hxx"
+
+#include "incoming.hxx"
+
 
 namespace nix {
 
@@ -14,6 +16,8 @@ IncomingMessage::IncomingMessage(yami::incoming_message& im)
 void IncomingMessage::reply()
 {
 	try {
+		clear();
+		set_status(nix::ok);
 		msg_.reply();
 	}
 	catch(yami::yami_runtime_error& e) {
@@ -33,10 +37,10 @@ void IncomingMessage::reply(Message& msg)
 	}
 }
 
-void IncomingMessage::reply_with_error(int error_code,
+void IncomingMessage::reply_with_error(nix::StatusCode_t error_code,
 									   const std::string& msg)
 {
-	set_error(error_code, msg);
+	set_status(error_code, msg);
 	reply(*this);
 }
 
@@ -50,7 +54,8 @@ void IncomingMessage::reject(const std::string& reason)
 	}
 }
 
-void IncomingMessage::reject(int error_code, const std::string& reason)
+void IncomingMessage::reject(nix::StatusCode_t error_code,
+							 const std::string& reason)
 {
 	reject(std::to_string(error_code) + ": " + reason);
 }

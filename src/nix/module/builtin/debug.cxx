@@ -76,7 +76,7 @@ void Debug::debug_async(std::unique_ptr<IncomingMessage> msg)
 	if(!success) {
 		LOG(DEBUG) << "Queue full";
 		msg->reject(
-			nix::error_code::temp_limit_reached,
+			nix::temp_limit_reached,
 			"Temporary failure: request queue full"
 		);
 	}

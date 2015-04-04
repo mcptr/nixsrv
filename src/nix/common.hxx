@@ -4,5 +4,5 @@
 
 #include "easylogging++.h"
 
-// errors
-#include "error_codes.hxx"
+// status
+#include "status_code.hxx"
