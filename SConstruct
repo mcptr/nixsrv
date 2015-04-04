@@ -1,5 +1,6 @@
 import sys
 import os
+from collections import OrderedDict
 
 THIS_PLATFORM = os.uname()[0].lower()
 PROJECT_NAME = "nix"
@@ -21,7 +22,8 @@ def extend_env(dest, src):
 			if items:
 				dest[item].extend(items if isinstance(items, list) else [items])
 	for item in entities:
-		dest[item] = list(set(dest[item]))
+		# using OrderedDict, as set reorders elements causing linking error...
+		dest[item] = OrderedDict.fromkeys(dest[item]).keys()
 	return dest
 
 class Dirs(object):
@@ -153,13 +155,13 @@ setup.create_directories()
 # ------------------------------------------------------------------------
 
 baseenv = Environment(
-	CXX = "clang++", #FIXME
+	CXX = "g++",
 	CXXFLAGS = setup.base_cxxflags,
 	CPPDEFINES = setup.base_defines,
 	CPPPATH = [Dirs.project_source] + get_platform_default_inc(),
 	LIBS = setup.base_libs,
 	LIBPATH = setup.base_libpath,
-	LINKFLAGS = setup.base_linkflags,
+	LINKFLAGS = setup.base_linkflags
 )
 
 baseenv['ENV']['TERM'] = os.environ['TERM']
@@ -198,7 +200,7 @@ extend_env(yamienv, {
 		#resolve_include("yami4-core", ns="yami4")
 	],
 	"LIBPATH" : [resolve_libpath("yami4")],
-	"LIBS" : ["yami4cored", "yami4cppd"]
+	"LIBS" : ["yami4cppd", "yami4cored"]
 })
 
 # ------------------------------------------------------------------------
@@ -260,6 +262,7 @@ extend_env(dbenv, {
 combinedenv = baseenv.Clone()
 extend_env(combinedenv, [dbenv, yamienv, boostenv])
 
+
 # ------------------------------------------------------------------------
 # EXT_MODS ENVIRONMENT
 # ------------------------------------------------------------------------
@@ -279,6 +282,7 @@ extend_env(extmodsenv, {
 
 testsenv = baseenv.Clone()
 extend_env(testsenv, [dbenv, yamienv, boostenv, combinedenv])
+
 
 # ------------------------------------------------------------------------
 # TRANSLATION UNITS
