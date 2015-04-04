@@ -6,6 +6,33 @@ THIS_PLATFORM = os.uname()[0].lower()
 PROJECT_NAME = "nix"
 PROJECT_TARGET = "NIX"
 
+AddOption("--compiler",
+		  dest="compiler",
+		  action="store",
+		  choices=["clang++", "g++"],
+		  default="clang++",
+		  help="compiler to use")
+
+
+AddOption("--enable-debug",
+		  dest="debug_build",
+		  action="store_true",
+		  default=False,
+		  help="debug build")
+
+AddOption("--enable-profile",
+		  dest="profile_build",
+		  action="store_true",
+		  default=False,
+		  help="enable profiling")
+
+AddOption("--modules",
+		  dest="build_modules",
+		  action="store_true",
+		  default=False,
+		  help="build modules")
+
+
 def is_option_set(opt):
 	v = ARGUMENTS.get(opt, "").lower()
 	return (v not in ["", "no", "0"])
@@ -50,9 +77,9 @@ class Setup(object):
 
 	def __init__(self):
 		self.setup_cpp_defines()
-		if is_option_set("debug"):
+		if GetOption("debug_build"):
 			self.base_cxxflags.append("-g")
-		if is_option_set("profile"):
+		if GetOption("profile_build"):
 			#self.base_cxxflags.append("--coverage")
 			#self.base_linkflags.append("-profile")
 			self.base_linkflags.append("-pg")
@@ -155,7 +182,7 @@ setup.create_directories()
 # ------------------------------------------------------------------------
 
 baseenv = Environment(
-	CXX = "g++",
+	CXX = GetOption("compiler"),
 	CXXFLAGS = setup.base_cxxflags,
 	CPPDEFINES = setup.base_defines,
 	CPPPATH = [Dirs.project_source] + get_platform_default_inc(),
@@ -164,7 +191,7 @@ baseenv = Environment(
 	LINKFLAGS = setup.base_linkflags
 )
 
-baseenv['ENV']['TERM'] = os.environ['TERM']
+baseenv["ENV"]["TERM"] = os.environ["TERM"]
 
 extend_env(baseenv, {
 	"CPPPATH" : ["src/external/include"], # resolve_include("jsoncpp")],
@@ -343,20 +370,20 @@ translation_units = {
 	},
 	# "transport/options" : {},
 	# "transport/yami" : {
-	# 	"env" : yamienv,
+	#	"env" : yamienv,
 	# },
 	"util/fs" : {},
 	"util/string" : {},
 	# ######################################################################
 	# "core/auth/auth" : {
-	# 	"cpppath" : [resolve_include("yami4")],
-	# 	"env" : dbenv
+	#	"cpppath" : [resolve_include("yami4")],
+	#	"env" : dbenv
 	# },
 	# "daemon/daemon" : {
-	# 	"env" : combinedenv,
+	#	"env" : combinedenv,
 	# },
 	# "daemon/signal_handlers" : {
-	# 	"env" : combinedenv,
+	#	"env" : combinedenv,
 	# },
 	# "util/version" : {},
 	# "util/pid" : {},
@@ -396,7 +423,7 @@ for (root, dirs, files) in os.walk(Dirs.tests_source):
 			source = [u, main_target_objects]
 		)
 
-testsenv.Alias('test', all_tests)
+testsenv.Alias("test", all_tests)
 
 # ------------------------------------------------------------------------
 # BUILD MAIN TARGET
@@ -411,14 +438,14 @@ implenv.Program(
 )
 
 implenv.Install(Dirs.install, target_executable)
-implenv.Alias('install', Dirs.install)
+implenv.Alias("install", Dirs.install)
 implenv.Default(target_executable)
 
-combinedenv.Alias('all', Dirs.install)
+combinedenv.Alias("all", Dirs.install)
 
 print("Building targets: %s\n" % "\n".join(list(map(str, BUILD_TARGETS))))
 
-if is_option_set("mods") and False:
+if GetOption("build_modules") and False:
 	base_dir = Dir(".").path
 	nix_objs_dir = os.path.join(base_dir, "../../..",	Dirs.objects)
 
