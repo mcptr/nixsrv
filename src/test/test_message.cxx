@@ -44,10 +44,18 @@ int main()
 		{
 			Message m;
 			m.set("level1.level2.level3", "value");
+			std::string expected("{\"level1\":{\"level2\":{\"level3\":\"value\"}}}\n");
 			test.equals(
 				m.to_string(),
-				"{\"level1\" : {\"level2:\" : {\"level3\" : \"value\"}}}",
+				expected,
 				"dotted field created and set"
+			);
+			m.set("level1.level2.level3", 12345);
+			expected = ("{\"level1\":{\"level2\":{\"level3\":12345}}}\n");
+			test.equals(
+				m.to_string(),
+				expected,
+				"dotted field overwritten"
 			);
 		}
 	);
