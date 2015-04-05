@@ -1,8 +1,8 @@
-import sys
 import argparse
 from lib import yami
 import threading
 import concurrent.futures
+from concurrent.futures import ThreadPoolExecutor
 import json
 
 default_requests = 1
@@ -11,9 +11,11 @@ default_server = "tcp://127.0.0.1:9876"
 
 tsprint_lock = threading.Lock()
 
+
 def tsprint(msg):
 	with tsprint_lock:
 		print(msg)
+
 
 def call(agent, **kwargs):
 	server = kwargs.pop("server")
@@ -27,9 +29,10 @@ def call(agent, **kwargs):
 		state = msg.get_state()
 		if state[0] == yami.OutgoingMessage.REPLIED:
 			reply = msg.get_reply()
-			response_data =  reply["response"] if "response" in reply else str({})
+			response_data = reply["response"] if "response" in reply else str({})
 			if verbose:
-				tsprint("# Finished (%d / %s)" % (reply["response_id"], threading.current_thread().getName()))
+				tsprint("# Finished (%d / %s)" % (
+					reply["response_id"], threading.current_thread().getName()))
 			if verbose:
 				response = json.loads(response_data)
 				return(json.dumps(response, indent=4))
@@ -39,6 +42,7 @@ def call(agent, **kwargs):
 		else:
 			tsprint("The message has been abandoned.")
 
+
 def run(requests, pool_size=1, **kwargs):
 	print("Creating yami agent")
 	with yami.Agent() as agent:
@@ -46,8 +50,9 @@ def run(requests, pool_size=1, **kwargs):
 			print("Lowering pool size to number of requests (%d)" % requests)
 			pool_size = requests
 		print("Executing %d request(s) with %d worker(s)" % (requests, pool_size))
-		with concurrent.futures.ThreadPoolExecutor(max_workers=pool_size) as executor:
-			futures = {executor.submit(call, agent, **kwargs): x for x in range(0, requests)}
+		with ThreadPoolExecutor(max_workers=pool_size) as executor:
+			futures = {executor.submit(
+				call, agent, **kwargs): x for x in range(0, requests)}
 			for future in concurrent.futures.as_completed(futures):
 				if kwargs.get("verbose"):
 					print(future.result())
@@ -55,7 +60,7 @@ def run(requests, pool_size=1, **kwargs):
 if __name__ == "__main__":
 	parser = argparse.ArgumentParser(description="Call remote procedure")
 	parser.add_argument("-c", "--concurrency", metavar="C",
-						type=int, action="store",  default=default_concurrency,
+						type=int, action="store", default=default_concurrency,
 						help="concurrency (default: %d)" % default_concurrency)
 
 	parser.add_argument("-f", "--input",

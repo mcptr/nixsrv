@@ -10,7 +10,7 @@ from subprocess import call, DEVNULL, STDOUT, PIPE
 os.environ.putenv("LD_LIBRARY_PATH", "/usr/local/lib64/soci:/usr/local/lib64/yami4")
 
 conf_pep8 = {
-	"ignore" : ["W191", "E203", "E251", "E303"],
+	"ignore" : ["W191", "E203", "E251", "E303", "E128", "E126"],
 	"exclude" : ["nix/lib/yami.py"]
 }
 
