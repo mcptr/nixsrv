@@ -1,4 +1,4 @@
-#!/usr/local/bin/python3 -tt
+#!../bin/python3 -tt
 
 import os
 import sys
@@ -6,15 +6,26 @@ import time
 import argparse
 from subprocess import call, DEVNULL, STDOUT, PIPE
 
+MY_DIR = os.path.abspath(os.path.dirname(sys.argv[0]))
+ld_library_paths = ["/usr/local/lib64/soci", "/usr/local/lib64/yami4"]
 
-os.environ.putenv("LD_LIBRARY_PATH", "/usr/local/lib64/soci:/usr/local/lib64/yami4")
+extern_libs_dir = os.path.abspath(os.path.join(MY_DIR, "../lib/external"))
+for entry in os.listdir(extern_libs_dir):
+	ld_library_paths.append(os.path.join(extern_libs_dir, entry))
+
+os.environ.putenv("LD_LIBRARY_PATH", ":".join(ld_library_paths))
+
+conf_pep8 = {
+	"ignore" : ["W191", "E203", "E251", "E303", "E128", "E126"],
+	"exclude" : ["nix/lib/yami.py"]
+}
 
 
 class Runner(object):
 	def __init__(self, **kwargs):
 		self.verbose = kwargs.pop("verbose", False)
 		self.parent_dir = os.path.abspath(os.path.dirname(sys.argv[0] ) + "/../")
-		self.cxx_tests_dir = "%s/cxx/build/target" % self.parent_dir
+		self.cxx_tests_dir = "%s/build/target" % self.parent_dir
 		self.python_dir = "%s/python" % self.parent_dir
 
 		self.test_results = {
@@ -47,7 +58,7 @@ class Runner(object):
 		if not self.verbose:
 			params["stdout"] = DEVNULL
 			params["stderr"] = DEVNULL
-			
+
 		status = call(*args, **params)
 		return status
 		
@@ -66,11 +77,12 @@ class Runner(object):
 
 	def run_pep8(self):
 		title = "Running pep8 against " + self.python_dir
-		returncode = self.exec_test(
-			["pep8", "--ignore=W191,E203,E251,E303", self.python_dir],
-			title=title,	
-			group="PEP8"
-		)
+
+		pep8_cmd = ["pep8",
+					"--ignore=%s" % ",".join(conf_pep8.get("ignore", [])),
+					"--exclude=%s" % ",".join("%s/%s" % (self.python_dir, f) for f in conf_pep8.get("exclude", [])),
+					self.python_dir]
+		returncode = self.exec_test(pep8_cmd, title=title, group="PEP8")
 
 	def run_nose(self):
 		title = "Running nosetest in " + self.python_dir

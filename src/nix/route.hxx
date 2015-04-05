@@ -15,7 +15,7 @@ namespace nix {
 class Route
 {
 public:
-	typedef enum { SYNC, ASYNC, FUTURE, PUBLISH } ProcessingType_t;
+	typedef enum { VOID, SYNC, ASYNC, FUTURE, PUBLISH } ProcessingType_t;
 
 
 	// ANY - allow from all - unauthenticated

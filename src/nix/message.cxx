@@ -32,6 +32,11 @@ void Message::parse(const std::string& json_string)
 	}
 }
 
+void Message::clear()
+{
+	root_.clear();
+}
+
 Json::Value Message::get_raw_value(const std::string& k)
 {
 	Json::Value dest;
@@ -102,20 +107,21 @@ void Message::set_null(const std::string& k)
 	set(k, Json::nullValue);
 }
 
-void Message::set_error_code(int error_code)
+void Message::set_status_code(nix::StatusCode_t status)
 {
-	root_["@error_code"] = error_code;
+	root_["@status_code"] = status;
 }
 
-void Message::set_error_msg(const std::string& msg)
+void Message::set_status_msg(const std::string& msg)
 {
-	root_["@error"] = msg;
+	root_["@status"] = msg;
 }
 
-void Message::set_error(int error_code, const std::string& msg)
+void Message::set_status(nix::StatusCode_t status,
+						 const std::string& msg)
 {
-	set_error_code(error_code);
-	set_error_msg(msg);
+	set_status_code(status);
+	set_status_msg(msg);
 }
 
 void Message::append_null(const std::string& k)
@@ -169,7 +175,6 @@ bool Message::exists(const std::string& k) const
 	return find(k, dummy);
 }
 
-
 bool Message::find(const std::string& k, Json::Value& dest) const
 {
 	std::vector<std::string> keys;
@@ -187,5 +192,6 @@ bool Message::find(const std::string& k, Json::Value& dest) const
 	dest = *ptr;
 	return true;
 }
+
 
 } // nix

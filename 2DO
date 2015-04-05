@@ -1,5 +1,0 @@
-- api/request & api/response - create template
-  with agent as template param, so that module can use polymorphics.
-  currently it exposes yami as transport internals
-
-- responder infrastruct to hide transport internals?

@@ -5,10 +5,10 @@
 #include <jsoncpp/writer.h>
 #include <jsoncpp/value.h>
 #include <memory>
-//#include <fstream>
 #include <string>
 #include <exception>
 
+#include "nix/common.hxx"
 #include "nix/util/string.hxx"
 
 
@@ -37,6 +37,8 @@ public:
 
 	Json::Value get_raw_value(const std::string& k);
 
+	void clear();
+
 	// value getters
 	virtual std::string get(const std::string& k, const char* default_value) const;
 	virtual std::string get(const std::string& k, const std::string& default_value) const;
@@ -58,9 +60,9 @@ public:
 	bool is_null(const std::string& k) const;
 	bool is_array(const std::string& k) const;
 
-	void set_error_code(int error_code);
-	void set_error_msg(const std::string& msg);
-	void set_error(int error_code, const std::string& msg);
+	void set_status_code(nix::StatusCode_t status);
+	void set_status_msg(const std::string& msg);
+	void set_status(nix::StatusCode_t status, const std::string& msg = std::string());
 
 	template< class T>
 	void set(const std::string& k, const T& value)

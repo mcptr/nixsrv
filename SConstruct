@@ -1,9 +1,37 @@
 import sys
 import os
+from collections import OrderedDict
 
 THIS_PLATFORM = os.uname()[0].lower()
 PROJECT_NAME = "nix"
 PROJECT_TARGET = "NIX"
+
+AddOption("--compiler",
+		  dest="compiler",
+		  action="store",
+		  choices=["clang++", "g++"],
+		  default="clang++",
+		  help="compiler to use")
+
+
+AddOption("--enable-debug",
+		  dest="debug_build",
+		  action="store_true",
+		  default=False,
+		  help="debug build")
+
+AddOption("--enable-profile",
+		  dest="profile_build",
+		  action="store_true",
+		  default=False,
+		  help="enable profiling")
+
+AddOption("--modules",
+		  dest="build_modules",
+		  action="store_true",
+		  default=False,
+		  help="build modules")
+
 
 def is_option_set(opt):
 	v = ARGUMENTS.get(opt, "").lower()
@@ -21,7 +49,8 @@ def extend_env(dest, src):
 			if items:
 				dest[item].extend(items if isinstance(items, list) else [items])
 	for item in entities:
-		dest[item] = list(set(dest[item]))
+		# using OrderedDict, as set reorders elements causing linking error...
+		dest[item] = OrderedDict.fromkeys(dest[item]).keys()
 	return dest
 
 class Dirs(object):
@@ -32,7 +61,8 @@ class Dirs(object):
 	project_source = source #"%s/%s" % (source, PROJECT_NAME)
 	install = ARGUMENTS.get("install_dir", "./bin")
 	#exceptions = "%s/excpt" % project_source
-	tests_source = "%s/tests" % source
+	tests_source = "%s/test" % source
+	tests_target = target
 
 
 class Setup(object):
@@ -48,9 +78,9 @@ class Setup(object):
 
 	def __init__(self):
 		self.setup_cpp_defines()
-		if is_option_set("debug"):
+		if GetOption("debug_build"):
 			self.base_cxxflags.append("-g")
-		if is_option_set("profile"):
+		if GetOption("profile_build"):
 			#self.base_cxxflags.append("--coverage")
 			#self.base_linkflags.append("-profile")
 			self.base_linkflags.append("-pg")
@@ -141,6 +171,14 @@ def get_platform_default_inc():
 		map(lambda x: "%s/include" % x, __base.get(THIS_PLATFORM))
 	)
 
+def get_platform_default_libs():
+	libs = {
+		"linux" : [],
+		"freebsd" : ["execinfo"],
+	}
+	return libs.get(THIS_PLATFORM)
+
+
 # ------------------------------------------------------------------------
 # SETUP
 # ------------------------------------------------------------------------
@@ -153,16 +191,16 @@ setup.create_directories()
 # ------------------------------------------------------------------------
 
 baseenv = Environment(
-	CXX = "clang++", #FIXME
+	CXX = GetOption("compiler"),
 	CXXFLAGS = setup.base_cxxflags,
 	CPPDEFINES = setup.base_defines,
 	CPPPATH = [Dirs.project_source] + get_platform_default_inc(),
-	LIBS = setup.base_libs,
+	LIBS = setup.base_libs + get_platform_default_libs(),
 	LIBPATH = setup.base_libpath,
-	LINKFLAGS = setup.base_linkflags,
+	LINKFLAGS = setup.base_linkflags
 )
 
-baseenv['ENV']['TERM'] = os.environ['TERM']
+baseenv["ENV"]["TERM"] = os.environ["TERM"]
 
 extend_env(baseenv, {
 	"CPPPATH" : ["src/external/include"], # resolve_include("jsoncpp")],
@@ -198,7 +236,7 @@ extend_env(yamienv, {
 		#resolve_include("yami4-core", ns="yami4")
 	],
 	"LIBPATH" : [resolve_libpath("yami4")],
-	"LIBS" : ["yami4cored", "yami4cppd"]
+	"LIBS" : ["yami4cppd", "yami4cored"]
 })
 
 # ------------------------------------------------------------------------
@@ -260,6 +298,7 @@ extend_env(dbenv, {
 combinedenv = baseenv.Clone()
 extend_env(combinedenv, [dbenv, yamienv, boostenv])
 
+
 # ------------------------------------------------------------------------
 # EXT_MODS ENVIRONMENT
 # ------------------------------------------------------------------------
@@ -279,6 +318,7 @@ extend_env(extmodsenv, {
 
 testsenv = baseenv.Clone()
 extend_env(testsenv, [dbenv, yamienv, boostenv, combinedenv])
+
 
 # ------------------------------------------------------------------------
 # TRANSLATION UNITS
@@ -307,13 +347,19 @@ translation_units = {
 		"env": combinedenv,
 	},
 	"module/api" : {},
-	"module/builtin/job_queue" : {
-		"env": combinedenv,
-	},
 	"module/builtin/debug" : {
 		"env": combinedenv,
 	},
 	"module/builtin/debug/worker" : {
+		"env": combinedenv,
+	},
+	"module/builtin/service/cache" : {
+		"env": combinedenv,
+	},
+	"module/builtin/service/job_queue" : {
+		"env": combinedenv,
+	},
+	"module/builtin/service/resolver" : {
 		"env": combinedenv,
 	},
 	"module/instance" : {
@@ -339,20 +385,20 @@ translation_units = {
 	},
 	# "transport/options" : {},
 	# "transport/yami" : {
-	# 	"env" : yamienv,
+	#	"env" : yamienv,
 	# },
 	"util/fs" : {},
 	"util/string" : {},
 	# ######################################################################
 	# "core/auth/auth" : {
-	# 	"cpppath" : [resolve_include("yami4")],
-	# 	"env" : dbenv
+	#	"cpppath" : [resolve_include("yami4")],
+	#	"env" : dbenv
 	# },
 	# "daemon/daemon" : {
-	# 	"env" : combinedenv,
+	#	"env" : combinedenv,
 	# },
 	# "daemon/signal_handlers" : {
-	# 	"env" : combinedenv,
+	#	"env" : combinedenv,
 	# },
 	# "util/version" : {},
 	# "util/pid" : {},
@@ -385,14 +431,14 @@ for (root, dirs, files) in os.walk(Dirs.tests_source):
 	for u in filter(lambda f: f.endswith(".cxx"), files):
 		u = "%s/%s" % (root, u)
 		basename = os.path.basename(u.replace(".cxx", ""))
-		test_exe = "%s/%s" % (Dirs.target, basename)
+		test_exe = "%s/%s.bin" % (Dirs.tests_target, basename)
 		all_tests.append(test_exe)
 		testsenv.Program(
 			target = test_exe,
 			source = [u, main_target_objects]
 		)
 
-testsenv.Alias('test', all_tests)
+testsenv.Alias("test", all_tests)
 
 # ------------------------------------------------------------------------
 # BUILD MAIN TARGET
@@ -407,14 +453,14 @@ implenv.Program(
 )
 
 implenv.Install(Dirs.install, target_executable)
-implenv.Alias('install', Dirs.install)
+implenv.Alias("install", Dirs.install)
 implenv.Default(target_executable)
 
-combinedenv.Alias('all', Dirs.install)
+combinedenv.Alias("all", Dirs.install)
 
 print("Building targets: %s\n" % "\n".join(list(map(str, BUILD_TARGETS))))
 
-if is_option_set("mods") and False:
+if GetOption("build_modules") and False:
 	base_dir = Dir(".").path
 	nix_objs_dir = os.path.join(base_dir, "../../..",	Dirs.objects)
 

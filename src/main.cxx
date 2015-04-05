@@ -34,8 +34,10 @@
 #include "nix/options.hxx"
 
 // bulitin modules
-#include "nix/module/builtin/job_queue.hxx"
 #include "nix/module/builtin/debug.hxx"
+#include "nix/module/builtin/service/job_queue.hxx"
+#include "nix/module/builtin/service/resolver.hxx"
+#include "nix/module/builtin/service/cache.hxx"
 
 
 // util
@@ -157,16 +159,38 @@ int main(int argc, char** argv)
 
 		server.reset(new nix::Server(server_options));
 
-		std::shared_ptr<nix::module::JobQueue> job_queue_module(
-			new nix::module::JobQueue(mod_api, 100)
-		);
-		setup_builtin_job_queue(job_queue_module, po);
-		module_manager->add_builtin(job_queue_module);
+		// MODULE: debug
+		if(po.get<bool>("enable-debug")) {
+			std::shared_ptr<nix::module::Debug> debug_module(
+				new nix::module::Debug(mod_api)
+			);
+			module_manager->add_builtin(debug_module);
+		}
 
-		std::shared_ptr<nix::module::Debug> debug_module(
-			new nix::module::Debug(mod_api)
-		);
-		module_manager->add_builtin(debug_module);
+		// MODULE: resolver
+		if(po.get<bool>("enable-resolver")) {
+			std::shared_ptr<nix::module::Resolver> resolver_module(
+				new nix::module::Resolver(mod_api)
+			);
+			module_manager->add_builtin(resolver_module);
+		}
+
+		// MODULE: job queue
+		if(po.get<bool>("enable-job-queue")) {
+			std::shared_ptr<nix::module::JobQueue> job_queue_module(
+				new nix::module::JobQueue(mod_api, 100)
+			);
+			setup_builtin_job_queue(job_queue_module, po);
+			module_manager->add_builtin(job_queue_module);
+		}
+
+		// MODULE: cache
+		if(po.get<bool>("enable-cache")) {
+			std::shared_ptr<nix::module::Cache> cache_module(
+				new nix::module::Cache(mod_api)
+			);
+			module_manager->add_builtin(cache_module);
+		}
 
 		module_manager->register_routing(server);
 		module_manager->start_all();
