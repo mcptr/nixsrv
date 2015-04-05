@@ -21,6 +21,7 @@ void ProgramOptions::parse(int argc, char** argv)
 		po::options_description generic("Startup options");
 		po::options_description server("Server options");
 		po::options_description builtins("Builtins");
+		po::options_description infrastructure("Infrastructure options");
 
 		po::options_description config_file_hidden(
 			"Configuration file based options"
@@ -43,7 +44,7 @@ void ProgramOptions::parse(int argc, char** argv)
 		generic.add_options()
 			("config,c", po::value<string>(&config_path)->default_value(
 				base_dir + "/etc/config.ini", "$BASE_DIR/etc/config.ini"), "")
- 			("no_config,N",
+			("no_config,N",
 			 po::value<bool>()->implicit_value(true)->zero_tokens()->default_value(false),
 			 "Do not read configuration file"
 			)
@@ -74,7 +75,7 @@ void ProgramOptions::parse(int argc, char** argv)
 
 		server.add_options()
 			("address,A", po::value(&stropt)->default_value("tcp://*:*"),
-			 "server address")
+			 "address to listen on")
 			;
 
 		builtins.add_options()
@@ -86,13 +87,26 @@ void ProgramOptions::parse(int argc, char** argv)
 			 "enable cache module")
 			("enable-resolver",
 			 po::value<bool>()->implicit_value(true)->zero_tokens()->default_value(false),
- 			 "enable resolver module"
-			)
+			 "enable resolver module")
 			("enable-job-queue",
 			 po::value<bool>()->implicit_value(true)->zero_tokens()->default_value(false),
 			 "enable job queue module")
 			;
 
+		infrastructure.add_options()
+			("srv_resolver_address",
+			 po::value(&stropt)->default_value(""),
+			 "external resolver address")
+			("srv_cache_address",
+			 po::value(&stropt)->default_value(""),
+			 "external cache server address")
+			("srv_broker_address",
+			 po::value(&stropt)->default_value(""),
+			 "external broker address")
+			("srv_job_queue_address",
+			 po::value(&stropt)->default_value(""),
+			 "external job queue server address")
+			;
 
 		passwd* pwd = getpwuid(getuid());
 		string username(pwd->pw_name);
@@ -115,7 +129,7 @@ void ProgramOptions::parse(int argc, char** argv)
 		po::notify(vm_);
 
 		if(!has_help()) {
-			config_file_hidden.add(generic).add(server).add(builtins);
+			config_file_hidden.add(generic).add(server).add(builtins).add(infrastructure);
 			if(vm_["debug"].as<bool>()) {
 				std::cout << "Reading config file: " << config_path << std::endl;
 			}
