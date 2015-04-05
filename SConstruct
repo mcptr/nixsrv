@@ -61,7 +61,8 @@ class Dirs(object):
 	project_source = source #"%s/%s" % (source, PROJECT_NAME)
 	install = ARGUMENTS.get("install_dir", "./bin")
 	#exceptions = "%s/excpt" % project_source
-	tests_source = "%s/tests" % source
+	tests_source = "%s/test" % source
+	tests_target = target
 
 
 class Setup(object):
@@ -430,7 +431,7 @@ for (root, dirs, files) in os.walk(Dirs.tests_source):
 	for u in filter(lambda f: f.endswith(".cxx"), files):
 		u = "%s/%s" % (root, u)
 		basename = os.path.basename(u.replace(".cxx", ""))
-		test_exe = "%s/%s" % (Dirs.target, basename)
+		test_exe = "%s/%s.bin" % (Dirs.tests_target, basename)
 		all_tests.append(test_exe)
 		testsenv.Program(
 			target = test_exe,
