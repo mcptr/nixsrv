@@ -38,6 +38,19 @@ int main()
 		}
 	);
 
+	unit.test_case(
+		"Object", 
+		[](TestCase& test)
+		{
+			Message m;
+			m.set("level1.level2.level3", "value");
+			test.equals(
+				m.to_string(),
+				"{\"level1\" : {\"level2:\" : {\"level3\" : \"value\"}}}",
+				"dotted field created and set"
+			);
+		}
+	);
 
 	return unit.run();
 }
