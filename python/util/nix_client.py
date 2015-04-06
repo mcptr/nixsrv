@@ -17,6 +17,12 @@ class Result(object):
 	def is_abandoned(self):
 		return (self.state[0] == yami.OutgoingMessage.ABANDONED)
 
+	def is_posted(self):
+		return (self.state[0] == yami.OutgoingMessage.POSTED)
+
+	def is_transmitted(self):
+		return (self.state[0] == yami.OutgoingMessage.TRANSMITTED)
+
 
 class NixClient(object):
 	def __init__(self, address = None):
@@ -34,5 +40,7 @@ class NixClient(object):
 			result.state = msg.get_state()
 
 			if result.state[0] == yami.OutgoingMessage.REPLIED:
-				result["data"] = json.loads(msg.get_reply()["message"])
+				reply = msg.get_reply()
+				if "message" in reply:
+					result["data"] = json.loads(reply["message"])
 			return result

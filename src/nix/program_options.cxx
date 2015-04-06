@@ -32,7 +32,7 @@ void ProgramOptions::parse(int argc, char** argv)
 		char progn[PATH_MAX];
 		memcpy(progn, progname.data(), progname.length());
 		string base_dir(dirname(dirname(progn)));
-		base_dir = nix::util::fs::resolve_path(base_dir);
+		base_dir = nix::util::fs::expand_user(base_dir);
 		string config_path;
 		string db_config_path;
 
@@ -72,6 +72,10 @@ void ProgramOptions::parse(int argc, char** argv)
 			("debug,D",
 			 po::value<bool>()->implicit_value(true)->zero_tokens()->default_value(false),
 			 "debug mode (additional info will be printed)"
+			)
+			("no-close-fds",
+			 po::value<bool>()->implicit_value(true)->zero_tokens()->default_value(false),
+			 "do not close stdout/stderr when daemonizing"
 			)
 			;
 

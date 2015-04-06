@@ -54,6 +54,7 @@ void Module::list_routes(std::unique_ptr<IncomingMessage> msg) const
 	for(auto& it : routes_) {
 		msg->set("routing." + it->get_route(), "");
 	}
+	LOG(DEBUG) << "Replying to list_routes";
 	msg->reply(*msg);
 }
 

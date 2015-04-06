@@ -16,7 +16,7 @@ bool pidfile_exists(const std::string& path)
 
 bool pidfile_write(const std::string& path, pid_t pid)
 {
-	std::string pidpath(fs::resolve_path(path));
+	std::string pidpath(fs::expand_user(path));
 	std::ofstream f(pidpath.c_str(), std::ios::trunc);
 	if(f.is_open()) {
 		f << pid;
@@ -28,7 +28,7 @@ bool pidfile_write(const std::string& path, pid_t pid)
 pid_t pidfile_read(const std::string& path)
 {
 	pid_t pid = 0;
-	std::string pidpath(fs::resolve_path(path));
+	std::string pidpath(fs::expand_user(path));
 	if(pidfile_exists(pidpath)) {
 		std::ifstream f(path.c_str());
 		if(f.is_open()) {
@@ -41,7 +41,7 @@ pid_t pidfile_read(const std::string& path)
 
 bool pidfile_remove(const std::string& path)
 {
-	std::string pidpath(fs::resolve_path(path));
+	std::string pidpath(fs::expand_user(path));
 	return (unlink(pidpath.c_str()) == 0);
 }
 

@@ -9,12 +9,13 @@ from subprocess import Popen
 
 class NixServer(object):
 	def __init__(self, address = None):
+		self.__server_process = None
 		self.project_root = os.getenv("PROJECT_ROOT")
 		self.__address = address
 		if not self.__address:
-			port = random.randint(65515, 65535)
+			port = random.randint(65500, 65535)
 			self.__address = "tcp://127.0.0.1:%d" % port
-		self.__pidfile = "/tmp/nix.%d.pid" % os.getpid()
+		self.__pidfile = "/tmp/nix.test-%d.pid" % os.getpid()
 
 	def get_address(self):
 		return self.__address
@@ -22,11 +23,12 @@ class NixServer(object):
 	def start(self):
 		executable = os.path.join(self.project_root, "bin", "NIX")
 		cmd = [
-			executable, "-F",
+			executable, "-F", "-D", "-v",
 			"--enable-resolver", "-A", self.__address,
-			"--pidfile", self.__pidfile
+			"--pidfile", self.__pidfile,
+			"--no-close-fds"
 		]
-		Popen(cmd, stdout=sys.stdout, shell=False)
+		self.__server_process = Popen(cmd, stdout=sys.stdout, shell=False)
 		print("")
 		wait = 3
 		while not os.path.isfile(self.__pidfile):

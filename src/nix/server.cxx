@@ -28,6 +28,7 @@ Server::Server(const server::Options& options)
 
 Server::~Server()
 {
+	LOG(INFO) << "~Server()";
 	agent_.reset();
 }
 

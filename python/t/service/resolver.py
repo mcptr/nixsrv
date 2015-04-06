@@ -15,7 +15,7 @@ class TestResolver(unittest.TestCase):
 		self.server.stop()
 
 	def test_resolver(self):
-		client = NixClient(self.server_address)
+		client = NixClient("tcp://127.0.0.1:9876")
 		result = client.call("Resolver", "list_routes", {}, 2000)
 		print(result.state)
 		self.assertFalse(result.is_rejected(), "not rejected")

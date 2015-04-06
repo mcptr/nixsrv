@@ -3,9 +3,9 @@
 ME=$(readlink -f $0)
 MY_DIR=$(dirname $ME)
 PROGNAME="NIX"
-PID=`pidof $PROGNAME`
+PID=0
 PROG="$MY_DIR/bin/$PROGNAME"
-PIDPATH="$MY_DIR/var/pid/srv.pid"
+PIDPATH="$MY_DIR/var/run/nix.pid"
 
 export LD_LIBRARY_PATH=/usr/local/lib64/soci:/usr/local/lib64/yami4:$MY_DIR/lib/external/jsoncpp
 
@@ -53,36 +53,54 @@ start_debug_no_db()
 
 stop()
 {
-    if [ $PID ]; then
-		echo "Stopping $PROG / $PID"
-		kill -TERM $PID
-
-		while true; do
-			kill -0 $PID > /dev/null
-			if test $? = 0; then
-				echo "Wating for $PID to stop"
-				sleep 1
-			else
-				echo "Done"
-				break
-			fi
-		 done
+    PID=0
+    if test -f $PIDPATH; then
+	PID=`cat $PIDPATH`
     else
-		echo "Not running?"
+	echo "No pidfile: $PIDPATH"
+    fi
+
+    if test $PID != 0; then
+	kill -0 $PID > /dev/null
+	if test $? != 0; then
+	    exit 0
+	fi
+	echo "Stopping $PROG / $PID"
+	kill -TERM $PID
+
+	while true; do
+	    kill -0 $PID > /dev/null
+	    if test $? = 0; then
+		echo "Wating for $PID to stop"
+		sleep 1
+	    else
+		echo "Done"
+		break
+	    fi
+	done
+    else
+	echo "Not running?"
     fi
 
     if [ -e $PIDPATH ]; then
-		rm $PIDPATH
+	rm $PIDPATH
     fi
 }
 
 show_status()
 {
-    PID=`pidof $PROGNAME`
-    if [ $PID ]; then
-		echo "Running, pid: $PID"
-    else
-		echo "Not running"
+    PID=0
+    if test -f $PIDPATH; then
+	PID=`cat $PIDPATH`
+    fi
+
+    if test $PID != 0; then
+	kill -0 $PID > /dev/null
+	if test $? = 0; then
+	    echo "Running, pid: $PID"
+	else
+	    echo "Not running: "
+	fi
     fi
 }
 
@@ -97,28 +115,28 @@ fi
 
 case "$ACTION" in
     start)
-		start $@
-		;;
+	start $@
+	;;
     debug)
-		start_debug $@
-		;;
+	start_debug $@
+	;;
     start_no_db|no_db)
-		start_no_db $@
-		;;
+	start_no_db $@
+	;;
     debug_no_db)
-		start_debug_no_db $@
-		;;
+	start_debug_no_db $@
+	;;
     stop)
-		stop
-		;;
+	stop
+	;;
     restart)
-		stop
-		start $@
-		;;
+	stop
+	start $@
+	;;
     status)
-		show_status
-		;;
+	show_status
+	;;
     *)
-		echo "Usage: $0 {start|debug|stop|restart|status}"
-		exit 1
+	echo "Usage: $0 {start|debug|stop|restart|status}"
+	exit 1
 esac

@@ -3,6 +3,7 @@
 import sys
 # import argparse
 import random
+import time
 from lib import yami
 import threading
 import concurrent.futures
@@ -11,6 +12,8 @@ import json
 
 server_address = "tcp://127.0.0.1:9876"
 print_lock = threading.Lock()
+
+client_agent = yami.Agent({"tcp_nonblocking" : 1})
 
 
 def call(agent, mod, route, params):
@@ -26,10 +29,10 @@ def call(agent, mod, route, params):
 		state = msg.get_state()
 		if state[0] == yami.OutgoingMessage.REPLIED:
 			# print_lock.acquire()
-			# print(
-			# 	"RAW (%d): " % (params["msg_id"]),
-			# 	threading.current_thread(), msg.get_reply()
-			# )
+			print(
+				"RAW (%d): " % (params["msg_id"]),
+				threading.current_thread(), msg.get_reply()
+			)
 			# # response = (json.loads(msg.get_reply()["message"]))
 			# # if "@error_code" in response:
 			# # 	print("Error: %d, %s" % (response["@error_code"], response["@error"]))
@@ -45,15 +48,14 @@ def call(agent, mod, route, params):
 
 futures = []
 
-with yami.Agent({"tcp_nonblocking" : 1}) as client_agent:
-	with ThreadPoolExecutor(max_workers=100) as executor:
-		for x in range(0, 500):
-			futures.append(executor.submit(
-				call, client_agent,
-				"Debug", "debug_async", {
-					# "interval_ms" : random.randint(1, 3) * 100,
-					"msg_id" : x
-				}
-			))
-		for future in concurrent.futures.as_completed(futures):
-			future.result()
+with ThreadPoolExecutor(max_workers=2) as executor:
+	for x in range(0, 1):
+		futures.append(executor.submit(
+			call, client_agent,
+			"Resolver", "list_routes", {
+				# "interval_ms" : random.randint(1, 3) * 100,
+				"msg_id" : x
+			}
+		))
+	for future in concurrent.futures.as_completed(futures):
+		future.result()
