@@ -391,6 +391,7 @@ translation_units = {
 	#	"env" : yamienv,
 	# },
 	"util/fs" : {},
+	"util/pid" : {},
 	"util/string" : {},
 	# ######################################################################
 	# "core/auth/auth" : {

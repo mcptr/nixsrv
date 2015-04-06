@@ -3,6 +3,7 @@
 #include <cstring>
 #include <fstream>
 #include <iostream>
+#include <climits>
 
 #include "exception.hxx"
 #include "program_options.hxx"
@@ -28,7 +29,9 @@ void ProgramOptions::parse(int argc, char** argv)
 		);
 
 		string progname(argv[0]);
-		string base_dir(dirname(dirname((char*)progname.c_str())));
+		char progn[PATH_MAX];
+		memcpy(progn, progname.data(), progname.length());
+		string base_dir(dirname(dirname(progn)));
 		base_dir = nix::util::fs::resolve_path(base_dir);
 		string config_path;
 		string db_config_path;
@@ -53,8 +56,7 @@ void ProgramOptions::parse(int argc, char** argv)
 			("basedir", po::value(&stropt)->default_value(base_dir), "base application directory")
 			("modulesdir", po::value(&stropt)->default_value(base_dir + "/lib", "$BASE_DIR/lib"), "directory containing modules (*.so)")
 			("logdir", po::value(&stropt)->default_value(base_dir + "/logs", "$BASE_DIR/logs"), "directory to store logs to")
-			("pidbase", po::value(&stropt)->default_value(base_dir, "$BASE_DIR"), "directory for storing pidfile")
-			("pidname", po::value(&stropt)->default_value(base_dir + "/server.pid", "$BASE_DIR/$(pidbase)/server.pid"), "pid filename")
+			("pidfile", po::value(&stropt)->default_value(base_dir + "/nix.pid", "$BASE_DIR"), "pidfile path")
 			("verbose,v",
 			 po::value<bool>()->implicit_value(true)->zero_tokens()->default_value(false),
 			 "verbose run"

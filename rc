@@ -58,7 +58,7 @@ stop()
 		kill -TERM $PID
 
 		while true; do
-			kill -0 $PID
+			kill -0 $PID > /dev/null
 			if test $? = 0; then
 				echo "Wating for $PID to stop"
 				sleep 1

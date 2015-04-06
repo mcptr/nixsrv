@@ -7,8 +7,9 @@
 #include <vector>
 
 #include "nix/route.hxx"
-#include "module/api.hxx"
+#include "nix/message/incoming.hxx"
 
+#include "module/api.hxx"
 
 namespace nix {
 
@@ -38,6 +39,9 @@ public:
 	
 	virtual void start();
 	virtual void stop();
+
+	// common handlers
+	virtual void list_routes(std::unique_ptr<IncomingMessage> msg) const final;
 protected:
 	std::shared_ptr<ModuleAPI> api_;
 	Routes_t routes_;

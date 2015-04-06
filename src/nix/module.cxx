@@ -10,6 +10,12 @@ Module::Module(std::shared_ptr<ModuleAPI> api, const std::string& id, int versio
 	  ident_(id),
 	  version_(version)
 {
+	routes_.push_back(
+		std::shared_ptr<Route>(
+			new Route("list_routes",
+					  std::bind(&Module::list_routes, this, _1),
+					  Route::ANY,
+					  Route::SYNC)));
 }
 
 Module::~Module()
@@ -42,5 +48,13 @@ void Module::stop()
 	/* default impl does nothing */
 }
 
+void Module::list_routes(std::unique_ptr<IncomingMessage> msg) const
+{
+	msg->clear();
+	for(auto& it : routes_) {
+		msg->set("routing." + it->get_route(), "");
+	}
+	msg->reply(*msg);
+}
 
 } // nix
