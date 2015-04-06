@@ -27,7 +27,7 @@ void Message::parse(const std::string& json_string)
 	Json::Reader reader;
 	
 	if(!reader.parse(json_string, root_, false)) {
-		LOG(DEBUG) << "Canno parse message: " << json_string;
+		LOG(DEBUG) << "Cannot parse message: " << json_string;
 		throw std::runtime_error(reader.getFormattedErrorMessages());
 	}
 }
@@ -94,17 +94,17 @@ bool Message::get(const std::string& k, bool default_value) const
 
 void Message::set_object(const std::string& k)
 {
-	set(k, Json::objectValue);
+	set(k, Object_t().get_value());
 }
 
 void Message::set_array(const std::string& k)
 {
-	set(k, Json::arrayValue);
+	set(k, Array_t().get_value());
 }
 
 void Message::set_null(const std::string& k)
 {
-	set(k, Json::nullValue);
+	set(k, Null_t().get_value());
 }
 
 void Message::set_status_code(nix::StatusCode_t status)
@@ -126,7 +126,7 @@ void Message::set_status(nix::StatusCode_t status,
 
 void Message::append_null(const std::string& k)
 {
-	append(k, Json::nullValue);
+	append(k, Null_t().get_value());
 }
 
 void Message::remove(const std::string&k)
@@ -158,6 +158,13 @@ bool Message::is_array(const std::string& k) const
 	Json::Value dest;
 	bool found = find(k, dest);
 	return (found && dest.isArray());
+}
+
+bool Message::is_object(const std::string& k) const
+{
+	Json::Value dest;
+	bool found = find(k, dest);
+	return (found && dest.isObject());
 }
 
 std::string Message::to_string(bool pretty) const

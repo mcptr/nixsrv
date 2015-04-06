@@ -10,14 +10,22 @@
 
 #include "nix/common.hxx"
 #include "nix/util/string.hxx"
-
+#include "message/value.hxx"
 
 namespace nix {
 
+using nix::value::Value;
+using nix::value::Object;
+using nix::value::Array;
+using nix::value::Null;
 
 class Message
 {
 public:
+	typedef Object Object_t;
+	typedef Array Array_t;
+	typedef Null Null_t;
+
 	Message();
 	explicit Message(Json::Value& root);
 	explicit Message(const std::string& json_string);
@@ -59,6 +67,7 @@ public:
 	bool exists(const std::string& k) const;
 	bool is_null(const std::string& k) const;
 	bool is_array(const std::string& k) const;
+	bool is_object(const std::string& k) const;
 
 	void set_status_code(nix::StatusCode_t status);
 	void set_status_msg(const std::string& msg);

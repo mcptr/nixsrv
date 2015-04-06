@@ -3,6 +3,7 @@
 
 #include <functional>
 #include <iostream>
+#include <iomanip>
 #include <string>
 #include <map>
 
@@ -63,7 +64,7 @@ protected:
 					 const T& expected,
 					 const std::string& name)
 	{
-		std::cout << "\n\t" << (name.empty() ? "..." : name)
+		std::cout << "\n\t> failed case: " << (name.empty() ? "..." : name)
 				  << "\n\tRESULT: " << result
 				  << "\n\tEXPECT: " << expected
 				  << std::endl;
@@ -90,7 +91,7 @@ public:
 	void test_case(const std::string& name,
 				   TestCase::TestFunction_t code)
 	{
-		cases_[name] = code;
+		cases_.push_back(std::make_pair(name, code));
 	}
 
 	int run()
@@ -99,7 +100,7 @@ public:
 		for(auto& it : cases_) {
 			try	{
 				i++;
-				std::cout << i << " - " << it.first << " - ";
+				std::cout << i << " - " << std::setw(48) << std::left << it.first << " - ";
 
 				TestCase tcase(it.first);
 				it.second(tcase);
@@ -112,6 +113,7 @@ public:
 				std::cout << (failures ? "FAIL" : "PASS") << std::endl;
 			}
 			catch(std::exception& e) {
+				failed_.push_back(it.first);
 				std::cout << "FAIL: " << it.first << "\n"
 						  << "\t" << e.what() << std::endl;
 			}
@@ -121,7 +123,7 @@ public:
 	}
 
 protected:
-	std::map<std::string, TestCase::TestFunction_t> cases_;
+	std::vector<std::pair<std::string, TestCase::TestFunction_t>> cases_;
 	std::vector<std::string> failed_;
 };
 

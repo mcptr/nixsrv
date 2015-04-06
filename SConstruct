@@ -343,6 +343,9 @@ translation_units = {
 	"message/incoming" : {
 		"env": combinedenv,
 	},
+	"message/value" : {
+		"env": combinedenv,
+	},
 	"module" : {
 		"env": combinedenv,
 	},
