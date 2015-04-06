@@ -8,7 +8,9 @@ int main()
 	using nix::Message;
 	using std::string;
 
-	UnitTest unit;
+	using namespace test;
+	Configuration config;
+	UnitTest unit(config);
 
 	unit.test_case(
 		"Basic", 
@@ -52,8 +54,8 @@ int main()
 			std::string key = "key";
 			m.set_object(key);
 			std::string expected("{\"key\":{}}\n");
-			test.equals(m.to_string(), expected, "to_string()");
-			test.equals(m.is_object(key), true, "is object?");
+			test.assert_equals(m.to_string(), expected, "to_string()");
+			test.assert_equals(m.is_object(key), true, "is object?");
 
 			Message::Object_t object_value;
 			m.set(key, object_value);
@@ -92,7 +94,7 @@ int main()
 	);
 
 	unit.test_case(
-		"set() suite", 
+		"set()/get()", 
 		[](TestCase& test) {
 			Message m;
 
@@ -115,7 +117,6 @@ int main()
 		}
 	);
 
-
 	unit.test_case(
 		"Parse json (ctor)", 
 		[](TestCase& test)
@@ -130,6 +131,20 @@ int main()
 			test.equals(retrieved,
 						expected,
 						"get value from parsed json");
+		}
+	);
+
+	unit.test_case(
+		"parse()", 
+		[](TestCase& test)
+		{
+			std::string json = "{\"level1\":{\"level2\":{\"first\":\"value\"}}}\n";
+			Message m;
+			test.no_throw([&m, &json]() { m.parse(json); }, "parse() success");
+			test.equals(m.to_string(), json, "parse() and to_string()");
+
+			test.throws<std::runtime_error>([&m]() { m.parse(""); } );
+			test.throws<std::runtime_error>([&m]() { m.parse("invalid"); } );
 		}
 	);
 
