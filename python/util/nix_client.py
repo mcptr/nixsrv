@@ -42,5 +42,5 @@ class NixClient(object):
 			if result.state[0] == yami.OutgoingMessage.REPLIED:
 				reply = msg.get_reply()
 				if "message" in reply:
-					result["data"] = json.loads(reply["message"])
+					result.data = json.loads(reply["message"])
 			return result

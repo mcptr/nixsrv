@@ -7,13 +7,14 @@ import argparse
 from subprocess import call, DEVNULL, STDOUT, PIPE
 
 MY_DIR = os.path.abspath(os.path.dirname(sys.argv[0]))
-ld_library_paths = ["/usr/local/lib64/soci", "/usr/local/lib64/yami4"]
 
-extern_libs_dir = os.path.abspath(os.path.join(MY_DIR, "../lib/external"))
-for entry in os.listdir(extern_libs_dir):
-	ld_library_paths.append(os.path.join(extern_libs_dir, entry))
+# ld_library_paths = ["/usr/local/lib64/soci", "/usr/local/lib64/yami4"]
 
-os.environ.putenv("LD_LIBRARY_PATH", ":".join(ld_library_paths))
+# extern_libs_dir = os.path.abspath(os.path.join(MY_DIR, "../lib/external"))
+# for entry in os.listdir(extern_libs_dir):
+# 	ld_library_paths.append(os.path.join(extern_libs_dir, entry))
+
+# os.environ.putenv("LD_LIBRARY_PATH", ":".join(ld_library_paths))
 
 conf_pep8 = {
 	"ignore" : ["W191", "E203", "E251", "E303", "E128", "E126"],
@@ -86,11 +87,8 @@ class Runner(object):
 
 	def run_nose(self):
 		title = "Running nosetest in " + self.python_dir
-		self.exec_test(
-			["nosetests", "-v", self.python_dir],
-			title=title,
-			group="NOSE"
-		)
+		cmd = ["nosetests", "-v", "--exe", "-s", self.python_dir]
+		self.exec_test(cmd,	title=title, group="NOSE")
 
 	def count_failures(self):
 		return len(list(filter(lambda x: self.test_results[x], self.test_results)))

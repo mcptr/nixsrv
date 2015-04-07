@@ -52,7 +52,10 @@ void Module::list_routes(std::unique_ptr<IncomingMessage> msg) const
 {
 	msg->clear();
 	for(auto& it : routes_) {
-		msg->set("routing." + it->get_route(), "");
+		const std::string prefix = "routing." + it->get_route();
+		msg->set(prefix + ".access", it->get_access_modifier());
+		msg->set(prefix + ".processing_type", it->get_processing_type());
+		msg->set(prefix + ".description", it->get_description());
 	}
 	LOG(DEBUG) << "Replying to list_routes";
 	msg->reply(*msg);
