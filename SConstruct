@@ -393,6 +393,9 @@ translation_units = {
 	"util/fs" : {},
 	"util/pid" : {},
 	"util/string" : {},
+	"types" : {
+		"env" : yamienv,
+	},
 	# ######################################################################
 	# "core/auth/auth" : {
 	#	"cpppath" : [resolve_include("yami4")],

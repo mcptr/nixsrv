@@ -8,6 +8,31 @@ from nose.tools import assert_true
 from nose.tools import assert_equal
 # from nose.tools import assert_raises
 
+expected_routing = {
+	"routing": {
+		"unbind": {
+			"description": "",
+			"processing_type": "VOID",
+			"access": "API_PRIVATE"
+		},
+		"list_routes": {
+			"description": "",
+			"processing_type": "SYNC",
+			"access": "ANY"
+		},
+		"resolve": {
+			"description": "",
+			"processing_type": "SYNC",
+			"access": "API_PRIVATE"
+		},
+		"bind": {
+			"description": "",
+			"processing_type": "SYNC",
+			"access": "API_PRIVATE"
+		}
+	}
+}
+
 
 def test_routing():
 	with NixServer() as server:
@@ -16,29 +41,5 @@ def test_routing():
 		assert_false(result.is_rejected(), "not rejected")
 		assert_false(result.is_abandoned(), "not abandoned")
 		assert_true(result.is_replied(), "is replied")
-
-		expected = {
-			"routing": {
-				"list_routes": {
-					"access": 0,
-					"description": "",
-					"processing_type": 1
-				},
-				"resolve": {
-					"access": 2,
-					"description": "",
-					"processing_type": 1
-				},
-				"bind": {
-					"access": 2,
-					"description": "",
-					"processing_type": 1
-				},
-				"unbind": {
-					"access": 2,
-					"description": "",
-					"processing_type": 0
-				}
-			}
-		}
-		assert_equal(expected, result.data)
+		# print(json.dumps(result.data, indent=4))
+		assert_equal(expected_routing, result.data)

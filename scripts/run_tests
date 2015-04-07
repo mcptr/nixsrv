@@ -87,7 +87,9 @@ class Runner(object):
 
 	def run_nose(self):
 		title = "Running nosetest in " + self.python_dir
-		cmd = ["nosetests", "-v", "--exe", "-s", self.python_dir]
+		cmd = ["nosetests", "-v", "--exe", self.python_dir]
+		if self.verbose:
+			cmd.append("-s")
 		self.exec_test(cmd,	title=title, group="NOSE")
 
 	def count_failures(self):
@@ -106,10 +108,8 @@ class Runner(object):
 		print("".center(72, "-"))
 
 
-def run_tests(**kwargs):
-	verbose = kwargs.pop("verbose", False)
-	print("")
-	runner = Runner(verbose=verbose)
+def run_tests(args):
+	runner = Runner(verbose=args.verbose)
 	runner.run_cxx_tests()
 	runner.run_pep8()
 	runner.run_nose()
@@ -121,7 +121,10 @@ def run_tests(**kwargs):
 
 if __name__ == "__main__":
 	parser = argparse.ArgumentParser(description='Test runner')
-	parser.add_argument("-v", "--verbose", action="store_true", help="verbose")
+
+	parser.add_argument("-v", "--verbose", dest="verbose",
+						action="store_true", help="verbose")
 
 	args = parser.parse_args()
-	run_tests(verbose=args.verbose)
+	print(args.verbose)
+	run_tests(args)

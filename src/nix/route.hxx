@@ -11,7 +11,6 @@
 
 namespace nix {
 
-
 class Route
 {
 public:

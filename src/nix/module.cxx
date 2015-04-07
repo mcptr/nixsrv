@@ -1,5 +1,6 @@
 #include "module.hxx"
 #include "nix/common.hxx"
+#include "nix/types.hxx"
 
 
 namespace nix {
@@ -51,12 +52,18 @@ void Module::stop()
 void Module::list_routes(std::unique_ptr<IncomingMessage> msg) const
 {
 	msg->clear();
+
 	for(auto& it : routes_) {
 		const std::string prefix = "routing." + it->get_route();
-		msg->set(prefix + ".access", it->get_access_modifier());
-		msg->set(prefix + ".processing_type", it->get_processing_type());
+		msg->set(prefix + ".access", 
+				 str_access_modifier(it->get_access_modifier()));
+
+		msg->set(prefix + ".processing_type",
+				 str_processing_type(it->get_processing_type()));
+
 		msg->set(prefix + ".description", it->get_description());
 	}
+
 	LOG(DEBUG) << "Replying to list_routes";
 	msg->reply(*msg);
 }
