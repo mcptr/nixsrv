@@ -8,6 +8,11 @@
 namespace nix {
 namespace server {
 
+Dispatcher::Dispatcher(bool development_mode)
+	: development_mode_(development_mode),
+	  auth_(nix::core::Auth(development_mode))
+{
+}
 
 void Dispatcher::add_routes(const std::string& module,
 							const Module::Routes_t& routes)

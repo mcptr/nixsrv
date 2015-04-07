@@ -13,22 +13,22 @@ expected_routing = {
 		"unbind": {
 			"description": "",
 			"processing_type": "VOID",
-			"access": "API_PRIVATE"
+			"access_modifier": "API_PRIVATE"
 		},
 		"list_routes": {
-			"description": "",
+			"description": "Display all routes handled by 'Resolver' module",
 			"processing_type": "SYNC",
-			"access": "ANY"
+			"access_modifier": "ANY"
 		},
 		"resolve": {
 			"description": "",
 			"processing_type": "SYNC",
-			"access": "API_PRIVATE"
+			"access_modifier": "API_PRIVATE"
 		},
 		"bind": {
 			"description": "",
 			"processing_type": "SYNC",
-			"access": "API_PRIVATE"
+			"access_modifier": "API_PRIVATE"
 		}
 	}
 }

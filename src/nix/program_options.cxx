@@ -23,6 +23,7 @@ void ProgramOptions::parse(int argc, char** argv)
 		po::options_description server("Server options");
 		po::options_description builtins("Builtins");
 		po::options_description infrastructure("Infrastructure options");
+		po::options_description devel("Development options");
 
 		po::options_description config_file_hidden(
 			"Configuration file based options"
@@ -114,8 +115,19 @@ void ProgramOptions::parse(int argc, char** argv)
 			 "external job queue server address")
 			;
 
+		devel.add_options()
+			("development-mode",
+			 po::value<bool>()->implicit_value(true)->zero_tokens()->default_value(false),
+			 "enable development mode")
+			;
+
 		passwd* pwd = getpwuid(getuid());
 		string username(pwd->pw_name);
+
+		all_.add(flags).add(generic).add(server).add(builtins).add(devel);
+		po::store(po::command_line_parser(argc, argv).options(all_).run(), vm_);
+		po::notify(vm_);
+
 
 		config_file_hidden.add_options()
 			("SERVER.tcp_listen_backlog",
@@ -128,11 +140,6 @@ void ProgramOptions::parse(int argc, char** argv)
 			 po::value(&intopt)->default_value(10), "SERVER.dispatcher_threads"
 			)
 			;
-
-		all_.add(flags).add(generic).add(server).add(builtins);
-
-		po::store(po::command_line_parser(argc, argv).options(all_).run(), vm_);
-		po::notify(vm_);
 
 		if(!has_help()) {
 			config_file_hidden.add(generic).add(server).add(builtins).add(infrastructure);

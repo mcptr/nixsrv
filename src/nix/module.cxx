@@ -16,7 +16,11 @@ Module::Module(std::shared_ptr<ModuleAPI> api, const std::string& id, int versio
 			new Route("list_routes",
 					  std::bind(&Module::list_routes, this, _1),
 					  Route::ANY,
-					  Route::SYNC)));
+					  Route::SYNC,
+					  "Display all routes handled by '" + ident_ + "' module"
+			)
+		)
+	);
 }
 
 Module::~Module()
@@ -55,7 +59,7 @@ void Module::list_routes(std::unique_ptr<IncomingMessage> msg) const
 
 	for(auto& it : routes_) {
 		const std::string prefix = "routing." + it->get_route();
-		msg->set(prefix + ".access", 
+		msg->set(prefix + ".access_modifier", 
 				 str_access_modifier(it->get_access_modifier()));
 
 		msg->set(prefix + ".processing_type",
@@ -67,5 +71,6 @@ void Module::list_routes(std::unique_ptr<IncomingMessage> msg) const
 	LOG(DEBUG) << "Replying to list_routes";
 	msg->reply(*msg);
 }
+
 
 } // nix

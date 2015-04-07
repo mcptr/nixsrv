@@ -153,7 +153,6 @@ int main(int argc, char** argv)
 			  << "\n";
 
 
-
 	pid_t other_pid = 0;
 
 	if(!is_foreground) {
@@ -335,6 +334,9 @@ void setup_server(Options& options,
 	options.tcp_nonblocking = po.get<bool>("SERVER.tcp_nonblocking");
 	options.tcp_listen_backlog = po.get<int>("SERVER.tcp_listen_backlog");
 	options.dispatcher_threads = po.get<int>("SERVER.dispatcher_threads");
+
+	// development options
+	options.development_mode = po.get<bool>("development-mode");
 }
 
 void setup_db_pool(std::shared_ptr<ObjectPool<Connection>> pool,

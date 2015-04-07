@@ -98,13 +98,13 @@ class Runner(object):
 	def display_results(self):
 		failures = 0
 		if self.test_results["CXX"]:
-			failures 
 			print("Failed CXX tests:\n%s" % "\t\n".join(
 				sorted(self.test_results["CXX"]))
 			)
 			print("".center(72, "-"))
 		print("PEP8: %s" % ("FAIL" if self.test_results["PEP8"] else "PASS"))
 		print("NOSE: %s" % ("FAIL" if self.test_results["NOSE"] else "PASS"))
+		print("CXX : %s" % ("FAIL" if self.test_results["CXX"] else "PASS"))
 		print("".center(72, "-"))
 
 
@@ -126,5 +126,4 @@ if __name__ == "__main__":
 						action="store_true", help="verbose")
 
 	args = parser.parse_args()
-	print(args.verbose)
 	run_tests(args)

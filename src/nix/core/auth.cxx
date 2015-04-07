@@ -5,11 +5,14 @@ namespace nix {
 namespace core {
 
 
-Auth::Auth()
+Auth::Auth(bool development_mode)
 {
-	auth_keys_["key_public"] = KEY_PUBLIC;
-	auth_keys_["key_private"] = KEY_PRIVATE;
-	auth_keys_["key_admin"] = KEY_ADMIN;
+	auth_keys_["example_key_public"] = KEY_PUBLIC;
+	auth_keys_["example_key_private"] = KEY_PRIVATE;
+	auth_keys_["example_key_admin"] = KEY_ADMIN;
+	if(development_mode) {
+		auth_keys_["_internal_key_test_"] = KEY_TEST;
+	}
 }
 
 bool Auth::check_access(const nix::IncomingMessage& msg,
