@@ -56,7 +56,8 @@ void Module::stop()
 void Module::list_routes(std::unique_ptr<IncomingMessage> msg) const
 {
 	msg->clear();
-
+	msg->set("module.ident", ident_);
+	msg->set("module.version", version_);
 	for(auto& it : routes_) {
 		const std::string prefix = "routing." + it->get_route();
 		msg->set(prefix + ".access_modifier", 

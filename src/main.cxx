@@ -273,6 +273,11 @@ int main(int argc, char** argv)
 		server->register_object("echo", nix::direct_handlers::echo);
 	}
 
+	if(po.get<bool>("development-mode")) {
+		LOG(WARNING) << "****** Starting in development mode "
+				  << "(always allows KEY_TEST) ******";
+	}
+
 	server->start();
 
 	std::vector<std::thread> threads;

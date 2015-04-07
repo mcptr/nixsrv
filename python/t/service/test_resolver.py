@@ -1,14 +1,18 @@
 from util.nix_server import NixServer
 from util.nix_client import NixClient
 
-import json
-
+import time
 from nose.tools import assert_false
 from nose.tools import assert_true
 from nose.tools import assert_equal
-# from nose.tools import assert_raises
+
 
 expected_routing = {
+	"@status_code": 0,
+	"module" : {
+		"ident" : "Resolver",
+		"version" : 1,
+	},
 	"routing": {
 		"unbind": {
 			"description": "",
@@ -34,12 +38,85 @@ expected_routing = {
 }
 
 
-def test_routing():
+development_key = "_development_key_"
+development_key_public = "_development_key_public"
+
+
+def test_routing_structure():
 	with NixServer() as server:
 		client = NixClient(server.get_address())
 		result = client.call("Resolver", "list_routes", {}, 2000)
 		assert_false(result.is_rejected(), "not rejected")
 		assert_false(result.is_abandoned(), "not abandoned")
 		assert_true(result.is_replied(), "is replied")
-		# print(json.dumps(result.data, indent=4))
 		assert_equal(expected_routing, result.data)
+		routing = result.data.get("routing")
+		auth_error_code = 101
+		# routes with access mod != ANY require api key -> code 101
+		for route in routing:
+			if routing[route]["access_modifier"] != "ANY":
+				response = client.call("Resolver", route, {}, 2000)
+				if routing[route]["processing_type"] != "VOID":
+					status_code = response.data.get("@status_code")
+					assert_equal(status_code, auth_error_code)
+
+		# test API_PRIVATE with invalid key (public) -> code 101
+		for route in routing:
+			am = routing[route]["access_modifier"]
+			if am == "API_PRIVATE" and route != "list_routes":
+				params = {"@api_key" : development_key_public}
+				response = client.call("Resolver", route, params, 2000)
+				status_code = response.data.get("@status_code")
+				assert_equal(status_code, 101)
+
+
+def test_service():
+	test_node = "unittest-01"
+	test_address = "tcp://127.0.0.1:33333"
+	with NixServer() as server:
+		client = NixClient(server.get_address())
+		params = {"@api_key" : development_key}
+
+		# testing 'bind' route
+
+		invalid_params = params.copy()
+		response = client.call("Resolver", "bind", invalid_params, 2000)
+		assert_equal(
+			response.status_code(),
+			501,
+			"Code 501 - indicates invalid parameters"
+		)
+
+		# valid
+		params.update({
+			"node" : test_node,
+			"address" : test_address}
+		)
+		response = client.call("Resolver", "bind", params, 2000)
+		assert_true(response.is_status_ok(), "Bind succeeded")
+
+		# testing 'resolve' route
+
+		client = NixClient(server.get_address())
+		params = {"@api_key" : development_key}
+		invalid_params = params.copy()
+		response = client.call("Resolver", "resolve", invalid_params, 2000)
+		assert_true(response.is_status_fail(), "Resolve fails without node")
+
+		# valid
+		params.update({"node" : test_node})
+		response = client.call("Resolver", "resolve", params, 2000)
+		assert_true(response.is_status_ok(), "Is resolved ok?")
+		assert_equal(
+			response.data["address"],
+			test_address,
+			"Is resolved address correct?"
+		)
+
+
+		# testing 'unbind' route
+		response = client.send_one_way("Resolver", "unbind", params)
+		time.sleep(1)
+		# after unbind node cannot be resolved
+		response = client.call("Resolver", "resolve", params, 2000)
+		assert_true(response.is_status_fail(), "Is node unbound?")

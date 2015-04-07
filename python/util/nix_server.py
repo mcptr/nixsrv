@@ -26,7 +26,8 @@ class NixServer(object):
 			executable, "-F", "-D", "-v",
 			"--enable-resolver", "-A", self.__address,
 			"--pidfile", self.__pidfile,
-			"--no-close-fds"
+			"--no-close-fds",
+			"--development-mode"
 		]
 		self.__server_process = Popen(cmd, stdout=PIPE, shell=False)
 		print("")

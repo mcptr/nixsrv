@@ -51,7 +51,7 @@ void Cache::store(std::unique_ptr<IncomingMessage> msg)
 	std::string key = msg->get("key", "");
 	std::string value = msg->get("value", "");
 	if(key.empty() || value.empty()) {
-		msg->reject(
+		msg->fail(
 			nix::data_invalid_content,
 			"Cannot cache empty key/value."
 		);
@@ -70,13 +70,13 @@ void Cache::retrieve(std::unique_ptr<IncomingMessage> msg)
 {
 	std::string key = msg->get("key", "");
 	if(key.empty() || !cache_.count(key)) {
-		msg->reject(nix::null_value);
+		msg->fail(nix::null_value);
 	}
 
 	else {
 		if(cache_[key].expired()) {
 			cache_.erase(key);
-			msg->reject(nix::null_value);
+			msg->fail(nix::null_value);
 		}
 		else {
 			msg->clear();

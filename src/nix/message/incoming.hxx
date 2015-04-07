@@ -16,11 +16,19 @@ public:
 	IncomingMessage() = delete;
 	IncomingMessage(yami::incoming_message& msg);
 	virtual ~IncomingMessage() = default;
+
 	void reply();
 	void reply(Message& msg);
+
 	void reply_with_error(nix::StatusCode_t status, const std::string& msg);
+
+	void fail(const std::string& reason = std::string());
+	void fail(nix::StatusCode_t status,
+			  const std::string& reason = std::string());
+
 	void reject(const std::string& reason = std::string());
-	void reject(nix::StatusCode_t status, const std::string& reason = std::string());
+	void reject(nix::StatusCode_t status,
+				const std::string& reason = std::string());
 protected:
 	yami::incoming_message msg_;
 };

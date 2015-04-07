@@ -9,8 +9,8 @@ namespace nix {
 namespace server {
 
 Dispatcher::Dispatcher(bool development_mode)
-	: development_mode_(development_mode),
-	  auth_(nix::core::Auth(development_mode))
+	: auth_(nix::core::Auth(development_mode)),
+	  development_mode_(development_mode)
 {
 }
 
@@ -55,17 +55,13 @@ void Dispatcher::operator()(yami::incoming_message& msg)
 
 		std::string auth_error;
 		if(!auth_.check_access(*im, *(it->second.get()), auth_error)) {
-			Message out_msg;
-			out_msg.set_status(nix::auth_unauthorized, auth_error);
-
 			LOG(DEBUG) <<  "AuthError: " << route << " / " << auth_error;
-
-			im->reply(out_msg);
-
+			im->fail(nix::auth_unauthorized, auth_error);
 			return;
 		}
 
 		switch(it->second->get_processing_type()) {
+		case Route::VOID:
 		case Route::SYNC:
 			it->second->handle(std::move(im));
 			break;

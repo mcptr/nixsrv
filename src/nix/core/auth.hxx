@@ -21,7 +21,6 @@ public:
 		KEY_TEST
 	} KeyType_t;
 
-
 	Auth(bool development_mode = false);
 	bool check_access(const nix::IncomingMessage& msg,
 					  const Route& route,
@@ -31,7 +30,7 @@ public:
 protected:
 	// FIXME: for development only
 	std::unordered_map<std::string, KeyType_t> auth_keys_;
-
+	const bool development_mode_ = false;
 
 };
 
