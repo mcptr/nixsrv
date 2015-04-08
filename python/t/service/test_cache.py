@@ -45,7 +45,7 @@ development_key_public = "_development_key_public"
 
 
 def test_routing_structure():
-	with NixServer() as server:
+	with NixServer(modules=[module]) as server:
 		client = NixClient(server.get_address())
 		result = client.call(module, "list_routes", {}, 2000)
 		assert_false(result.is_rejected(), "not rejected")
@@ -57,7 +57,7 @@ def test_routing_structure():
 def test_service():
 	test_key = "unittest"
 	test_value = {"a_string" : "some string"}
-	with NixServer() as server:
+	with NixServer(modules=[module]) as server:
 		client = NixClient(server.get_address())
 		params = {"@api_key" : development_key}
 

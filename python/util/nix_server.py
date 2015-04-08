@@ -8,10 +8,11 @@ from subprocess import Popen, PIPE
 
 
 class NixServer(object):
-	def __init__(self, address = None):
+	def __init__(self, **kwargs):
 		self.__server_process = None
 		self.project_root = os.getenv("PROJECT_ROOT")
-		self.__address = None
+		self.__address = kwargs.pop("address", None)
+		self.__builtin_modules = kwargs.pop("modules", [])
 		if not self.__address:
 			port = random.randint(65500, 65535)
 			self.__address = "tcp://127.0.0.1:%d" % port
@@ -29,6 +30,8 @@ class NixServer(object):
 			"--no-close-fds",
 			"--development-mode"
 		]
+		for module in self.__builtin_modules:
+			cmd.append("--enable-" + module.lower())
 		self.__server_process = Popen(cmd, stdout=PIPE, shell=False)
 		print("")
 		wait = 3

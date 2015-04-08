@@ -36,7 +36,8 @@ bool Auth::check_access(const nix::IncomingMessage& msg,
 	// startup
 	if(development_mode_
 	   && auth_keys_[api_key] == KEY_TEST) {
-		LOG(INFO) << "Development mode: ALLOW " << api_key;
+		LOG(WARNING) << "\nDevelopment mode: ALLOWING "
+					 << api_key << "\n";
 		return true;
 	}
 	

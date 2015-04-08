@@ -61,6 +61,7 @@ class NixClient(object):
 			return result
 
 	def send_one_way(self, mod, route, params = None):
+		print("### send_one_way: %s/%s" % (mod, route))
 		params = (params or {})
 		self.__agent.send_one_way(
 			self.__address,

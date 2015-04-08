@@ -87,7 +87,6 @@ void Cache::retrieve(std::unique_ptr<IncomingMessage> msg)
 			msg->clear();
 			msg->set_deserialized(key, cache_[key].content);
 			msg->reply();
-			LOG(DEBUG) << "Retrieve: " << key;
 		}
 	}
 }
