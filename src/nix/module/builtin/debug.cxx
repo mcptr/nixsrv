@@ -49,7 +49,7 @@ void Debug::start()
 
 void Debug::stop()
 {
-	q_->close();
+	q_->set_enabled(false);
 	LOG(DEBUG) << "Queue closed";
 	int i = 0;
 	for(auto& it : threads_) {

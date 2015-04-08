@@ -53,14 +53,28 @@ JobQueue::JobQueue(std::shared_ptr<ModuleAPI> api,
 	);
 
 	std::shared_ptr<Route> queue_clear(
-		new Route("job/clear", handler, Route::ADMIN, Route::SYNC)
+		new Route("job/queue/clear",
+				  std::bind(&JobQueue::clear_queue, this, _1),
+				  Route::ADMIN,
+				  Route::SYNC
+		)
+	);
+
+	std::shared_ptr<Route> queue_manage(
+		new Route("job/queue/manage",
+				  std::bind(&JobQueue::manage_queue, this, _1),
+				  Route::ADMIN,
+				  Route::SYNC
+		)
 	);
 
 	routes_.push_back(submit);
+	routes_.push_back(work_get);
 	routes_.push_back(progress_publish);
 	routes_.push_back(result_set);
 	routes_.push_back(result_get);
 	routes_.push_back(queue_clear);
+	routes_.push_back(queue_manage);
 }
 
 JobQueue::~JobQueue()
@@ -133,9 +147,14 @@ void JobQueue::get_work(std::unique_ptr<IncomingMessage> msg)
 			if(ptr) {
 				Message work;
 				work.set("action", ptr->get_action());
-				work.set("payload", ptr->get_serialized_parameters());
-				//work.set("@queue_address", nodename);
-				msg->reply();
+				work.set_deserialized("parameters", ptr->get_serialized_parameters());
+				work.set("job_id", ptr->get_id());
+				work.set("queue_node", options_.nodename);
+				msg->reply(work);
+
+				mtx_.lock();
+				in_progress_[ptr->get_id()] = std::move(ptr);
+				mtx_.unlock();
 			}
 		}
 	}
@@ -147,7 +166,9 @@ void JobQueue::set_progress(std::unique_ptr<IncomingMessage> msg)
 
 	auto it = in_progress_.find(job_id);
 	if(it != in_progress_.end()) {
+		mtx_.lock();
 		it->second->set_progress(msg->get("progress", 0.0));
+		mtx_.unlock();
 	}
 }
 
@@ -156,9 +177,14 @@ void JobQueue::set_result(std::unique_ptr<IncomingMessage> msg)
 {
 	std::string job_id = msg->get("job_id", "");
 
-	in_progress_.erase(job_id);
 	if(!persistent_) {
-		completed_[job_id] = std::move(msg);
+		mtx_.lock();
+		in_progress_.erase(job_id);
+		std::unique_ptr<Message> result(new Message(msg->to_string()));
+		completed_[job_id] = std::move(result);
+		mtx_.unlock();
+		msg->clear();
+		msg->reply();
 	}
 }
 
@@ -176,7 +202,9 @@ void JobQueue::get_result(std::unique_ptr<IncomingMessage> msg)
 			std::string submitter = c_it->second->get("@api_key", "");
 			if(submitter.compare(api_key) == 0) {
 				msg->reply(*(c_it->second));
+				mtx_.lock();
 				completed_.erase(c_it);
+				mtx_.unlock();
 			}
 			else {
 				msg->fail(nix::access_denied);
@@ -195,18 +223,61 @@ void JobQueue::get_result(std::unique_ptr<IncomingMessage> msg)
 	}
 }
 
-// void JobQueue::get_progress(std::unique_ptr<IncomingMessage> msg)
-// {
-// 	std::string job_id = msg->get("job_id", "");
 
-// 	auto it = in_progress_.find(job_id);
-// 	if(it != in_progress_.end()) {
-// 		it.second->set_progress(msg->get("progress", 0.0));
-// 	}
-// 	else {
-// 		msg->fail(nix::null_value);
-// 	}
-// }
+void JobQueue::clear_queue(std::unique_ptr<IncomingMessage> msg)
+{
+	bool all = msg->get("all", false);
+	if(all) {
+		for(auto it : queues_) {
+			//it->second->clear();
+		}
+		msg->reply();
+	}
+	else {
+		std::string queue = msg->get("queue", "");
+		auto it = queues_.find(queue);
+		if(it == queues_.end()) {
+			msg->fail(nix::null_value);
+		}
+		else {
+			it->second->clear();
+			msg->reply();
+		}
+	}
+}
+
+void JobQueue::manage_queue(std::unique_ptr<IncomingMessage> msg)
+{
+	std::string queue = msg->get("queue", "");
+	auto it = queues_.find(queue);
+	if(it == queues_.end()) {
+		msg->fail(nix::null_value);
+	}
+	else {
+		bool has_switch = !msg->is_null("enable");
+		if(has_switch) {
+			it->second->set_enabled(msg->get("enable", true));
+		}
+
+		has_switch = !msg->is_null("clear");
+		if(has_switch) {
+			if(msg->get("clear", false)) {
+				it->second->clear();
+			}
+		}
+
+		has_switch = !msg->is_null("remove");
+		if(has_switch) {
+			if((msg->get("remove", false))) {
+				it->second->set_enabled(false);
+				it->second->clear();
+				queues_.erase(it);
+			}
+		}
+
+		msg->reply();
+	}
+}
 
 
 } // module

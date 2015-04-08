@@ -8,7 +8,8 @@
 #include <memory>
 #include <atomic>
 
-#include <iostream>
+#include "nix/common.hxx"
+
 
 namespace nix {
 
@@ -33,7 +34,6 @@ public:
 		std::unique_lock<std::mutex> lock(mtx_);
 
 		while(!is_closed_ && !ptr) {
-			//std::cout << "LOOP " << std::endl;
 			if(!q_.empty()) {
 				ptr = std::move(q_.front());
 				q_.pop();
@@ -41,7 +41,6 @@ public:
 
 			if(!ptr) {
 				if(timeout == -1) {
-					//std::cout << "WAIT " << std::endl;
 					cv_.wait(lock);//, [this]() { return this->is_closed(); });
 				}
 				else {
@@ -56,7 +55,6 @@ public:
 				break;
 			}
 		}
-		//std::cout << "POP EXITING " << std::endl;
 	}
 
 	void push(std::unique_ptr<T>&& elem, bool& success)
@@ -64,15 +62,12 @@ public:
 		success = false;
 
 		std::unique_lock<std::mutex> lock(mtx_);
-		//std::cout << "PUSH LOCKED " << std::endl;
 
 		if(!is_closed_ && queue_size_ && q_.size() < queue_size_) {
 			q_.push(std::move(elem));
-			//std::cout << "PUSHED " << q_.size() << std::endl;
 			success = true;
 		}
 		lock.unlock();
-		//std::cout << "UNLOCKED -> NOTIFY" << std::endl;
 		cv_.notify_one();
 	}
 
@@ -81,11 +76,21 @@ public:
 		return q_.size();
 	}
 
-	void close()
+	void set_enabled(bool state = true)
 	{
-		//std::unique_lock<std::mutex> lock(mtx_);
+		is_closed_ = !state;
+		cv_.notify_all();
+	}
+
+	void clear()
+	{
+		std::unique_lock<std::mutex> lock(mtx_);
+		bool was_closed = is_closed_;
 		is_closed_ = true;
-		//lock.unlock();
+		std::queue<std::unique_ptr<T>> new_q;
+		std::swap(q_, new_q);
+		is_closed_ = was_closed;
+		lock.unlock();
 		cv_.notify_all();
 	}
 

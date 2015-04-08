@@ -12,19 +12,23 @@ class NixServer(object):
 		self.__project_root = os.getenv("PROJECT_ROOT")
 		self.__address = kwargs.pop("address", None)
 		self.__builtin_modules = kwargs.pop("modules", [])
+		port = random.randint(65500, 65535)
 		if not self.__address:
-			port = random.randint(65500, 65535)
 			self.__address = "tcp://127.0.0.1:%d" % port
 		self.__pidfile = "/tmp/nix.test-%d.pid" % os.getpid()
+		self.__nodename = "unittest-node-01-%d" % port
 
 	def get_address(self):
 		return self.__address
+
+	def get_nodename(self):
+		return self.__nodename
 
 	def __enter__(self):
 		executable = os.path.join(self.__project_root, "bin", "NIX")
 		cmd = [
 			executable, "-F", "-D", "-v",
-			"--nodename", "unittest-node-01",
+			"--nodename", self.__nodename,
 			"-c", self.__project_root + "/etc/devel.ini",
 			"-A", self.__address,
 			"--pidfile", self.__pidfile,
