@@ -4,6 +4,7 @@
 #include <fstream>
 #include <iostream>
 #include <climits>
+#include <sys/utsname.h>
 
 #include "exception.hxx"
 #include "program_options.hxx"
@@ -33,9 +34,17 @@ void ProgramOptions::parse(int argc, char** argv)
 		char progn[PATH_MAX];
 		memcpy(progn, progname.data(), progname.length());
 		string base_dir(dirname(dirname(progn)));
-		base_dir = nix::util::fs::expand_user(base_dir);
+		//base_dir = nix::util::fs::expand_user(base_dir);
 		string config_path;
 		string db_config_path;
+
+		struct utsname utsn;
+		int status = uname(&utsn);
+		if(status != 0) {
+			throw std::runtime_error("Unable to read host name");
+		}
+
+		std::string nodename(utsn.nodename);
 
 		string stropt;
 		int intopt;
@@ -52,6 +61,7 @@ void ProgramOptions::parse(int argc, char** argv)
 			 po::value<bool>()->implicit_value(true)->zero_tokens()->default_value(false),
 			 "Do not read configuration file"
 			)
+			("nodename", po::value<string>(&stropt)->default_value(nodename), "")
 			("dbconfig", po::value<string>(&db_config_path)->default_value(
 				base_dir + "/etc/config.ini", "$BASE_DIR/etc/db.ini"), "")
 			("basedir", po::value(&stropt)->default_value(base_dir), "base application directory")

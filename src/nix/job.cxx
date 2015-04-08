@@ -2,6 +2,7 @@
 #include <boost/uuid/uuid_generators.hpp>
 #include <boost/uuid/uuid_io.hpp>
 #include <sstream>
+#include <ctime>
 
 #include "job.hxx"
 
@@ -9,16 +10,34 @@
 namespace nix {
 
 
-Job::Job()
+Job::Job(const std::string& action,
+		 const std::string& serialized_parameters)
+	: action_(action),
+	  parameters_(serialized_parameters)
 {
+	static boost::uuids::uuid rg = boost::uuids::random_generator()();
+
 	std::stringstream s;
-	s << boost::uuids::random_generator()();
-	Job(s.str());
+	s << rg;
+	id_ = s.str();
+
+	std::time_t tm = std::time(nullptr);
+	ctime_ = std::localtime(&tm)->tm_sec;
 }
 
-Job::Job(const std::string& id)
-	: id_(id)
+void Job::set_progress(double progress)
 {
+	progress_ = progress;
+}
+
+double Job::get_progress() const
+{
+	return progress_;
+}
+
+const std::string& Job::get_action() const
+{
+	return action_;
 }
 
 

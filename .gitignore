@@ -1,6 +1,7 @@
 .sconsign.dblite
 etc/config.ini
 etc/db.ini
+etc/devel.ini
 py/etc/agents
 bin/
 build/

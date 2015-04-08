@@ -24,8 +24,9 @@ bool CacheEntry::expired() const
 	return (now - ctime) > 0;
 }
 
-Cache::Cache(std::shared_ptr<ModuleAPI> api)
-	: Module(api, "Cache", 1)
+Cache::Cache(std::shared_ptr<ModuleAPI> api,
+			 const nix::server::Options& options)
+	: BuiltinModule(api, "Cache", 1, options)
 {
 	using namespace std::placeholders;
 

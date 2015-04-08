@@ -25,7 +25,7 @@ void Options::parse(const std::string& config_path)
 
 	ifstream cf(config_path.c_str());
 	if(!cf.good()) {
-		throw nix::InitializationError("No builtin queue config found (" + config_path + ")");
+		throw nix::InitializationError("No builtin queue config file found (" + config_path + ")");
 	}
 
 	po::store(po::parse_config_file(cf, options, true), vm_);

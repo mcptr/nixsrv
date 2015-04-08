@@ -3,7 +3,7 @@
 
 #include <memory>
 #include <unordered_map>
-#include "nix/module.hxx"
+#include "nix/module/builtin.hxx"
 #include "nix/message/incoming.hxx"
 
 
@@ -23,12 +23,13 @@ public:
 	std::string content;
 };
 
-class Cache : public Module
+class Cache : public BuiltinModule
 {
 public:
 	Cache() = delete;
 	virtual ~Cache() = default;
-	explicit Cache(std::shared_ptr<ModuleAPI> api);
+	explicit Cache(std::shared_ptr<ModuleAPI> api,
+				   const nix::server::Options& options);
 
 private:
 	void store(std::unique_ptr<IncomingMessage> msg);

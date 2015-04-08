@@ -157,7 +157,7 @@ void Message::append_null(const std::string& k)
 	append(k, Null_t().get_value());
 }
 
-void Message::remove(const std::string&k)
+void Message::remove(const std::string& k)
 {
 	std::vector<std::string> keys;
 	nix::util::string::split(k, keys, ".");

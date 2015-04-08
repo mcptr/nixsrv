@@ -230,7 +230,7 @@ int main(int argc, char** argv)
 		// MODULE: debug
 		if(po.get<bool>("enable-debug")) {
 			std::shared_ptr<nix::module::Debug> debug_module(
-				new nix::module::Debug(mod_api)
+				new nix::module::Debug(mod_api, server_options)
 			);
 			module_manager->add_builtin(debug_module);
 		}
@@ -238,7 +238,7 @@ int main(int argc, char** argv)
 		// MODULE: resolver
 		if(po.get<bool>("enable-resolver")) {
 			std::shared_ptr<nix::module::Resolver> resolver_module(
-				new nix::module::Resolver(mod_api)
+				new nix::module::Resolver(mod_api, server_options)
 			);
 			module_manager->add_builtin(resolver_module);
 		}
@@ -246,7 +246,7 @@ int main(int argc, char** argv)
 		// MODULE: job queue
 		if(po.get<bool>("enable-job-queue")) {
 			std::shared_ptr<nix::module::JobQueue> job_queue_module(
-				new nix::module::JobQueue(mod_api, 100)
+				new nix::module::JobQueue(mod_api, server_options)
 			);
 			setup_builtin_job_queue(job_queue_module, po);
 			module_manager->add_builtin(job_queue_module);
@@ -255,7 +255,7 @@ int main(int argc, char** argv)
 		// MODULE: cache
 		if(po.get<bool>("enable-cache")) {
 			std::shared_ptr<nix::module::Cache> cache_module(
-				new nix::module::Cache(mod_api)
+				new nix::module::Cache(mod_api, server_options)
 			);
 			module_manager->add_builtin(cache_module);
 		}
@@ -334,6 +334,7 @@ void setup_server(Options& options,
 	using namespace nix;
 	using nix::server::Options;
 
+	options.nodename = po.get<std::string>("nodename");
 	options.address = po.get<string>("address");
 
 	options.tcp_nonblocking = po.get<bool>("SERVER.tcp_nonblocking");

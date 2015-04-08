@@ -18,9 +18,10 @@ public:
 	virtual ~IncomingMessage() = default;
 
 	void reply();
-	void reply(Message& msg);
+	void reply(Message& msg, nix::StatusCode_t status = nix::ok);
 
-	void reply_with_error(nix::StatusCode_t status, const std::string& msg);
+	void reply_with_error(nix::StatusCode_t status,
+						  const std::string& msg);
 
 	void fail(const std::string& reason = std::string());
 	void fail(nix::StatusCode_t status,

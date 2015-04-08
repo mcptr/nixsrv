@@ -1,0 +1,32 @@
+basedir = ~/Devel/nix-env/nix
+modulesdir = ~/Devel/nix-env/nix/lib
+logdir = ~/Devel/nix-env/nix/var/log
+pidfile = ~/Devel/nix-env/nix/var/run/nix.pid
+
+node_name = devel-01
+address = tcp://127.0.0.1:55555
+
+## builtin modules
+enable-debug = 1
+## builtin modules: services
+enable-cache = 1
+enable-resolver = 1
+enable-job-queue = 1
+
+[SERVER]
+tcp_listen_backlog = 10
+tcp_nonblocking = 1
+dispatcher_threads = 2
+
+[builtins]
+queues = test
+
+[queue.test]
+size = 123
+
+
+[infrastructure]
+srv_resolver_address = tcp://127.0.0.1:55555
+srv_cache_address = 
+srv_broker_address = 
+srv_job_queue_address = 

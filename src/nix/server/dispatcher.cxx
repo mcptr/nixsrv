@@ -64,13 +64,8 @@ void Dispatcher::operator()(yami::incoming_message& msg)
 		switch(it->second->get_processing_type()) {
 		case Route::VOID:
 		case Route::SYNC:
-			it->second->handle(std::move(im));
-			break;
 		case Route::ASYNC:
-			it->second->handle(std::move(im));
-			break;
 		case Route::FUTURE:
-			// uuid into message, and queue
 			it->second->handle(std::move(im));
 			break;
 		case Route::PUBLISH:

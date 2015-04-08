@@ -25,9 +25,9 @@ void IncomingMessage::reply()
 	}
 }
 
-void IncomingMessage::reply(Message& msg)
+void IncomingMessage::reply(Message& msg, nix::StatusCode_t status)
 {
-	msg.set_status_code(nix::ok);
+	msg.set_status_code(status);
 	yami::parameters params;
 	params.set_string("message", msg.to_string());
 
