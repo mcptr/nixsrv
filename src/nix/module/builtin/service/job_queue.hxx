@@ -3,27 +3,46 @@
 
 #include <memory>
 #include <unordered_map>
+#include <mutex>
 #include "nix/queue.hxx"
 #include "nix/queue/instance_config.hxx"
 #include "nix/job.hxx"
-#include "nix/module.hxx"
+#include "nix/module/builtin.hxx"
+#include "nix/message/incoming.hxx"
+
 
 namespace nix {
 namespace module {
 
+
 using nix::Queue;
 using nix::Job;
 
-class JobQueue : public Module
+class JobQueue : public BuiltinModule
 {
 public:
 	JobQueue() = delete;
+	explicit JobQueue(std::shared_ptr<ModuleAPI> api,
+					  const nix::server::Options& options);
 	~JobQueue();
 
-	explicit JobQueue(std::shared_ptr<ModuleAPI> api, size_t queue_size);
 	void init_queue(std::shared_ptr<nix::queue::InstanceConfig> inst);
+
+	// route handlers
+	void submit(std::unique_ptr<IncomingMessage> msg);
+	void get_work(std::unique_ptr<IncomingMessage> msg);
+
+	void set_progress(std::unique_ptr<IncomingMessage> msg);
+	void set_result(std::unique_ptr<IncomingMessage> msg);
+	void get_result(std::unique_ptr<IncomingMessage> msg);
 private:
+	bool persistent_ = false;
+	std::mutex mtx_;
+
 	std::unordered_map<std::string, Queue<Job>*> queues_;
+	std::unordered_map<std::string, std::unique_ptr<Job>> in_progress_;
+	// this will be used when persistent queues are not in use
+	std::unordered_map<std::string, std::unique_ptr<IncomingMessage>> completed_;
 };
 
 

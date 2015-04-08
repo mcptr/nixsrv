@@ -13,8 +13,9 @@ namespace nix {
 namespace module {
 
 
-Debug::Debug(std::shared_ptr<ModuleAPI> api)
-	: Module(api, "Debug", 1)
+Debug::Debug(std::shared_ptr<ModuleAPI> api,
+			 const nix::server::Options& options)
+	: BuiltinModule(api, "Debug", 1, options)
 {
 	using namespace std::placeholders;
 
@@ -28,7 +29,6 @@ Debug::Debug(std::shared_ptr<ModuleAPI> api)
 
 	routes_.push_back(debug_sync_route);
 	routes_.push_back(debug_async_route);
-
 }
 
 void Debug::start()

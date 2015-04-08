@@ -4,6 +4,7 @@
 #include <fstream>
 #include <iostream>
 #include <climits>
+#include <sys/utsname.h>
 
 #include "exception.hxx"
 #include "program_options.hxx"
@@ -33,9 +34,17 @@ void ProgramOptions::parse(int argc, char** argv)
 		char progn[PATH_MAX];
 		memcpy(progn, progname.data(), progname.length());
 		string base_dir(dirname(dirname(progn)));
-		base_dir = nix::util::fs::expand_user(base_dir);
+		//base_dir = nix::util::fs::expand_user(base_dir);
 		string config_path;
 		string db_config_path;
+
+		struct utsname utsn;
+		int status = uname(&utsn);
+		if(status != 0) {
+			throw std::runtime_error("Unable to read host name");
+		}
+
+		std::string nodename(utsn.nodename);
 
 		string stropt;
 		int intopt;
@@ -46,18 +55,38 @@ void ProgramOptions::parse(int argc, char** argv)
 			;
 
 		generic.add_options()
-			("config,c", po::value<string>(&config_path)->default_value(
-				base_dir + "/etc/config.ini", "$BASE_DIR/etc/config.ini"), "")
+			("config,c",
+			 po::value<string>(&config_path)->default_value(
+				 base_dir + "/etc/config.ini", "$BASE_DIR/etc/config.ini"
+			 ),
+			 "configuration path")
 			("no_config,N",
 			 po::value<bool>()->implicit_value(true)->zero_tokens()->default_value(false),
 			 "Do not read configuration file"
 			)
-			("dbconfig", po::value<string>(&db_config_path)->default_value(
-				base_dir + "/etc/config.ini", "$BASE_DIR/etc/db.ini"), "")
-			("basedir", po::value(&stropt)->default_value(base_dir), "base application directory")
-			("modulesdir", po::value(&stropt)->default_value(base_dir + "/lib", "$BASE_DIR/lib"), "directory containing modules (*.so)")
-			("logdir", po::value(&stropt)->default_value(base_dir + "/logs", "$BASE_DIR/logs"), "directory to store logs to")
-			("pidfile", po::value(&stropt)->default_value(base_dir + "/nix.pid", "$BASE_DIR"), "pidfile path")
+			("nodename",
+			 po::value<string>(&stropt)->default_value(nodename),
+			 "set node name to be used accross infrastracture"
+			)
+			("dbconfig",
+			 po::value<string>(&db_config_path)->default_value(
+				 base_dir + "/etc/config.ini", "$BASE_DIR/etc/db.ini"), ""
+			)
+			("basedir", po::value(&stropt)->default_value(base_dir),
+			 "base application directory"
+			)
+			("modulesdir",
+			 po::value(&stropt)->default_value(base_dir + "/lib", "$BASE_DIR/lib"),
+			 "directory containing modules (*.so)"
+			)
+			("logdir",
+			 po::value(&stropt)->default_value(base_dir + "/logs", "$BASE_DIR/logs"),
+			 "directory to store logs to"
+			)
+			("pidfile",
+			 po::value(&stropt)->default_value(base_dir + "/nix.pid", "$BASE_DIR"),
+			 "pidfile path"
+			)
 			("verbose,v",
 			 po::value<bool>()->implicit_value(true)->zero_tokens()->default_value(false),
 			 "verbose run"

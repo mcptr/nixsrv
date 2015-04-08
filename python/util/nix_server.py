@@ -1,5 +1,4 @@
 import os
-import sys
 import signal
 import random
 import time
@@ -10,7 +9,7 @@ from subprocess import Popen, PIPE
 class NixServer(object):
 	def __init__(self, **kwargs):
 		self.__server_process = None
-		self.project_root = os.getenv("PROJECT_ROOT")
+		self.__project_root = os.getenv("PROJECT_ROOT")
 		self.__address = kwargs.pop("address", None)
 		self.__builtin_modules = kwargs.pop("modules", [])
 		if not self.__address:
@@ -22,10 +21,12 @@ class NixServer(object):
 		return self.__address
 
 	def __enter__(self):
-		executable = os.path.join(self.project_root, "bin", "NIX")
+		executable = os.path.join(self.__project_root, "bin", "NIX")
 		cmd = [
 			executable, "-F", "-D", "-v",
-			"--enable-resolver", "-A", self.__address,
+			"--nodename", "unittest-node-01",
+			"-c", self.__project_root + "/etc/devel.ini",
+			"-A", self.__address,
 			"--pidfile", self.__pidfile,
 			"--no-close-fds",
 			"--development-mode"

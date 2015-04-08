@@ -13,8 +13,9 @@ namespace nix {
 namespace module {
 
 
-Resolver::Resolver(std::shared_ptr<ModuleAPI> api)
-	: Module(api, "Resolver", 1)
+Resolver::Resolver(std::shared_ptr<ModuleAPI> api,
+				   const nix::server::Options& options)
+	: BuiltinModule(api, "Resolver", 1, options)
 {
 	using namespace std::placeholders;
 
