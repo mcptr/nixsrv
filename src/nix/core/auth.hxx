@@ -14,9 +14,14 @@ namespace core {
 class Auth
 {
 public:
-	typedef enum { KEY_PUBLIC = 1, KEY_PRIVATE, KEY_ADMIN } KeyType_t;
+	typedef enum {
+		KEY_PUBLIC = 1,
+		KEY_PRIVATE,
+		KEY_ADMIN,
+		KEY_TEST
+	} KeyType_t;
 
-	Auth();
+	Auth(bool development_mode = false);
 	bool check_access(const nix::IncomingMessage& msg,
 					  const Route& route,
 					  std::string& error_msg
@@ -25,7 +30,7 @@ public:
 protected:
 	// FIXME: for development only
 	std::unordered_map<std::string, KeyType_t> auth_keys_;
-
+	const bool development_mode_ = false;
 
 };
 

@@ -8,6 +8,11 @@
 namespace nix {
 namespace server {
 
+Dispatcher::Dispatcher(bool development_mode)
+	: auth_(nix::core::Auth(development_mode)),
+	  development_mode_(development_mode)
+{
+}
 
 void Dispatcher::add_routes(const std::string& module,
 							const Module::Routes_t& routes)
@@ -30,11 +35,13 @@ void Dispatcher::operator()(yami::incoming_message& msg)
 {
 	std::string route = msg.get_object_name() + "::" + msg.get_message_name();
 	Routing_t::iterator it = routing_.find(route);
+
 	if(it != routing_.end()) {
 		const yami::parameters& msg_params = msg.get_parameters();
 
 		bool has_message = false;
 		yami::parameter_entry msg_entry;
+
 		if(msg_params.find("message", msg_entry)) {
 			has_message = true;
 		}
@@ -49,17 +56,13 @@ void Dispatcher::operator()(yami::incoming_message& msg)
 
 		std::string auth_error;
 		if(!auth_.check_access(*im, *(it->second.get()), auth_error)) {
-			Message out_msg;
-			out_msg.set_status(nix::auth_unauthorized, auth_error);
-
 			LOG(DEBUG) <<  "AuthError: " << route << " / " << auth_error;
-
-			im->reply(out_msg);
-
+			im->fail(nix::auth_unauthorized, auth_error);
 			return;
 		}
 
 		switch(it->second->get_processing_type()) {
+		case Route::VOID:
 		case Route::SYNC:
 			it->second->handle(std::move(im));
 			break;
@@ -84,7 +87,11 @@ void Dispatcher::operator()(yami::incoming_message& msg)
 	}
 	else {
 		LOG(DEBUG) << "Rejected (route not found): " << route;
-		msg.reject();
+		std::unique_ptr<IncomingMessage> im(
+			new IncomingMessage(msg)
+		);
+
+		im->fail("Route not found");
 	}
 }
 

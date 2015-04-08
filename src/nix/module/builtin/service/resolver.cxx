@@ -40,7 +40,7 @@ void Resolver::bind(std::unique_ptr<IncomingMessage> msg)
 	std::string node = msg->get("node", "");
 	std::string address = msg->get("address", "");
 	if(node.empty() || address.empty()) {
-		msg->reject(
+		msg->fail(
 			nix::data_invalid_content,
 			"Resolver cannot bind. Invalid content."
 		);
@@ -55,7 +55,7 @@ void Resolver::resolve(std::unique_ptr<IncomingMessage> msg)
 {
 	std::string node = nodes_[msg->get("node", "")];
 	if(node.empty()) {
-		msg->reject(nix::fail, "Unknown node.");
+		msg->fail(nix::fail, "Unknown node.");
 	}
 	else {
 		msg->clear();

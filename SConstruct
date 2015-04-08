@@ -343,6 +343,9 @@ translation_units = {
 	"message/incoming" : {
 		"env": combinedenv,
 	},
+	"message/value" : {
+		"env": combinedenv,
+	},
 	"module" : {
 		"env": combinedenv,
 	},
@@ -388,7 +391,11 @@ translation_units = {
 	#	"env" : yamienv,
 	# },
 	"util/fs" : {},
+	"util/pid" : {},
 	"util/string" : {},
+	"types" : {
+		"env" : yamienv,
+	},
 	# ######################################################################
 	# "core/auth/auth" : {
 	#	"cpppath" : [resolve_include("yami4")],

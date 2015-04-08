@@ -16,6 +16,9 @@ public:
 	bool tcp_nonblocking = true;
 	int tcp_listen_backlog = 10;
 	int dispatcher_threads = 1;
+
+	// runtime config
+	bool development_mode = false;
 };
 
 } // server

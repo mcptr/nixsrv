@@ -1,10 +1,9 @@
-basedir = ~/Devel/nix
-modulesdir = ~/Devel/nix/lib
-logdir = ~/Devel/nix/var/log
-pidbase = ~/Devel/nix/var/run
-pidname = nix.localhost
+basedir = ~/Devel/nix-env/nix
+modulesdir = ~/Devel/nix-env/nix/lib
+logdir = ~/Devel/nix-env/nix/var/log
+pidfile = ~/Devel/nix-env/nix/var/run/nix.pid
 
-node_name = node_01
+node_name = node-01
 address = tcp://127.0.0.1:9876
 
 ## builtin modules
@@ -24,3 +23,10 @@ queues = internal
 
 [queue.internal]
 size = 123
+
+
+[infrastructure]
+srv_resolver_address = tcp://127.0.0.1:9876
+srv_cache_address = 
+srv_broker_address = 
+srv_job_queue_address = 

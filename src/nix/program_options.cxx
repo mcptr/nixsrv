@@ -3,6 +3,7 @@
 #include <cstring>
 #include <fstream>
 #include <iostream>
+#include <climits>
 
 #include "exception.hxx"
 #include "program_options.hxx"
@@ -22,14 +23,17 @@ void ProgramOptions::parse(int argc, char** argv)
 		po::options_description server("Server options");
 		po::options_description builtins("Builtins");
 		po::options_description infrastructure("Infrastructure options");
+		po::options_description devel("Development options");
 
 		po::options_description config_file_hidden(
 			"Configuration file based options"
 		);
 
 		string progname(argv[0]);
-		string base_dir(dirname(dirname((char*)progname.c_str())));
-		base_dir = nix::util::fs::resolve_path(base_dir);
+		char progn[PATH_MAX];
+		memcpy(progn, progname.data(), progname.length());
+		string base_dir(dirname(dirname(progn)));
+		base_dir = nix::util::fs::expand_user(base_dir);
 		string config_path;
 		string db_config_path;
 
@@ -53,8 +57,7 @@ void ProgramOptions::parse(int argc, char** argv)
 			("basedir", po::value(&stropt)->default_value(base_dir), "base application directory")
 			("modulesdir", po::value(&stropt)->default_value(base_dir + "/lib", "$BASE_DIR/lib"), "directory containing modules (*.so)")
 			("logdir", po::value(&stropt)->default_value(base_dir + "/logs", "$BASE_DIR/logs"), "directory to store logs to")
-			("pidbase", po::value(&stropt)->default_value(base_dir, "$BASE_DIR"), "directory for storing pidfile")
-			("pidname", po::value(&stropt)->default_value(base_dir + "/server.pid", "$BASE_DIR/$(pidbase)/server.pid"), "pid filename")
+			("pidfile", po::value(&stropt)->default_value(base_dir + "/nix.pid", "$BASE_DIR"), "pidfile path")
 			("verbose,v",
 			 po::value<bool>()->implicit_value(true)->zero_tokens()->default_value(false),
 			 "verbose run"
@@ -70,6 +73,10 @@ void ProgramOptions::parse(int argc, char** argv)
 			("debug,D",
 			 po::value<bool>()->implicit_value(true)->zero_tokens()->default_value(false),
 			 "debug mode (additional info will be printed)"
+			)
+			("no-close-fds",
+			 po::value<bool>()->implicit_value(true)->zero_tokens()->default_value(false),
+			 "do not close stdout/stderr when daemonizing"
 			)
 			;
 
@@ -108,8 +115,19 @@ void ProgramOptions::parse(int argc, char** argv)
 			 "external job queue server address")
 			;
 
+		devel.add_options()
+			("development-mode",
+			 po::value<bool>()->implicit_value(true)->zero_tokens()->default_value(false),
+			 "enable development mode")
+			;
+
 		passwd* pwd = getpwuid(getuid());
 		string username(pwd->pw_name);
+
+		all_.add(flags).add(generic).add(server).add(builtins).add(devel);
+		po::store(po::command_line_parser(argc, argv).options(all_).run(), vm_);
+		po::notify(vm_);
+
 
 		config_file_hidden.add_options()
 			("SERVER.tcp_listen_backlog",
@@ -122,11 +140,6 @@ void ProgramOptions::parse(int argc, char** argv)
 			 po::value(&intopt)->default_value(10), "SERVER.dispatcher_threads"
 			)
 			;
-
-		all_.add(flags).add(generic).add(server).add(builtins);
-
-		po::store(po::command_line_parser(argc, argv).options(all_).run(), vm_);
-		po::notify(vm_);
 
 		if(!has_help()) {
 			config_file_hidden.add(generic).add(server).add(builtins).add(infrastructure);

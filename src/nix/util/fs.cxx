@@ -1,22 +1,82 @@
 #include <unistd.h>
 #include <pwd.h>
 #include <wordexp.h>
+#include <errno.h>
+#include <libgen.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 #include <sys/param.h>
 #include <cstdlib>
+#include <vector>
+#include <cstring>
+#include <climits>
+
+
 #include "fs.hxx"
+#include "string.hxx"
+
 
 namespace nix {
 namespace util {
 namespace fs {
 
+
+mode_t getumask(void)
+{
+	mode_t mask = umask( 0 );
+	umask(mask);
+	return mask;
+}
+
+std::string dirname(const std::string& path)
+{
+	// linux... char* ...
+	char cpath[PATH_MAX];
+	memcpy(cpath, path.data(), path.length());
+	std::string name(::dirname(cpath));
+	return name;
+}
+
+std::string basename(const std::string& path)
+{
+	// linux... char* ...
+	char cpath[PATH_MAX];
+	memcpy(cpath, path.data(), path.length());
+	std::string name(::basename(cpath));
+	return name;
+}
+
 bool path_exists(const std::string& path)
 {
+	std::string resolved(expand_user(path));
 	return (access(path.c_str(), F_OK) == 0);
 }
 
 bool file_exists(const std::string& path)
 {
+	std::string resolved(expand_user(path));
 	return (access(path.c_str(), F_OK) == 0);
+}
+
+int create_dir(const std::string& path, bool recurse)
+{
+	std::string exp(expand_user(path));
+	if(recurse) {
+		std::vector<std::string> parts;
+		nix::util::string::split(exp, parts, "/");
+		for(auto& it : parts) {
+			if(mkdir(it.c_str(), 0777 - getumask())) {
+				return errno;
+			}
+		}
+	}
+	else {
+		if(mkdir(path.c_str(), 0777 - getumask())) {
+			return errno;
+		}
+	}
+
+	return 0;
 }
 
 std::string resolve_path(const std::string& path)
@@ -92,6 +152,7 @@ std::string wexpand(const std::string& path)
 
 	return out;
 }
+
 
 } // fs
 } // util

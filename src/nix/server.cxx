@@ -16,7 +16,8 @@ namespace nix {
 
 
 Server::Server(const server::Options& options)
-	: address_(options.address)
+	: address_(options.address),
+	  dispatcher_(server::Dispatcher(options.development_mode))
 {
 	yami::parameters params;
 	params.set_integer("dispatcher_threads", options.dispatcher_threads);
@@ -28,6 +29,7 @@ Server::Server(const server::Options& options)
 
 Server::~Server()
 {
+	LOG(INFO) << "~Server()";
 	agent_.reset();
 }
 

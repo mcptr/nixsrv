@@ -7,13 +7,14 @@ import argparse
 from subprocess import call, DEVNULL, STDOUT, PIPE
 
 MY_DIR = os.path.abspath(os.path.dirname(sys.argv[0]))
-ld_library_paths = ["/usr/local/lib64/soci", "/usr/local/lib64/yami4"]
 
-extern_libs_dir = os.path.abspath(os.path.join(MY_DIR, "../lib/external"))
-for entry in os.listdir(extern_libs_dir):
-	ld_library_paths.append(os.path.join(extern_libs_dir, entry))
+# ld_library_paths = ["/usr/local/lib64/soci", "/usr/local/lib64/yami4"]
 
-os.environ.putenv("LD_LIBRARY_PATH", ":".join(ld_library_paths))
+# extern_libs_dir = os.path.abspath(os.path.join(MY_DIR, "../lib/external"))
+# for entry in os.listdir(extern_libs_dir):
+# 	ld_library_paths.append(os.path.join(extern_libs_dir, entry))
+
+# os.environ.putenv("LD_LIBRARY_PATH", ":".join(ld_library_paths))
 
 conf_pep8 = {
 	"ignore" : ["W191", "E203", "E251", "E303", "E128", "E126"],
@@ -86,11 +87,10 @@ class Runner(object):
 
 	def run_nose(self):
 		title = "Running nosetest in " + self.python_dir
-		self.exec_test(
-			["nosetests", "-v", self.python_dir],
-			title=title,
-			group="NOSE"
-		)
+		cmd = ["nosetests", "-v", "--exe", self.python_dir]
+		if self.verbose:
+			cmd.append("-s")
+		self.exec_test(cmd,	title=title, group="NOSE")
 
 	def count_failures(self):
 		return len(list(filter(lambda x: self.test_results[x], self.test_results)))
@@ -98,20 +98,18 @@ class Runner(object):
 	def display_results(self):
 		failures = 0
 		if self.test_results["CXX"]:
-			failures 
 			print("Failed CXX tests:\n%s" % "\t\n".join(
 				sorted(self.test_results["CXX"]))
 			)
 			print("".center(72, "-"))
 		print("PEP8: %s" % ("FAIL" if self.test_results["PEP8"] else "PASS"))
 		print("NOSE: %s" % ("FAIL" if self.test_results["NOSE"] else "PASS"))
+		print("CXX : %s" % ("FAIL" if self.test_results["CXX"] else "PASS"))
 		print("".center(72, "-"))
 
 
-def run_tests(**kwargs):
-	verbose = kwargs.pop("verbose", False)
-	print("")
-	runner = Runner(verbose=verbose)
+def run_tests(args):
+	runner = Runner(verbose=args.verbose)
 	runner.run_cxx_tests()
 	runner.run_pep8()
 	runner.run_nose()
@@ -123,7 +121,9 @@ def run_tests(**kwargs):
 
 if __name__ == "__main__":
 	parser = argparse.ArgumentParser(description='Test runner')
-	parser.add_argument("-v", "--verbose", action="store_true", help="verbose")
+
+	parser.add_argument("-v", "--verbose", dest="verbose",
+						action="store_true", help="verbose")
 
 	args = parser.parse_args()
-	run_tests(verbose=args.verbose)
+	run_tests(args)

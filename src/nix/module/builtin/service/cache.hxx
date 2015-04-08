@@ -6,8 +6,10 @@
 #include "nix/module.hxx"
 #include "nix/message/incoming.hxx"
 
+
 namespace nix {
 namespace module {
+
 
 class CacheEntry
 {
