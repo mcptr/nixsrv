@@ -34,7 +34,7 @@ public:
 
 	virtual inline const Routes_t& get_routing() const final
 	{
-		return routes_;
+		return this->routes_;
 	}
 	
 	virtual void start();

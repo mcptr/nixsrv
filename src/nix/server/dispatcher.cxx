@@ -35,12 +35,13 @@ void Dispatcher::operator()(yami::incoming_message& msg)
 {
 	std::string route = msg.get_object_name() + "::" + msg.get_message_name();
 	Routing_t::iterator it = routing_.find(route);
-	LOG(DEBUG) << "Dispatcher operator";
+
 	if(it != routing_.end()) {
 		const yami::parameters& msg_params = msg.get_parameters();
 
 		bool has_message = false;
 		yami::parameter_entry msg_entry;
+
 		if(msg_params.find("message", msg_entry)) {
 			has_message = true;
 		}
@@ -86,7 +87,11 @@ void Dispatcher::operator()(yami::incoming_message& msg)
 	}
 	else {
 		LOG(DEBUG) << "Rejected (route not found): " << route;
-		msg.reject();
+		std::unique_ptr<IncomingMessage> im(
+			new IncomingMessage(msg)
+		);
+
+		im->fail("Route not found");
 	}
 }
 

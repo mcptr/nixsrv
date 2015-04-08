@@ -16,7 +16,7 @@ IncomingMessage::IncomingMessage(yami::incoming_message& im)
 void IncomingMessage::reply()
 {
 	try {
-		clear();
+		//clear();
 		this->set_status(nix::ok);
 		this->reply(*this);
 	}
@@ -55,6 +55,7 @@ void IncomingMessage::fail(const std::string& reason)
 void IncomingMessage::fail(nix::StatusCode_t error_code,
 						   const std::string& reason)
 {
+	LOG(DEBUG) << "FAIL: " << reason;
 	clear();
 	this->set_status(error_code, reason);
 

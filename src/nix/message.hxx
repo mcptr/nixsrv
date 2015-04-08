@@ -43,11 +43,14 @@ public:
 		return root_;
 	}
 
-	Json::Value get_raw_value(const std::string& k);
-
 	void clear();
 
 	// value getters
+	Json::Value get_raw_value(const std::string& k);
+	std::string get_serialized(const std::string& k,
+							   const std::string& value = std::string());
+
+
 	virtual std::string get(const std::string& k, const char* default_value) const;
 	virtual std::string get(const std::string& k, const std::string& default_value) const;
 	virtual int get(const std::string& k, int default_value) const;
@@ -59,6 +62,8 @@ public:
 	void set_object(const std::string& k);
 	void set_array(const std::string& k);
 	void set_null(const std::string& k);
+	void set_deserialized(const std::string& k,
+						  const std::string& value = std::string());
 
 	void append_null(const std::string& k);
 	void remove(const std::string&k);

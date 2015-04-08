@@ -44,6 +44,21 @@ Json::Value Message::get_raw_value(const std::string& k)
 	return (found ? dest : Json::nullValue);
 }
 
+std::string Message::get_serialized(
+	const std::string& k,
+	const std::string& value)
+{
+	Json::Value dest;
+	bool found = find(k, dest);
+	
+	if(found) {
+		Json::FastWriter writer;
+		return writer.write(dest);
+	}
+
+	return value;
+}
+
 std::string Message::get(const std::string& k, const std::string& default_value) const
 {
 	Json::Value dest;
@@ -106,6 +121,19 @@ void Message::set_null(const std::string& k)
 {
 	set(k, Null_t().get_value());
 }
+
+void Message::set_deserialized(const std::string& k,
+							   const std::string& value)
+{
+	Json::Value deserialized;
+	Json::Reader reader;
+	if(!reader.parse(value, deserialized, false)) {
+		LOG(DEBUG) << "Cannot parse value: " << value;
+		throw std::runtime_error(reader.getFormattedErrorMessages());
+	}
+	set(k, deserialized);
+}
+
 
 void Message::set_status_code(nix::StatusCode_t status)
 {

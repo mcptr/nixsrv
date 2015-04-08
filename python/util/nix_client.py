@@ -44,6 +44,7 @@ class NixClient(object):
 		self.__agent = yami.Agent({"tcp_nonblocking" : 1})
 
 	def call(self, mod, route, params = None, timeout_ms = 3000):
+		print("### call: %s/%s" % (mod, route))
 		params = (params or {})
 		result = Result()
 		with self.__agent.send(
