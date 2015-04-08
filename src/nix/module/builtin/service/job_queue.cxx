@@ -229,12 +229,13 @@ void JobQueue::clear_queue(std::unique_ptr<IncomingMessage> msg)
 	bool all = msg->get("all", false);
 	if(all) {
 		for(auto it : queues_) {
-			//it->second->clear();
+			it.second->clear();
 		}
 		msg->reply();
 	}
 	else {
 		std::string queue = msg->get("queue", "");
+		mtx_.lock();
 		auto it = queues_.find(queue);
 		if(it == queues_.end()) {
 			msg->fail(nix::null_value);
@@ -243,11 +244,13 @@ void JobQueue::clear_queue(std::unique_ptr<IncomingMessage> msg)
 			it->second->clear();
 			msg->reply();
 		}
+		mtx_.unlock();
 	}
 }
 
 void JobQueue::manage_queue(std::unique_ptr<IncomingMessage> msg)
 {
+	mtx_.lock();
 	std::string queue = msg->get("queue", "");
 	auto it = queues_.find(queue);
 	if(it == queues_.end()) {
@@ -277,6 +280,7 @@ void JobQueue::manage_queue(std::unique_ptr<IncomingMessage> msg)
 
 		msg->reply();
 	}
+	mtx_.unlock();
 }
 
 
