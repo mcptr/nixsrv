@@ -1,5 +1,4 @@
 import os
-import sys
 import signal
 import random
 import time
@@ -27,7 +26,7 @@ class NixServer(object):
 			executable, "-F", "-D", "-v",
 			"--nodename", "unittest-node-01",
 			"-c", self.__project_root + "/etc/devel.ini",
-			"--enable-resolver", "-A", self.__address,
+			"-A", self.__address,
 			"--pidfile", self.__pidfile,
 			"--no-close-fds",
 			"--development-mode"
