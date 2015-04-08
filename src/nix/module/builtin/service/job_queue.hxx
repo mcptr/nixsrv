@@ -35,6 +35,10 @@ public:
 	void set_progress(std::unique_ptr<IncomingMessage> msg);
 	void set_result(std::unique_ptr<IncomingMessage> msg);
 	void get_result(std::unique_ptr<IncomingMessage> msg);
+
+	// admin handlers
+	void clear_queue(std::unique_ptr<IncomingMessage> msg);
+	void manage_queue(std::unique_ptr<IncomingMessage> msg);
 private:
 	bool persistent_ = false;
 	std::mutex mtx_;
@@ -42,7 +46,7 @@ private:
 	std::unordered_map<std::string, Queue<Job>*> queues_;
 	std::unordered_map<std::string, std::unique_ptr<Job>> in_progress_;
 	// this will be used when persistent queues are not in use
-	std::unordered_map<std::string, std::unique_ptr<IncomingMessage>> completed_;
+	std::unordered_map<std::string, std::unique_ptr<Message>> completed_;
 };
 
 

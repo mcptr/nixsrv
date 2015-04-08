@@ -3,6 +3,7 @@
 #include <boost/uuid/uuid_io.hpp>
 #include <sstream>
 #include <ctime>
+#include <cmath>
 
 #include "job.hxx"
 
