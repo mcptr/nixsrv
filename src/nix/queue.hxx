@@ -23,7 +23,7 @@ public:
 	Queue& operator= (Queue& other) = delete;
 
 	Queue(size_t queue_size)
-		: queue_size_(queue_size),
+		: queue_size_(queue_size ? queue_size : 50),
 		  is_closed_(false)
 	{
 	}

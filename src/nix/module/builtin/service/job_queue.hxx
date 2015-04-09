@@ -26,7 +26,8 @@ public:
 					  const nix::server::Options& options);
 	~JobQueue();
 
-	void init_queue(std::shared_ptr<nix::queue::InstanceConfig> inst);
+	bool init_queue(std::shared_ptr<nix::queue::InstanceConfig> inst);
+	bool init_queue(const std::string& name, size_t size);
 
 	// route handlers
 	void submit(std::unique_ptr<IncomingMessage> msg);
@@ -36,10 +37,19 @@ public:
 	void set_result(std::unique_ptr<IncomingMessage> msg);
 	void get_result(std::unique_ptr<IncomingMessage> msg);
 
+
+	void status(std::unique_ptr<IncomingMessage> msg);
+
 	// admin handlers
-	void clear_queue(std::unique_ptr<IncomingMessage> msg);
-	void manage_queue(std::unique_ptr<IncomingMessage> msg);
+	void manage(std::unique_ptr<IncomingMessage> msg);
 private:
+	const int default_queue_size_ = 50;
+	long long completed_jobs_ = 0;
+
+	void clear_all();
+	void switch_all(bool state);
+	void remove_all();
+
 	bool persistent_ = false;
 	std::mutex mtx_;
 
