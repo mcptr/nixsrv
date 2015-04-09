@@ -1,8 +1,9 @@
-from util.nix_server import NixServer
-from util.nix_client import NixClient
-
+import os
 import time
 import json
+
+from util.nix_server import NixServer
+from util.nix_client import NixClient
 
 from nose.tools import assert_false
 from nose.tools import assert_true
@@ -13,45 +14,45 @@ module = "JobQueue"
 
 expected_routing = {
 	"routing": {
-		"job/queue/manage": {
-			"processing_type": "SYNC",
-			"description": "",
-			"access_modifier": "ADMIN"
-		},
-		"job/queue/clear": {
-			"processing_type": "SYNC",
-			"description": "",
-			"access_modifier": "ADMIN"
-		},
-		"job/work/get": {
-			"processing_type": "SYNC",
-			"description": "",
-			"access_modifier": "API_PRIVATE"
-		},
-		"job/submit": {
-			"processing_type": "FUTURE",
-			"description": "",
-			"access_modifier": "API_PRIVATE"
-		},
-		"list_routes": {
-			"processing_type": "SYNC",
-			"description": "Display all routes handled by 'JobQueue' module",
-			"access_modifier": "ANY"
-		},
 		"job/result/set": {
 			"processing_type": "SYNC",
-			"description": "",
-			"access_modifier": "API_PRIVATE"
+			"access_modifier": "API_PRIVATE",
+			"description": ""
+		},
+		"manage": {
+			"processing_type": "SYNC",
+			"access_modifier": "ADMIN",
+			"description": ""
+		},
+		"status": {
+			"processing_type": "SYNC",
+			"access_modifier": "API_PRIVATE",
+			"description": ""
 		},
 		"job/result/get": {
 			"processing_type": "SYNC",
-			"description": "",
-			"access_modifier": "API_PRIVATE"
+			"access_modifier": "API_PRIVATE",
+			"description": ""
 		},
 		"job/progress/set": {
 			"processing_type": "VOID",
-			"description": "",
-			"access_modifier": "API_PRIVATE"
+			"access_modifier": "API_PRIVATE",
+			"description": ""
+		},
+		"job/work/get": {
+			"processing_type": "SYNC",
+			"access_modifier": "API_PRIVATE",
+			"description": ""
+		},
+		"list_routes": {
+			"processing_type": "SYNC",
+			"access_modifier": "ANY",
+			"description": "Display all routes handled by 'JobQueue' module"
+		},
+		"job/submit": {
+			"processing_type": "FUTURE",
+			"access_modifier": "API_PRIVATE",
+			"description": ""
 		}
 	},
 	"module": {
@@ -62,7 +63,8 @@ expected_routing = {
 }
 
 development_key = "_development_key_"
-development_key_public = "_development_key_public"
+development_key_public = "_development_key_public_"
+development_key_admin = "_development_key_admin_"
 JOB_ID = None
 
 
@@ -166,3 +168,201 @@ def test_submit():
 		assert_equal(
 			data[job_param_name],
 			"Result: %s" % job_param_value, "result: job value")
+
+
+def test_queue_management():
+	with NixServer(modules=["job-queue"]) as server:
+		client = NixClient(server.get_address())
+
+		params = {
+			"@api_key" : development_key,
+		}
+
+		invalid_auth_params = {
+			"@api_key" : development_key_public,
+		}
+		response = client.call(
+			module,
+			"manage",
+			invalid_auth_params
+		)
+		assert_equal(response.status_code(), 101, "Auth error")
+
+		status_params = {
+			"@api_key" : development_key_admin,
+		}
+		response = client.call(module, "status", status_params)
+		assert_true(response.is_status_ok(), "got status")
+		status = response.data
+		assert_equal(status["total_completed"], 0, "no jobs done yey")
+		assert_equal(status["results_awaiting"], 0, "no results awaiting")
+		assert_equal(status["in_progress"], 0, "no jobs in progress")
+		assert_equal(status["total_pending"], 0, "no pending jobs")
+		assert_equal(
+			status["queues"]["test"]["closed"],
+			False,
+			"test queue is not closed"
+		)
+
+		queue_name_1 = "unittest-queue-%d" % os.getpid()
+		queue_name_2 = "second-queue-%d" % os.getpid()
+		create_params = {
+			"@api_key" : development_key_admin,
+			"queue" : queue_name_1,
+			"create" : {
+				"size" : 256,
+			}
+		}
+		response = client.call(module, "manage", create_params)
+		assert_true(response.is_status_ok(), "created queue")
+
+		create_params["queue"] = queue_name_2
+		response = client.call(module, "manage", create_params)
+		assert_true(response.is_status_ok(), "created second queue")
+
+		response = client.call(module, "manage", create_params)
+		assert_true(response.is_status_fail(), "queue already exists")
+
+		response = client.call(module, "status", status_params)
+		assert_true(response.is_status_ok(), "got status")
+		status = response.data
+		assert_equal(
+			status["queues"][queue_name_1]["closed"],
+			False,
+			"created queue is not closed"
+		)
+
+		assert_equal(
+			status["queues"][queue_name_2]["closed"],
+			False,
+			"second created queue is not closed"
+		)
+
+		assert_equal(
+			status["queues"][queue_name_1]["pending"],
+			0, "no jobs in created queue")
+
+		assert_equal(
+			status["queues"][queue_name_2]["pending"],
+			0, "no jobs in second created queue")
+
+		# FIRST queue - submit jobs
+
+		submitted_jobs = []
+		batch_size = 10
+		submit_params = params.copy()
+		for i in range(0, batch_size):
+			submit_params.update({
+				"module" : queue_name_1,
+				"action" : "dummy",
+				"params" : [i, "a string", True, {"test" : []}, None]
+			})
+
+			response = client.call(
+				module, "job/submit", submit_params)
+
+			assert_true(response.is_status_ok(), "submitted job")
+			job_id = response.data["job_id"]
+			assert_true(len(job_id), "got job id")
+			submitted_jobs.append(job_id)
+
+		assert_equal(
+			len(set(submitted_jobs)),
+			batch_size,
+			"submitted jobs have unique ids"
+		)
+
+		response = client.call(module, "status", status_params)
+		assert_true(response.is_status_ok(), "got status")
+		status = response.data
+		assert_equal(
+			status["total_pending"],
+			batch_size, "number of pending jobs")
+
+		# SECOND queue - submit jobs
+
+		for i in range(0, batch_size):
+			submit_params.update({
+				"module" : queue_name_2,
+				"action" : "dummy",
+				"params" : [i, "a string", True, {"test" : []}, None]
+			})
+
+			response = client.call(
+				module, "job/submit", submit_params)
+
+			assert_true(response.is_status_ok(), "submitted job")
+
+		response = client.call(module, "status", status_params)
+		assert_true(response.is_status_ok(), "got status")
+		status = response.data
+		assert_equal(
+			status["queues"][queue_name_2]["pending"],
+			batch_size,
+			"second queue got jobs"
+		)
+		assert_equal(
+			status["total_pending"],
+			batch_size * 2, "number of pending jobs")
+
+		# Close second queue
+		switch_params = params.copy()
+		switch_params["queue"] = queue_name_2
+		switch_params["enable"] = False
+		response = client.call(module, "manage", switch_params)
+		assert_true(response.is_status_ok(), "close queue call")
+
+		response = client.call(module, "status", status_params)
+		assert_true(response.is_status_ok(), "got status after close")
+		status = response.data
+		assert_equal(
+			status["queues"][queue_name_2]["closed"],
+			True,
+			"second queue is now closed"
+		)
+		# Reopen second queue
+		switch_params = params.copy()
+		switch_params["queue"] = queue_name_2
+		switch_params["enable"] = True
+		response = client.call(module, "manage", switch_params)
+		assert_true(response.is_status_ok(), "close queue call")
+
+		response = client.call(module, "status", status_params)
+		assert_true(response.is_status_ok(), "got status after reopen")
+		status = response.data
+		assert_equal(
+			status["queues"][queue_name_2]["closed"],
+			False,
+			"second queue is now enabled"
+		)
+		assert_equal(
+			status["queues"][queue_name_2]["pending"],
+			batch_size,
+			"second queue still has pending jobs"
+		)
+
+		# clear jobs in SECOND queue
+		clear_params = params.copy()
+		clear_params["queue"] = queue_name_2
+		clear_params["clear"] = True
+		response = client.call(module, "manage", clear_params)
+		assert_true(response.is_status_ok(), "close queue call")
+
+		response = client.call(module, "status", status_params)
+		assert_true(response.is_status_ok(), "got status after reopen")
+		status = response.data
+		assert_equal(
+			status["queues"][queue_name_2]["pending"],
+			0, "second queue cleared")
+
+		# remove SECOND queue
+		remove_params = params.copy()
+		remove_params["queue"] = queue_name_2
+		remove_params["remove"] = True
+		response = client.call(module, "manage", remove_params)
+		assert_true(response.is_status_ok(), "remove queue call")
+
+		response = client.call(module, "status", status_params)
+		assert_true(response.is_status_ok(), "got status after remove")
+		status = response.data
+		assert_false(queue_name_2 in status["queues"], "second queue removed")

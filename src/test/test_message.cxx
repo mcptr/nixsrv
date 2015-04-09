@@ -18,12 +18,12 @@ int main()
 		{
 			Message m;
 			std::string expected("{}\n");
-			test.equals(m.to_string(), expected, "is empty");
+			test.equal(m.to_string(), expected, "is empty");
 			
 			m.set("string", "value");
 			m.set("int", 123);
 			expected = "{\"int\":123,\"string\":\"value\"}\n";
-			test.equals(m.to_string(), expected, "to_string()");
+			test.equal(m.to_string(), expected, "to_string()");
 		}
 	);
 
@@ -35,12 +35,12 @@ int main()
 			std::string key = "key";
 			m.set_null(key);
 			std::string expected("{\"key\":null}\n");
-			test.equals(m.to_string(), expected, "to_string()");
-			test.equals(m.is_null(key), true, "is null?");
+			test.equal(m.to_string(), expected, "to_string()");
+			test.equal(m.is_null(key), true, "is null?");
 
 			Message::Null_t null_value;
 			m.set(key, null_value);
-			test.equals(m.is_null(key), true, "is null?");
+			test.equal(m.is_null(key), true, "is null?");
 
 			// 2DO: cannot get(k, Null_t)
 		}
@@ -54,12 +54,12 @@ int main()
 			std::string key = "key";
 			m.set_object(key);
 			std::string expected("{\"key\":{}}\n");
-			test.assert_equals(m.to_string(), expected, "to_string()");
-			test.assert_equals(m.is_object(key), true, "is object?");
+			test.assert_equal(m.to_string(), expected, "to_string()");
+			test.assert_equal(m.is_object(key), true, "is object?");
 
 			Message::Object_t object_value;
 			m.set(key, object_value);
-			test.equals(m.is_object(key), true, "is object?");
+			test.equal(m.is_object(key), true, "is object?");
 		}
 	);
 
@@ -71,12 +71,12 @@ int main()
 			std::string key = "key";
 			m.set_array(key);
 			std::string expected("{\"key\":[]}\n");
-			test.equals(m.to_string(), expected, "to_string()");
-			test.equals(m.is_array(key), true, "is array?");
+			test.equal(m.to_string(), expected, "to_string()");
+			test.equal(m.is_array(key), true, "is array?");
 
 			Message::Array_t array_value;
 			m.set(key, array_value);
-			test.equals(m.is_array(key), true, "is array?");
+			test.equal(m.is_array(key), true, "is array?");
 		}
 	);
 
@@ -89,7 +89,7 @@ int main()
 			Message m2 = m1;
 			
 			std::string excected = "{\"string\":\"value\"}\n";
-			test.equals(m2.to_string(), excected, "copied message to_string()");
+			test.equal(m2.to_string(), excected, "copied message to_string()");
 		}
 	);
 
@@ -109,11 +109,11 @@ int main()
 			m.set("double", double_v);
 			m.set("long long", long_long_v);
 
-			test.equals(m.get("bool", false), bool_v, "bool");
-			test.equals(m.get("int", 0), int_v, "int");
-			test.equals(m.get("string", ""), string_v, "string");
-			test.equals(m.get("double", 0.0), double_v, "double");
-			test.equals(m.get("long long", 0LL), long_long_v, "long long");
+			test.equal(m.get("bool", false), bool_v, "bool");
+			test.equal(m.get("int", 0), int_v, "int");
+			test.equal(m.get("string", ""), string_v, "string");
+			test.equal(m.get("double", 0.0), double_v, "double");
+			test.equal(m.get("long long", 0LL), long_long_v, "long long");
 		}
 	);
 
@@ -124,11 +124,11 @@ int main()
 			std::string json = "{\"level1\":{\"level2\":{\"first\":\"value\"}}}\n";
 			Message m(json);
 
-			test.equals(m.to_string(), json, "parsed and to_string()");
+			test.equal(m.to_string(), json, "parsed and to_string()");
 
 			std::string retrieved = m.get("level1.level2.first", "");
 			std::string expected = "value";
-			test.equals(retrieved,
+			test.equal(retrieved,
 						expected,
 						"get value from parsed json");
 		}
@@ -141,7 +141,7 @@ int main()
 			std::string json = "{\"level1\":{\"level2\":{\"first\":\"value\"}}}\n";
 			Message m;
 			test.no_throw([&m, &json]() { m.parse(json); }, "parse() success");
-			test.equals(m.to_string(), json, "parse() and to_string()");
+			test.equal(m.to_string(), json, "parse() and to_string()");
 
 			test.throws<std::runtime_error>([&m]() { m.parse(""); } );
 			test.throws<std::runtime_error>([&m]() { m.parse("invalid"); } );
@@ -155,14 +155,14 @@ int main()
 			Message m;
 			m.set("level1.level2.first", "value");
 			std::string expected("{\"level1\":{\"level2\":{\"first\":\"value\"}}}\n");
-			test.equals(
+			test.equal(
 				m.to_string(),
 				expected,
 				"dotted field created and set"
 			);
 			m.set("level1.level2.first", 12345);
 			expected = ("{\"level1\":{\"level2\":{\"first\":12345}}}\n");
-			test.equals(
+			test.equal(
 				m.to_string(),
 				expected,
 				"dotted field overwritten"
@@ -170,7 +170,7 @@ int main()
 
 			m.set_null("level1.level2.second");
 			expected = ("{\"level1\":{\"level2\":{\"first\":12345,\"second\":null}}}\n");
-			test.equals(
+			test.equal(
 				m.to_string(),
 				expected,
 				"set null in an exiting object"
@@ -178,7 +178,7 @@ int main()
 
 			m.set_null("level1.level2");
 			expected = ("{\"level1\":{\"level2\":null}}\n");
-			test.equals(
+			test.equal(
 				m.to_string(),
 				expected,
 				"set null in an exiting object (delete object)"
@@ -186,7 +186,7 @@ int main()
 
 			m.clear();
 			expected = ("{}\n");
-			test.equals(m.to_string(), expected, "clear");
+			test.equal(m.to_string(), expected, "clear");
 		}
 	);
 
@@ -197,12 +197,12 @@ int main()
 			Message m;
 			m.set_array("array1");
 			std::string expected("{\"array1\":[]}\n");
-			test.equals(m.to_string(), expected, "set_array()");
+			test.equal(m.to_string(), expected, "set_array()");
 
 			m.append("array1", 1);
 			m.append("array1", "one");
 			expected = "{\"array1\":[1,\"one\"]}\n";
-			test.equals(m.to_string(), expected, "append()");
+			test.equal(m.to_string(), expected, "append()");
 		}
 	);
 

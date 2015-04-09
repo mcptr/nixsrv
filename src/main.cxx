@@ -289,6 +289,7 @@ int main(int argc, char** argv)
 		}
 	}
 
+	module_manager.reset();
 	server->stop();
 
 	if(server_pid) {

@@ -13,9 +13,9 @@ Auth::Auth(bool development_mode)
 		// always allowed in development_mode
 		auth_keys_["_development_key_"] = KEY_TEST;
 		// specific levels in development_mode
-		auth_keys_["_development_key_public"] = KEY_PUBLIC;
-		auth_keys_["_development_key_private"] = KEY_PRIVATE;
-		auth_keys_["_development_key_admin"] = KEY_ADMIN;
+		auth_keys_["_development_key_public_"] = KEY_PUBLIC;
+		auth_keys_["_development_key_private_"] = KEY_PRIVATE;
+		auth_keys_["_development_key_admin_"] = KEY_ADMIN;
 	}
 }
 
@@ -62,7 +62,10 @@ bool Auth::check_access(const nix::IncomingMessage& msg,
 		authorized = true;
 		break;
 	case Route::API_PRIVATE:
-		authorized = (auth_keys_[api_key] == KEY_PRIVATE);
+		authorized = (
+			(auth_keys_[api_key] == KEY_PRIVATE) || 
+			(auth_keys_[api_key] == KEY_ADMIN)
+		);
 		break;
 	case Route::ADMIN:
 		authorized = (auth_keys_[api_key] == KEY_ADMIN);

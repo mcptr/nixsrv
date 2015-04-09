@@ -52,18 +52,18 @@ JobQueue::JobQueue(std::shared_ptr<ModuleAPI> api,
 		)
 	);
 
-	std::shared_ptr<Route> queue_clear(
-		new Route("job/queue/clear",
-				  std::bind(&JobQueue::clear_queue, this, _1),
+	std::shared_ptr<Route> queue_manage(
+		new Route("manage",
+				  std::bind(&JobQueue::manage, this, _1),
 				  Route::ADMIN,
 				  Route::SYNC
 		)
 	);
 
-	std::shared_ptr<Route> queue_manage(
-		new Route("job/queue/manage",
-				  std::bind(&JobQueue::manage_queue, this, _1),
-				  Route::ADMIN,
+	std::shared_ptr<Route> queue_status(
+		new Route("status",
+				  std::bind(&JobQueue::status, this, _1),
+				  Route::API_PRIVATE,
 				  Route::SYNC
 		)
 	);
@@ -73,28 +73,42 @@ JobQueue::JobQueue(std::shared_ptr<ModuleAPI> api,
 	routes_.push_back(progress_publish);
 	routes_.push_back(result_set);
 	routes_.push_back(result_get);
-	routes_.push_back(queue_clear);
 	routes_.push_back(queue_manage);
+	routes_.push_back(queue_status);
 }
 
 JobQueue::~JobQueue()
 {
-	for(auto& it : queues_) {
+	for(auto const& it : queues_) {
 		LOG(DEBUG) << "Deleting queue: " << it.first 
 				   << "("
 				   << std::to_string(it.second->size())
 				   << " jobs left)";
 
+		it.second->clear();
 		delete it.second;
 	}
 }
 
-void JobQueue::init_queue(std::shared_ptr<nix::queue::InstanceConfig> inst)
+bool JobQueue::init_queue(std::shared_ptr<nix::queue::InstanceConfig> inst)
 {
-	LOG(DEBUG) << inst->name
-			   << " / size " << std::to_string(inst->size);
+	return init_queue(inst->name, inst->size);
+}
 
-	queues_.emplace(inst->name, new Queue<Job>(inst->size));
+bool JobQueue::init_queue(const std::string& name, size_t size)
+{
+	size = size ? size : default_queue_size_;
+
+	LOG(DEBUG) << name << " / size " << size;
+
+	if(queues_.count(name)) {
+		return false;
+	}
+
+	mtx_.lock();
+	queues_.emplace(name, new Queue<Job>(size));
+	mtx_.unlock();
+	return true;
 }
 
 void JobQueue::submit(std::unique_ptr<IncomingMessage> msg)
@@ -182,6 +196,7 @@ void JobQueue::set_result(std::unique_ptr<IncomingMessage> msg)
 		in_progress_.erase(job_id);
 		std::unique_ptr<Message> result(new Message(msg->to_string()));
 		completed_[job_id] = std::move(result);
+		completed_jobs_++;
 		mtx_.unlock();
 		msg->clear();
 		msg->reply();
@@ -224,59 +239,129 @@ void JobQueue::get_result(std::unique_ptr<IncomingMessage> msg)
 }
 
 
-void JobQueue::clear_queue(std::unique_ptr<IncomingMessage> msg)
+/*
+ * queue - string
+ * clear - (single) true/false
+ * clear_all - (ALL) true/false
+ * enable - (single) true/false
+ * enable_all - (ALL) true/false
+ * remove - true/false
+ * remove_all - true/false
+ * create - { create : { size : x } }
+ */
+void JobQueue::manage(std::unique_ptr<IncomingMessage> msg)
 {
-	bool all = msg->get("all", false);
-	if(all) {
-		for(auto it : queues_) {
-			//it->second->clear();
-		}
-		msg->reply();
+	bool any_action_matched = false;
+	// clear all (true/false)
+	bool is_clear_all = msg->get("clear_all", false);
+	if(is_clear_all) {
+		clear_all();
+		any_action_matched = true;
 	}
-	else {
-		std::string queue = msg->get("queue", "");
-		auto it = queues_.find(queue);
-		if(it == queues_.end()) {
-			msg->fail(nix::null_value);
-		}
-		else {
-			it->second->clear();
+
+	// remove all (true/false)
+	bool is_remove_all = msg->get("remove_all", false);
+	if(is_remove_all) {
+		remove_all();
+		any_action_matched = true;
+	}
+
+	// switch all on/off (true/false)
+	bool has_switch = !msg->is_null("switch_all");
+	bool state = msg->get("switch_all", true);
+	if(has_switch) {
+		switch_all(state);
+		any_action_matched = true;
+	}
+
+	// operations on single queue
+	const std::string name = msg->get("queue", "");
+	auto it = queues_.find(name);
+
+	if(!name.empty() && msg->is_object("create")) {
+		if(init_queue(name, msg->get("create.size", 0))) {
+			msg->clear();
 			msg->reply();
 		}
+		else {
+			msg->fail("Failed to create queue. Already exists?");
+		}
+		any_action_matched = true;
+	}
+	else if(it != queues_.end()) {
+		mtx_.lock();
+		
+		if(!msg->is_null("enable")) {
+			it->second->set_enabled(msg->get("enable", true));
+		}
+		
+		if(!msg->is_null("clear") && msg->get("clear", false)) {
+			it->second->clear();
+		}
+		
+		if(!msg->is_null("remove") && msg->get("remove", false)) {
+			it->second->set_enabled(false);
+			it->second->clear();
+				queues_.erase(it);
+		}
+		
+		mtx_.unlock();
+		msg->reply();
+		any_action_matched = true;
+	}
+
+	if(!any_action_matched) {
+		msg->fail(nix::null_value);
 	}
 }
 
-void JobQueue::manage_queue(std::unique_ptr<IncomingMessage> msg)
+void JobQueue::status(std::unique_ptr<IncomingMessage> msg)
 {
-	std::string queue = msg->get("queue", "");
-	auto it = queues_.find(queue);
-	if(it == queues_.end()) {
-		msg->fail(nix::null_value);
+	msg->clear();
+
+	msg->set("total_completed", completed_jobs_);
+
+	mtx_.lock();
+
+	long long total_in_progress = in_progress_.size();
+	long long total_results_awaiting = completed_.size();
+	msg->set("in_progress", total_in_progress);
+	msg->set("results_awaiting", total_results_awaiting);
+	long long total_pending = 0;
+	for(auto it : queues_) {
+		const std::string prefix = "queues." + it.first;
+		long long pending = it.second->size();
+		total_pending += pending;
+		msg->set(prefix + ".closed", it.second->is_closed());
+		msg->set(prefix + ".pending", pending);
 	}
-	else {
-		bool has_switch = !msg->is_null("enable");
-		if(has_switch) {
-			it->second->set_enabled(msg->get("enable", true));
-		}
+	msg->set("total_pending", total_pending);
 
-		has_switch = !msg->is_null("clear");
-		if(has_switch) {
-			if(msg->get("clear", false)) {
-				it->second->clear();
-			}
-		}
+	mtx_.unlock();
+	msg->reply(*msg);
+}
 
-		has_switch = !msg->is_null("remove");
-		if(has_switch) {
-			if((msg->get("remove", false))) {
-				it->second->set_enabled(false);
-				it->second->clear();
-				queues_.erase(it);
-			}
-		}
-
-		msg->reply();
+void JobQueue::clear_all()
+{
+	for(auto it : queues_) {
+		it.second->clear();
 	}
+}
+
+void JobQueue::switch_all(bool state)
+{
+	for(auto it : queues_) {
+		it.second->set_enabled(state);
+	}
+}
+
+void JobQueue::remove_all()
+{
+	mtx_.lock();
+	switch_all(false);
+	clear_all();
+	queues_.clear();
+	mtx_.unlock();
 }
 
 

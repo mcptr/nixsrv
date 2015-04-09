@@ -91,9 +91,9 @@ public:
 	}
 
 	template <class T>
-	bool equals(const T& result,
+	bool equal(const T& result,
 				const T& expected,
-				const std::string& name = "equals")
+				const std::string& name = "equal")
 	{
 		bool ok = (result == expected);
 		if(!ok) {
@@ -104,9 +104,9 @@ public:
 	}
 
 	template <class T>
-	bool equals(const std::string& result,
-				const std::string& expected,
-				const std::string& name = "equals")
+	bool equal(const std::string& result,
+			   const std::string& expected,
+			   const std::string& name = "equal")
 	{
 		int different = (result.compare(expected));
 		if(different) {
@@ -114,6 +114,29 @@ public:
 		}
 		store_result(!different, name);
 		return !different;
+	}
+
+	template <class T>
+	bool not_equal(const T& result,
+				   const T& expected,
+				   const std::string& name = "not_equal")
+	{
+		bool ok = (result != expected);
+		if(!ok) {
+			print_diff(result, expected, name);
+		}
+		store_result(ok, name);
+		return ok;
+	}
+
+	template <class T>
+	bool not_equal(const std::string& result,
+			   const std::string& expected,
+			   const std::string& name = "equal")
+	{
+		bool ok = (result.compare(expected) != 0);
+		store_result(ok, name);
+		return ok;
 	}
 
 	bool no_throw(Callable_t callable, const std::string& name = std::string())
@@ -216,21 +239,31 @@ public:
 	}
 
 	template <class T>
-	void assert_equals(const T& result,
+	void assert_equal(const T& result,
 					   const T& expected,
-					   const std::string& name = "assert_equals")
+					   const std::string& name = "assert_equal")
 	{
-		if(!equals(result, expected, name)) {
+		if(!equal(result, expected, name)) {
 			throw AssertionFailed();
 		}
 	}
 
 	template <class T>
-	void asser_equals(const std::string& result,
+	void assert_equal(const std::string& result,
 					  const std::string& expected,
-					  const std::string& name = "assert_equals")
+					  const std::string& name = "assert_equal")
 	{
-		if(!equals(result, expected, name)) {
+		if(!equal(result, expected, name)) {
+			throw AssertionFailed();
+		}
+	}
+
+	template <class T>
+	void assert_not_equal(const T& result,
+						  const T& expected,
+						  const std::string& name = "assert_not_equal")
+	{
+		if(!not_equal(result, expected, name)) {
 			throw AssertionFailed();
 		}
 	}

@@ -16,10 +16,10 @@ Job::Job(const std::string& action,
 	: action_(action),
 	  parameters_(serialized_parameters)
 {
-	static boost::uuids::uuid rg = boost::uuids::random_generator()();
+	static boost::uuids::random_generator rg;
 
 	std::stringstream s;
-	s << rg;
+	s << rg();
 	id_ = s.str();
 
 	std::time_t tm = std::time(nullptr);
