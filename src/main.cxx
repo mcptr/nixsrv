@@ -335,6 +335,8 @@ void setup_server(Options& options,
 	using namespace nix;
 	using nix::server::Options;
 
+	options.start_time = std::time(nullptr);
+
 	options.nodename = po.get<std::string>("nodename");
 	options.address = po.get<string>("address");
 

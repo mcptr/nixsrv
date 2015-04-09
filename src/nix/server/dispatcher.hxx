@@ -9,18 +9,23 @@
 #include "nix/core/auth.hxx"
 #include "nix/route.hxx"
 #include "nix/module.hxx"
+#include "nix/message/incoming.hxx"
 #include "nix/server/options.hxx"
 
 
 namespace nix {
 namespace server {
 
+
+const std::string BUILTIN_STATUS_OBJECT_NAME = "Status";
+
+
 struct ServerStats
 {
-	std::atomic_ullong requests;
-	std::atomic_ullong auth_errors;
-	std::atomic_ullong unroutable;
-	std::atomic_ullong rejected;
+	std::atomic_ullong requests { 0 };
+	std::atomic_ullong auth_errors { 0 };
+	std::atomic_ullong unroutable { 0 };
+	std::atomic_ullong rejected { 0 };
 };
 
 class Dispatcher
@@ -40,6 +45,7 @@ public:
 
 	void operator()(yami::incoming_message& msg);
 
+	void server_status(std::unique_ptr<IncomingMessage> msg);
 protected:
 	Routing_t routing_;
 	nix::core::Auth auth_;

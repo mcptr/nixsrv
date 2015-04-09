@@ -11,6 +11,7 @@ namespace server {
 class Options
 {
 public:
+	int start_time = 0;
 	std::string nodename;
 	std::string address = "tcp://*:*";
 

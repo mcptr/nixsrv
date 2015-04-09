@@ -13,6 +13,10 @@
 
 
 namespace nix {
+void dupa(yami::incoming_message& msg)
+{
+	msg.reply();
+}
 
 
 Server::Server(const server::Options& options)
@@ -35,10 +39,12 @@ Server::~Server()
 
 void Server::start()
 {
+	agent_->register_object(server::BUILTIN_STATUS_OBJECT_NAME,
+							*(dispatcher_.get()));
+
 	// this throws yami::yami_runtime_error
 	resolved_address_ = agent_->add_listener(address_);
 	LOG(INFO) << "Listening on: " << resolved_address_;
-	agent_->register_object("Server", *(dispatcher_.get()));
 }
 
 void Server::stop()
