@@ -79,7 +79,6 @@ JobQueue::JobQueue(std::shared_ptr<ModuleAPI> api,
 
 JobQueue::~JobQueue()
 {
-	LOG(DEBUG) << "@&*^%&*^%*&^%*&^%*&!^%*&^!%@*&^%!@ ~JobQueue()";
 	for(auto const& it : queues_) {
 		LOG(DEBUG) << "Deleting queue: " << it.first 
 				   << "("
