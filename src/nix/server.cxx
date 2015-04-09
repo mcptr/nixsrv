@@ -24,7 +24,7 @@ Server::Server(const server::Options& options)
 	params.set_integer("tcp_listen_backlog", options.tcp_listen_backlog);
 
 	agent_.reset(new yami::agent(params));
-	dispatcher_.reset(new server::Dispatcher(options.development_mode));
+	dispatcher_.reset(new server::Dispatcher(options));
 }
 
 Server::~Server()
