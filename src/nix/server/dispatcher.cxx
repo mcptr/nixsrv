@@ -12,6 +12,7 @@ Dispatcher::Dispatcher(bool development_mode)
 	: auth_(nix::core::Auth(development_mode)),
 	  development_mode_(development_mode)
 {
+	stats_.reset(new ServerStats());
 }
 
 void Dispatcher::add_routes(const std::string& module,
@@ -28,6 +29,11 @@ void Dispatcher::add_route(const std::string& module,
 {
 	std::string full_route = module + "::" + route->get_route();
 	routing_.emplace(full_route, route);
+	if(stats_by_module_.count(module) == 0) {
+		std::unique_ptr<ServerStats> stats(new ServerStats());
+		stats_by_module_.emplace(module, std::move(stats));
+	}
+
 	LOG(DEBUG) << full_route;
 }
 

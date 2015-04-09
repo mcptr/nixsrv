@@ -4,6 +4,7 @@
 #include <yami4-cpp/yami.h>
 #include <map>
 #include <memory>
+#include <atomic>
 
 #include "nix/core/auth.hxx"
 #include "nix/route.hxx"
@@ -13,6 +14,10 @@
 namespace nix {
 namespace server {
 
+class ServerStats
+{
+	std::atomic_ullong x;
+};
 
 class Dispatcher
 {
@@ -35,6 +40,11 @@ protected:
 	Routing_t routing_;
 	nix::core::Auth auth_;
 	bool development_mode_ = false;
+	std::unique_ptr<ServerStats> stats_;
+
+	std::unordered_map<
+		std::string,
+		std::unique_ptr<ServerStats>> stats_by_module_;
 };
 
 

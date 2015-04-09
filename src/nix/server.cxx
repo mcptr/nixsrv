@@ -16,8 +16,7 @@ namespace nix {
 
 
 Server::Server(const server::Options& options)
-	: address_(options.address),
-	  dispatcher_(server::Dispatcher(options.development_mode))
+	: address_(options.address)
 {
 	yami::parameters params;
 	params.set_integer("dispatcher_threads", options.dispatcher_threads);
@@ -25,6 +24,7 @@ Server::Server(const server::Options& options)
 	params.set_integer("tcp_listen_backlog", options.tcp_listen_backlog);
 
 	agent_.reset(new yami::agent(params));
+	dispatcher_.reset(new server::Dispatcher(options.development_mode));
 }
 
 Server::~Server()
@@ -38,6 +38,7 @@ void Server::start()
 	// this throws yami::yami_runtime_error
 	resolved_address_ = agent_->add_listener(address_);
 	LOG(INFO) << "Listening on: " << resolved_address_;
+	agent_->register_object("Server", *(dispatcher_.get()));
 }
 
 void Server::stop()
@@ -48,9 +49,9 @@ void Server::stop()
 
 void Server::register_module(std::shared_ptr<const Module> inst)
 {
-	dispatcher_.add_routes(inst->get_ident(), inst->get_routing());
+	dispatcher_->add_routes(inst->get_ident(), inst->get_routing());
 	LOG(DEBUG) << "Registering object: " << inst->get_ident();
-	agent_->register_object(inst->get_ident(), dispatcher_);
+	agent_->register_object(inst->get_ident(), *(dispatcher_.get()));
 }
 
 void Server::register_object(const std::string& name,
