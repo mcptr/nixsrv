@@ -22,8 +22,7 @@ Job::Job(const std::string& action,
 	s << rg();
 	id_ = s.str();
 
-	std::time_t tm = std::time(nullptr);
-	ctime_ = std::localtime(&tm)->tm_sec;
+	ctime_ = std::time(nullptr);
 }
 
 void Job::set_progress(double progress)

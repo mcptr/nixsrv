@@ -1,3 +1,5 @@
+#include <functional>
+
 #include "dispatcher.hxx"
 
 #include "nix/common.hxx"
@@ -8,10 +10,24 @@
 namespace nix {
 namespace server {
 
-Dispatcher::Dispatcher(bool development_mode)
-	: auth_(nix::core::Auth(development_mode)),
-	  development_mode_(development_mode)
+
+Dispatcher::Dispatcher(const nix::server::Options& options)
+	: auth_(nix::core::Auth(options.development_mode)),
+	  options_(options)
 {
+	stats_.reset(new ServerStats());
+
+	using std::placeholders::_1;
+
+	std::shared_ptr<Route> server_status_route(
+		new Route("status",
+				  std::bind(&Dispatcher::server_status, this, _1),
+				  Route::API_PRIVATE,
+				  Route::SYNC
+		)
+	);
+
+	add_route(BUILTIN_STATUS_OBJECT_NAME, server_status_route);
 }
 
 void Dispatcher::add_routes(const std::string& module,
@@ -28,13 +44,22 @@ void Dispatcher::add_route(const std::string& module,
 {
 	std::string full_route = module + "::" + route->get_route();
 	routing_.emplace(full_route, route);
+	if(stats_by_module_.count(module) == 0) {
+		std::unique_ptr<ServerStats> stats(new ServerStats());
+		stats_by_module_.emplace(module, std::move(stats));
+	}
+
 	LOG(DEBUG) << full_route;
 }
 
 void Dispatcher::operator()(yami::incoming_message& msg)
 {
-	std::string route = msg.get_object_name() + "::" + msg.get_message_name();
+	std::string module = msg.get_object_name();
+	std::string route = module + "::" + msg.get_message_name();
 	Routing_t::iterator it = routing_.find(route);
+
+	stats_->requests++;
+	stats_by_module_[module]->requests++;
 
 	if(it != routing_.end()) {
 		const yami::parameters& msg_params = msg.get_parameters();
@@ -58,6 +83,8 @@ void Dispatcher::operator()(yami::incoming_message& msg)
 		if(!auth_.check_access(*im, *(it->second.get()), auth_error)) {
 			LOG(DEBUG) <<  "AuthError: " << route << " / " << auth_error;
 			im->fail(nix::auth_unauthorized, auth_error);
+			stats_->auth_errors++;
+			stats_by_module_[module]->auth_errors++;
 			return;
 		}
 
@@ -75,9 +102,11 @@ void Dispatcher::operator()(yami::incoming_message& msg)
 			break;
 		default:
 			LOG(DEBUG) << "Rejected: "
-						<< route
-						<< " / Unknown processing type";
+					   << route
+					   << " / Unknown processing type";
 			msg.reject();
+			stats_->unroutable++;
+			stats_by_module_[module]->unroutable++;
 		}
 	}
 	else {
@@ -87,7 +116,53 @@ void Dispatcher::operator()(yami::incoming_message& msg)
 		);
 
 		im->fail("Route not found");
+		stats_->unroutable++;
+		stats_by_module_[module]->unroutable++;
+
 	}
+}
+
+void Dispatcher::server_status(std::unique_ptr<IncomingMessage> msg)
+{
+	Message om;
+	
+	om.set("nodename", options_.nodename);
+
+	if(msg->get("server", false)) {
+		int uptime_sec = std::time(nullptr) - options_.start_time;
+		om.set("server.uptime", uptime_sec);
+	}
+
+	if(msg->get("stats", false)) {
+		om.set("stats.requests", (long long)stats_->requests);
+		om.set("stats.auth_errors", (long long)stats_->auth_errors);
+		om.set("stats.unroutable", (long long)stats_->unroutable);
+		om.set("stats.rejected", (long long)stats_->rejected);
+	}
+
+	if(msg->get("module_stats", false)) {
+		for(auto& it : stats_by_module_) {
+			std::string prefix = "stats." + it.first;
+			om.set(prefix + ".requests", (long long)it.second->requests);
+			om.set(prefix + ".auth_errors", (long long)it.second->auth_errors);
+			om.set(prefix + ".unroutable", (long long)it.second->unroutable);
+			om.set(prefix + ".rejected", (long long)it.second->rejected);
+		}
+	}
+
+	if(msg->get("routing", false)) {
+		for(auto& it : routing_) {
+			std::string route_key = "server.routing." + it.first;
+			om.set(route_key + ".access_modifier",
+				   it.second->get_access_modifier());
+			om.set(route_key + ".processing_type",
+				   it.second->get_processing_type());
+			om.set(route_key + ".description",
+				   it.second->get_description());
+		}
+	}
+
+	msg->reply(om);
 }
 
 

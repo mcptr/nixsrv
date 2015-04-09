@@ -366,3 +366,11 @@ def test_queue_management():
 		assert_true(response.is_status_ok(), "got status after remove")
 		status = response.data
 		assert_false(queue_name_2 in status["queues"], "second queue removed")
+
+		params = {
+			"@api_key" : development_key,
+			"server" : True,
+			"stats" : True,
+			"module_stats" : True,
+			"routing" : True,
+		}

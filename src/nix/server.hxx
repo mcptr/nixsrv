@@ -35,7 +35,7 @@ private:
 	const std::string address_;
 	std::unique_ptr<yami::agent> agent_;
 	std::string resolved_address_;
-	server::Dispatcher dispatcher_;
+	std::unique_ptr<server::Dispatcher> dispatcher_;
 };
 
 
