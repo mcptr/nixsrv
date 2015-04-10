@@ -1,3 +1,4 @@
+import sys
 import os
 import signal
 import random
@@ -67,25 +68,24 @@ class NixServer(object):
 			pid = int(fh.read())
 			wait = 500
 			try:
+				print("### Stopping server", pid)
 				os.kill(pid, signal.SIGTERM)
 				is_alive = True
 				while wait and is_alive:
 					try:
 						is_alive = (os.kill(pid, 0) is None)
 						if is_alive:
-							time.sleep(0.01)
-							print("### Waiting for server to stop (%d)" % pid)
+							time.sleep(0.02)
 							wait -= 1
 						else:
 							break
 					except OSError as e:
 						if e.errno == errno.ESRCH:
-							print("### NixServer: Server stopped")
 							break
-
 				if os.kill(pid, 0) is None:
 					print("Killing with SIGKILL")
 					os.kill(pid, signal.SIGKILL)
+				print("### NixServer: Server stopped")
 			except OSError as e:
 				if e.errno != errno.ESRCH:
 					raise

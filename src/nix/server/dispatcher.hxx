@@ -5,6 +5,7 @@
 #include <map>
 #include <memory>
 #include <atomic>
+#include <mutex>
 
 #include "nix/core/auth.hxx"
 #include "nix/route.hxx"
@@ -50,6 +51,7 @@ protected:
 	Routing_t routing_;
 	nix::core::Auth auth_;
 	Options options_;
+	std::mutex mtx_;
 
 	std::unique_ptr<ServerStats> stats_;
 	std::unordered_map<

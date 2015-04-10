@@ -14,15 +14,23 @@ enable-resolver = 1
 enable-job-queue = 1
 
 [SERVER]
-tcp_listen_backlog = 10
+tcp_listen_backlog = 250
 tcp_nonblocking = 1
-dispatcher_threads = 2
+dispatcher_threads = 12
 
-[builtins]
-queues = internal
+[builtins.cache]
+cleaner_enabled = 1
+# cache cleaner interval: run * sleep (milliseconds),
+# e.g. 60 * 1000 = 1 minute
+cleaner_run_interval = 60
+cleaner_sleep_interval_ms = 1000
 
-[queue.internal]
+[builtins.queues]
+queues = 
+
+[bulitins.queue.internal]
 size = 123
+
 
 
 [infrastructure]

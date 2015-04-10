@@ -1,4 +1,3 @@
-#include <string>
 #include <memory>
 #include <thread>
 #include <chrono>
@@ -6,11 +5,16 @@
 #include <vector>
 #include <csignal>
 #include <functional>
+#include <string>
+#include <sstream>
+#include <cstdlib>
 
 #include <nix/common.hxx>
 #include <nix/util/fs.hxx>
 
 #include "resolver_client.hxx"
+#include "cache_client.hxx"
+#include "status_client.hxx"
 
 
 std::atomic<bool> signaled = { false };
@@ -22,13 +26,14 @@ void termination_signal_handler(int /* sig */)
 
 void run_client(std::shared_ptr<simulator::BaseClient> client)
 {
+
+	std::stringstream thread_id;
+	thread_id << std::this_thread::get_id();
 	while(!signaled) {
-		try {
-			client->run();
-		}
-		catch(const std::exception& e) {
-			LOG(DEBUG) << "run failed: " << e.what();
-		}
+		// std::this_thread::sleep_for(
+		// 	std::chrono::microseconds(rand() % 5000 + 10)
+		// );
+		client->run(thread_id.str());
 	}
 }
 
@@ -48,7 +53,6 @@ int main(int argc, char** argv)
 
 	std::string base_dir = nix::util::fs::resolve_path(
 		nix::util::fs::dirname(argv[0]));
-	LOG(DEBUG) << base_dir;
 
 	std::string log_config = nix::util::fs::resolve_path(
 		base_dir + "/../log.conf");
@@ -58,14 +62,25 @@ int main(int argc, char** argv)
 
 
 	std::vector<std::thread> threads;
-	for(int i = 0; i < 1; i++) {
-		std::shared_ptr<BaseClient>
-			resolver_c(new ResolverClient(argv[1]));
+	for(int i = 0; i < 16; i++) {
+		std::vector<std::shared_ptr<BaseClient>> clients;
+		clients.push_back(
+			std::shared_ptr<BaseClient>(new ResolverClient(argv[1])));
+		clients.push_back(
+			std::shared_ptr<BaseClient>(new CacheClient(argv[1])));
+		clients.push_back(
+			std::shared_ptr<BaseClient>(new StatusClient(argv[1], false)));
 
-		threads.push_back(
-			std::move(
-				std::thread(&run_client, resolver_c)));
+		for(auto& client : clients) {
+			threads.push_back(
+				std::move(
+					std::thread(&run_client, client)));
+		}
 	}
+
+	std::shared_ptr<BaseClient>
+		monitor(new StatusClient(argv[1], true, 1));
+	threads.push_back(std::move(std::thread(&run_client, monitor)));
 
 	for(auto& th : threads) {
 		th.join();

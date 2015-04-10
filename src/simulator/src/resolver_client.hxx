@@ -11,11 +11,11 @@ class ResolverClient : public BaseClient
 public:
 	ResolverClient() = delete;
 	ResolverClient(const std::string& address)
-		: BaseClient(address)
+		: BaseClient(address, "Resolver")
 	{
 	}
 
-	void run();
+	void run(const std::string& thread_id = std::string());
 };
 
 

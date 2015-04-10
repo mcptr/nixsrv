@@ -47,9 +47,9 @@ void Resolver::bind(std::unique_ptr<IncomingMessage> msg)
 		);
 	}
 	else {
-		mtx_.lock();
+		std::unique_lock<std::mutex> lock(mtx_);
 		nodes_[node] = address;
-		mtx_.unlock();
+		lock.unlock();
 		msg->clear();
 		msg->reply();
 	}
@@ -57,22 +57,27 @@ void Resolver::bind(std::unique_ptr<IncomingMessage> msg)
 
 void Resolver::resolve(std::unique_ptr<IncomingMessage> msg)
 {
-	std::string node = nodes_[msg->get("nodename", "")];
-	if(node.empty()) {
+	std::string node = msg->get("nodename", "");
+
+	std::unique_lock<std::mutex> lock(mtx_);
+	std::string address = nodes_[node];
+	lock.unlock();
+
+	if(address.empty()) {
 		msg->fail(nix::fail, "Unknown node.");
 	}
 	else {
 		msg->clear();
-		msg->set("address", node);
+		msg->set(node, address);
 		msg->reply(*msg);
 	}
 }
 
 void Resolver::unbind(std::unique_ptr<IncomingMessage> msg)
 {
-	mtx_.lock();
+	std::unique_lock<std::mutex> lock(mtx_);
 	nodes_.erase(msg->get("nodename", ""));
-	mtx_.unlock();
+	lock.unlock();
 	msg->reply();
 }
 

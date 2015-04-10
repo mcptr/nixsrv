@@ -264,7 +264,7 @@ int main(int argc, char** argv)
 		module_manager->start_all();
 
 	}
-	catch(std::exception& e) {
+	catch(const std::exception& e) {
 		std::cerr << "std::exception (main()): " << e.what() << std::endl;
 		return EXIT_FAILURE;
 	}
@@ -278,7 +278,13 @@ int main(int argc, char** argv)
 				  << "(always allows KEY_TEST) ******";
 	}
 
-	server->start();
+	try {
+		server->start();
+	}
+	catch(const std::exception& e) {
+		LOG(ERROR) << e.what();
+		return 1;
+	}
 
 	std::vector<std::thread> threads;
 	threads.push_back(std::move(std::thread(block_and_wait)));
@@ -342,10 +348,24 @@ void setup_server(Options& options,
 
 	options.tcp_nonblocking = po.get<bool>("SERVER.tcp_nonblocking");
 	options.tcp_listen_backlog = po.get<int>("SERVER.tcp_listen_backlog");
+
 	options.dispatcher_threads = po.get<int>("SERVER.dispatcher_threads");
+	if(po.get<int>("threads")) {
+		options.dispatcher_threads = po.get<int>("threads");
+	}
 
 	// development options
 	options.development_mode = po.get<bool>("development-mode");
+	options.enable_random_sleep = po.get<bool>("enable-random-sleep");
+
+	// builtins.cache
+	options.cache_cleaner_enabled =
+		po.get<bool>("builtins.cache.cleaner_enabled");
+	options.cache_cleaner_run_interval =
+		po.get<int>("builtins.cache.cleaner_run_interval");;
+	options.cache_cleaner_sleep_interval_ms =
+		po.get<int>("builtins.cache.cleaner_sleep_interval_ms");
+;
 }
 
 void setup_db_pool(std::shared_ptr<ObjectPool<Connection>> pool,

@@ -56,7 +56,7 @@ void Dispatcher::operator()(yami::incoming_message& msg)
 {
 	std::string module = msg.get_object_name();
 	std::string route = module + "::" + msg.get_message_name();
-	LOG(DEBUG) << "Dispathing: " << route;
+	LOG(DEBUG) << "Dispatching: " << route;
 	Routing_t::iterator it = routing_.find(route);
 
 	stats_->requests++;
@@ -119,8 +119,8 @@ void Dispatcher::operator()(yami::incoming_message& msg)
 		im->fail("Route not found");
 		stats_->unroutable++;
 		stats_by_module_[module]->unroutable++;
-
 	}
+
 }
 
 void Dispatcher::server_status(std::unique_ptr<IncomingMessage> msg)
@@ -163,6 +163,20 @@ void Dispatcher::server_status(std::unique_ptr<IncomingMessage> msg)
 		}
 	}
 
+	if(msg->get("reset", false)) {
+		LOG(INFO) << "Resetting server statistics";
+		stats_->requests = 0;
+		stats_->auth_errors = 0;
+		stats_->rejected = 0;
+		stats_->unroutable = 0;
+
+		for(auto& it : stats_by_module_) {
+			it.second->requests = 0;
+			it.second->auth_errors = 0;
+			it.second->rejected = 0;
+			it.second->unroutable = 0;
+		}
+	}
 	msg->reply(om);
 }
 

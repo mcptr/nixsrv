@@ -393,6 +393,7 @@ translation_units = {
 	"util/fs" : {},
 	"util/pid" : {},
 	"util/string" : {},
+	"util/test" : {},
 	"types" : {
 		"env" : yamienv,
 	},

@@ -23,6 +23,7 @@ void ProgramOptions::parse(int argc, char** argv)
 		po::options_description generic("Startup options");
 		po::options_description server("Server options");
 		po::options_description builtins("Builtins");
+		po::options_description builtins_hidden("Configuration of builtins modules");
 		po::options_description infrastructure("Infrastructure options");
 		po::options_description devel("Development options");
 
@@ -112,6 +113,8 @@ void ProgramOptions::parse(int argc, char** argv)
 		server.add_options()
 			("address,A", po::value(&stropt)->default_value("tcp://*:*"),
 			 "address to listen on")
+			("threads,t", po::value(&intopt)->default_value(0),
+			 "dispatcher threads (overwrites config value)")
 			;
 
 		builtins.add_options()
@@ -127,6 +130,18 @@ void ProgramOptions::parse(int argc, char** argv)
 			("enable-job-queue",
 			 po::value<bool>()->implicit_value(true)->zero_tokens()->default_value(false),
 			 "enable job queue module")
+			;
+
+		builtins_hidden.add_options()
+			("builtins.cache.cleaner_enabled",
+			 po::value<bool>()->implicit_value(true)->zero_tokens()->default_value(false),
+			 "enable cleaner thread")
+			("builtins.cache.cleaner_run_interval",
+			 po::value(&intopt)->default_value(60),
+			 "cleaner run (run * sleep)")
+			("builtins.cache.cleaner_sleep_interval_ms",
+			 po::value(&intopt)->default_value(1000),
+			 "cleaner sleep interval in ms (run * sleep)")
 			;
 
 		infrastructure.add_options()
@@ -147,7 +162,12 @@ void ProgramOptions::parse(int argc, char** argv)
 		devel.add_options()
 			("development-mode",
 			 po::value<bool>()->implicit_value(true)->zero_tokens()->default_value(false),
-			 "enable development mode")
+			 "enable development mode"
+			)
+			("enable-random-sleep",
+			 po::value<bool>()->implicit_value(true)->zero_tokens()->default_value(false),
+			 "enable random sleep in builtin modules threads\n(only in 'DEBUG_BUILD' and when development mode enabled)"
+			)
 			;
 
 		passwd* pwd = getpwuid(getuid());
@@ -171,7 +191,9 @@ void ProgramOptions::parse(int argc, char** argv)
 			;
 
 		if(!has_help()) {
-			config_file_hidden.add(generic).add(server).add(builtins).add(infrastructure);
+			config_file_hidden.add(generic).add(server).add(builtins).add(infrastructure)
+				.add(builtins_hidden);
+
 			if(vm_["debug"].as<bool>()) {
 				std::cout << "Reading config file: " << config_path << std::endl;
 			}
