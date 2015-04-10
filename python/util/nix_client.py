@@ -39,12 +39,14 @@ class Result(object):
 
 
 class NixClient(object):
-	def __init__(self, address = None):
+	def __init__(self, address = None, **kwargs):
 		self.__address = address
 		self.__agent = yami.Agent({"tcp_nonblocking" : 1})
+		self._verbose = kwargs.pop("verbose", False)
 
 	def call(self, mod, route, params = None, timeout_ms = 3000):
-		print("### call: %s/%s" % (mod, route))
+		if self._verbose:
+			print("### call: %s/%s" % (mod, route))
 		params = (params or {})
 		result = Result()
 		with self.__agent.send(
@@ -61,7 +63,8 @@ class NixClient(object):
 			return result
 
 	def send_one_way(self, mod, route, params = None):
-		print("### send_one_way: %s/%s" % (mod, route))
+		if self._verbose:
+			print("### send_one_way: %s/%s" % (mod, route))
 		params = (params or {})
 		self.__agent.send_one_way(
 			self.__address,

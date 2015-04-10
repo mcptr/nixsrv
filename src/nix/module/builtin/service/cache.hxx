@@ -3,6 +3,7 @@
 
 #include <memory>
 #include <unordered_map>
+#include <mutex>
 #include "nix/module/builtin.hxx"
 #include "nix/message/incoming.hxx"
 
@@ -37,6 +38,7 @@ private:
 	void remove(std::unique_ptr<IncomingMessage> msg);
 
 	std::unordered_map<std::string, CacheEntry> cache_;
+	std::mutex mtx_;
 };
 
 

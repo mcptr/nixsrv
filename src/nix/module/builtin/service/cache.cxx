@@ -20,8 +20,9 @@ CacheEntry::CacheEntry()
 
 bool CacheEntry::expired() const
 {
+	// FIXME: make it configurable
 	std::time_t now = std::time(0);
-	return (now - ctime) > 0;
+	return (now - ctime) > 60 * 15;
 }
 
 Cache::Cache(std::shared_ptr<ModuleAPI> api,
@@ -56,8 +57,10 @@ void Cache::store(std::unique_ptr<IncomingMessage> msg)
 			nix::data_invalid_content,
 			"Cannot cache empty key/value."
 		);
+		LOG(DEBUG) << " CACHE FAILED store";
 	}
 	else {
+		mtx_.lock();
 		CacheEntry entry;
 
 		int period = msg->get("period", 0);
@@ -67,7 +70,7 @@ void Cache::store(std::unique_ptr<IncomingMessage> msg)
 		entry.content = value;
 
 		cache_[key] = entry;
-		
+		mtx_.unlock();
 		msg->reply();
 	}
 }
@@ -75,8 +78,10 @@ void Cache::store(std::unique_ptr<IncomingMessage> msg)
 void Cache::retrieve(std::unique_ptr<IncomingMessage> msg)
 {
 	std::string key = msg->get("key", "");
+
 	if(key.empty() || !cache_.count(key)) {
-		msg->fail(nix::null_value);
+		msg->fail(nix::null_value, (cache_.count(key) ? "EMPTY" : "NOT FOUND"));
+		LOG(DEBUG) << " CACHE FAILED retrieve " << key;
 	}
 
 	else {
@@ -94,7 +99,9 @@ void Cache::retrieve(std::unique_ptr<IncomingMessage> msg)
 
 void Cache::remove(std::unique_ptr<IncomingMessage> msg)
 {
+	mtx_.lock();
 	cache_.erase(msg->get("key", ""));
+	mtx_.unlock();
 }
 
 
