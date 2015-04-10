@@ -1,0 +1,31 @@
+import os
+AddOption("--compiler",
+		  dest="compiler",
+		  action="store",
+		  choices=["clang++", "g++"],
+		  default="clang++",
+		  help="compiler to use")
+
+
+# relative paht start as of "build" dir
+simulator_env = Environment(
+	CXX = GetOption("compiler"),
+	CXXFLAGS = Split(
+		"-std=c++11 -Wall -Wextra -pedantic -O2 " +
+		"-pipe -pthread -finline-functions -Wreorder"),
+	CPPDEFINES = Split(""),
+	CPPPATH = [
+		"/usr/include/yami4", "/usr/local/include/yami4",
+		"../../",
+		"../../external/include"
+	],
+	LIBS = Split("yami4cppd yami4cored jsoncpp " +
+				 "boost_system boost_thread boost_program_options"),
+	LIBPATH = ["/usr/local/lib64/yami4", "../../../lib/external/jsoncpp"],
+	LINKFLAGS = Split("-lpthread -ldl"),
+	DESTDIR = "../bin"
+)
+
+# clang colors
+simulator_env['ENV']['TERM'] = os.environ['TERM']
+SConscript('src/SConscript', variant_dir='simulator-build', exports=["simulator_env"], duplicate=0)

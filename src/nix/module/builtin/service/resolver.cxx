@@ -28,7 +28,7 @@ Resolver::Resolver(std::shared_ptr<ModuleAPI> api,
 	);
 
 	std::shared_ptr<Route> unbind_route(
-		new Route("unbind", std::bind(&Resolver::unbind, this, _1), Route::API_PRIVATE, Route::VOID)
+		new Route("unbind", std::bind(&Resolver::unbind, this, _1), Route::API_PRIVATE, Route::SYNC)
 	);
 
 	routes_.push_back(bind_route);
@@ -38,7 +38,7 @@ Resolver::Resolver(std::shared_ptr<ModuleAPI> api,
 
 void Resolver::bind(std::unique_ptr<IncomingMessage> msg)
 {
-	std::string node = msg->get("node", "");
+	std::string node = msg->get("nodename", "");
 	std::string address = msg->get("address", "");
 	if(node.empty() || address.empty()) {
 		msg->fail(
@@ -47,14 +47,17 @@ void Resolver::bind(std::unique_ptr<IncomingMessage> msg)
 		);
 	}
 	else {
+		mtx_.lock();
 		nodes_[node] = address;
+		mtx_.unlock();
+		msg->clear();
 		msg->reply();
 	}
 }
 
 void Resolver::resolve(std::unique_ptr<IncomingMessage> msg)
 {
-	std::string node = nodes_[msg->get("node", "")];
+	std::string node = nodes_[msg->get("nodename", "")];
 	if(node.empty()) {
 		msg->fail(nix::fail, "Unknown node.");
 	}
@@ -67,7 +70,10 @@ void Resolver::resolve(std::unique_ptr<IncomingMessage> msg)
 
 void Resolver::unbind(std::unique_ptr<IncomingMessage> msg)
 {
-	nodes_.erase(msg->get("node", ""));
+	mtx_.lock();
+	nodes_.erase(msg->get("nodename", ""));
+	mtx_.unlock();
+	msg->reply();
 }
 
 

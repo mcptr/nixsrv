@@ -1,6 +1,8 @@
 #ifndef NIX_MODULE_BUILTIN_HXX
 #define NIX_MODULE_BUILTIN_HXX
 
+#include <mutex>
+
 #include "nix/module.hxx"
 #include "nix/server/options.hxx"
 
@@ -23,6 +25,7 @@ public:
 
 protected:
 	const nix::server::Options options_;
+	std::mutex mtx_;
 };
 
 

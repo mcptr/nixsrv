@@ -56,6 +56,7 @@ void Dispatcher::operator()(yami::incoming_message& msg)
 {
 	std::string module = msg.get_object_name();
 	std::string route = module + "::" + msg.get_message_name();
+	LOG(DEBUG) << "Dispathing: " << route;
 	Routing_t::iterator it = routing_.find(route);
 
 	stats_->requests++;
