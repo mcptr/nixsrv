@@ -79,6 +79,12 @@ public:
 	void set_status(nix::StatusCode_t status, const std::string& msg = std::string());
 
 	template< class T>
+	void set_meta(const std::string& k, const T& value)
+	{
+		root_["@" + k] = value;
+	}
+
+	template< class T>
 	void set(const std::string& k, const T& value)
 	{
 		std::vector<std::string> keys;

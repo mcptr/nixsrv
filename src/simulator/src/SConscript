@@ -1,0 +1,16 @@
+import os
+
+app_objects = []
+for root, dirs, files in os.walk("../../../build/objs"):
+	for f in files:
+		if f.endswith(".o"):
+			app_objects.append(os.path.join(root, f))
+
+Import("simulator_env")
+target_exe = "bin/simulator"
+cxx_units = Glob("*.cxx")
+simulator_env.Program(
+	target=target_exe,
+	source=[simulator_env.SharedObject(cxx_units)] + app_objects
+)
+simulator_env.Install(simulator_env["DESTDIR"], target_exe)

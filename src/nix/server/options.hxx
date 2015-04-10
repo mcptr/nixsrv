@@ -20,6 +20,11 @@ public:
 	int dispatcher_threads = 1;
 
 	bool development_mode = false;
+	bool enable_random_sleep = false;
+
+	bool cache_cleaner_enabled = false;
+	int cache_cleaner_run_interval = 60;
+	int cache_cleaner_sleep_interval_ms = 1000;
 };
 
 

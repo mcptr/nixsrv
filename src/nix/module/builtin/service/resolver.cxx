@@ -28,7 +28,7 @@ Resolver::Resolver(std::shared_ptr<ModuleAPI> api,
 	);
 
 	std::shared_ptr<Route> unbind_route(
-		new Route("unbind", std::bind(&Resolver::unbind, this, _1), Route::API_PRIVATE, Route::VOID)
+		new Route("unbind", std::bind(&Resolver::unbind, this, _1), Route::API_PRIVATE, Route::SYNC)
 	);
 
 	routes_.push_back(bind_route);
@@ -38,7 +38,7 @@ Resolver::Resolver(std::shared_ptr<ModuleAPI> api,
 
 void Resolver::bind(std::unique_ptr<IncomingMessage> msg)
 {
-	std::string node = msg->get("node", "");
+	std::string node = msg->get("nodename", "");
 	std::string address = msg->get("address", "");
 	if(node.empty() || address.empty()) {
 		msg->fail(
@@ -47,27 +47,38 @@ void Resolver::bind(std::unique_ptr<IncomingMessage> msg)
 		);
 	}
 	else {
+		std::unique_lock<std::mutex> lock(mtx_);
 		nodes_[node] = address;
+		lock.unlock();
+		msg->clear();
 		msg->reply();
 	}
 }
 
 void Resolver::resolve(std::unique_ptr<IncomingMessage> msg)
 {
-	std::string node = nodes_[msg->get("node", "")];
-	if(node.empty()) {
+	std::string node = msg->get("nodename", "");
+
+	std::unique_lock<std::mutex> lock(mtx_);
+	std::string address = nodes_[node];
+	lock.unlock();
+
+	if(address.empty()) {
 		msg->fail(nix::fail, "Unknown node.");
 	}
 	else {
 		msg->clear();
-		msg->set("address", node);
+		msg->set(node, address);
 		msg->reply(*msg);
 	}
 }
 
 void Resolver::unbind(std::unique_ptr<IncomingMessage> msg)
 {
-	nodes_.erase(msg->get("node", ""));
+	std::unique_lock<std::mutex> lock(mtx_);
+	nodes_.erase(msg->get("nodename", ""));
+	lock.unlock();
+	msg->reply();
 }
 
 

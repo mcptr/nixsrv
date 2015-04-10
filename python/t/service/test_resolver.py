@@ -17,7 +17,7 @@ expected_routing = {
 	"routing": {
 		"unbind": {
 			"description": "",
-			"processing_type": "VOID",
+			"processing_type": "SYNC",
 			"access_modifier": "API_PRIVATE"
 		},
 		"list_routes": {
@@ -90,7 +90,7 @@ def test_service():
 
 		# valid
 		params.update({
-			"node" : test_node,
+			"nodename" : test_node,
 			"address" : test_address}
 		)
 		response = client.call(module, "bind", params, 2000)
@@ -103,11 +103,11 @@ def test_service():
 		assert_true(response.is_status_fail(), "Resolve fails without node")
 
 		# valid
-		params.update({"node" : test_node})
+		params.update({"nodename" : test_node})
 		response = client.call(module, "resolve", params, 2000)
 		assert_true(response.is_status_ok(), "Is resolved ok?")
 		assert_equal(
-			response.data["address"],
+			response.data[test_node],
 			test_address,
 			"Is resolved address correct?"
 		)
