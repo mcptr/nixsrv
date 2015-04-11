@@ -41,7 +41,11 @@ class Result(object):
 class NixClient(object):
 	def __init__(self, address = None, **kwargs):
 		self.__address = address
-		self.__agent = yami.Agent({"tcp_nonblocking" : 1})
+		self.__agent = yami.Agent({
+			"tcp_nonblocking" : 1,
+			"tcp_connect_timeout" : 200,
+			"connection_retries" : 3
+		})
 		self._verbose = kwargs.pop("verbose", False)
 
 	def call(self, mod, route, params = None, timeout_ms = 3000):
@@ -49,10 +53,12 @@ class NixClient(object):
 			print("### call: %s/%s" % (mod, route))
 		params = (params or {})
 		result = Result()
+		print("empty result, calling", mod, route, params, self.__address)
 		with self.__agent.send(
 				self.__address,
 				mod, route,
 				{"message" : json.dumps(params)}) as msg:
+			print("called, waiting")
 			msg.wait_for_completion(timeout_ms)
 			result.state = msg.get_state()
 
