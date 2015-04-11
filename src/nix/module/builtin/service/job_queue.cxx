@@ -321,7 +321,7 @@ void JobQueue::status(std::unique_ptr<IncomingMessage> msg)
 
 	msg->set("total_completed", completed_jobs_);
 
-	mtx_.lock();
+	std::unique_lock<std::mutex> lock(mtx_);
 
 	long long total_in_progress = in_progress_.size();
 	long long total_results_awaiting = completed_.size();
@@ -337,12 +337,13 @@ void JobQueue::status(std::unique_ptr<IncomingMessage> msg)
 	}
 	msg->set("total_pending", total_pending);
 
-	mtx_.unlock();
+	lock.unlock();
 	msg->reply(*msg);
 }
 
 void JobQueue::clear_all()
 {
+	// each queue is takes care of thread safety
 	for(auto it : queues_) {
 		it.second->clear();
 	}
@@ -357,11 +358,11 @@ void JobQueue::switch_all(bool state)
 
 void JobQueue::remove_all()
 {
-	mtx_.lock();
+	std::unique_lock<std::mutex> lock(mtx_);
 	switch_all(false);
 	clear_all();
 	queues_.clear();
-	mtx_.unlock();
+	lock.unlock();
 }
 
 

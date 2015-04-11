@@ -36,6 +36,7 @@ class NixServer(object):
 			"--no-close-fds",
 			"--development-mode"
 		]
+
 		for module in self.__builtin_modules:
 			cmd.append("--enable-" + module.lower())
 		self.__server_process = Popen(cmd, stdout=PIPE, shell=False)

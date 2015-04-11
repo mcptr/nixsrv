@@ -4,29 +4,37 @@ logdir = ~/Devel/nix-env/nix/var/log
 pidfile = ~/Devel/nix-env/nix/var/run/nix.pid
 
 node_name = devel-01
-address = tcp://127.0.0.1:55555
+address = tcp://127.0.0.1:65535
 
 ## builtin modules
-enable-debug = 1
+enable-debug = 0
 ## builtin modules: services
-enable-cache = 1
-enable-resolver = 1
-enable-job-queue = 1
+enable-cache = 0
+enable-resolver = 0
+enable-job-queue = 0
 
 [SERVER]
-tcp_listen_backlog = 10
+tcp_listen_backlog = 5
 tcp_nonblocking = 1
-dispatcher_threads = 2
+dispatcher_threads = 4
 
-[builtins]
+[builtins.cache]
+cleaner_enabled = 1
+# cache cleaner interval: run * sleep (milliseconds),
+# e.g. 60 * 1000 = 1 minute
+cleaner_run_interval = 60
+cleaner_sleep_interval_ms = 1000
+
+[builtins.queues]
 queues = test
 
-[queue.test]
+[bulitins.queue.test]
 size = 123
 
 
+
 [infrastructure]
-srv_resolver_address = tcp://127.0.0.1:55555
+srv_resolver_address = tcp://127.0.0.1:65535
 srv_cache_address = 
 srv_broker_address = 
 srv_job_queue_address = 

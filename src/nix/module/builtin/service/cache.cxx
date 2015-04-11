@@ -70,9 +70,11 @@ void Cache::start()
 
 void Cache::stop()
 {
-	cleaner_stop_flag_ = true;
-	cleaner_mtx_.unlock();
-	cleaner_thread_.join();
+	if(options_.cache_cleaner_enabled) {
+		cleaner_stop_flag_ = true;
+		cleaner_mtx_.unlock();
+		cleaner_thread_.join();
+	}
 }
 
 void Cache::store(std::unique_ptr<IncomingMessage> msg)

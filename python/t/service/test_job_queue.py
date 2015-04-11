@@ -85,7 +85,7 @@ def test_submit():
 		# testing 'submit' route
 
 		response = client.call(module, "job/submit", params, 100)
-		assert_true(response.is_status_fail())
+		assert_true(response.is_status_fail(), "Fails without params")
 
 		job_module = "test"
 		job_action = "test"
@@ -98,8 +98,8 @@ def test_submit():
 			job_param_name : job_param_value
 		})
 
-		response = client.call(module, "job/submit", params, 100)
-		assert_true(response.is_status_ok())
+		response = client.call(module, "job/submit", params, 1000)
+		assert_true(response.is_status_ok(), "Submit ok")
 		JOB_ID = response.data["job_id"]
 		assert_true(len(JOB_ID))
 
@@ -191,7 +191,7 @@ def test_queue_management():
 		status_params = {
 			"@api_key" : development_key_admin,
 		}
-		response = client.call(module, "status", status_params)
+		response = client.call(module, "status", status_params, 2000)
 		assert_true(response.is_status_ok(), "got status")
 		status = response.data
 		assert_equal(status["total_completed"], 0, "no jobs done yey")

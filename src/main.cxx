@@ -295,8 +295,8 @@ int main(int argc, char** argv)
 		}
 	}
 
-	module_manager.reset();
 	server->stop();
+	module_manager.reset();
 
 	if(server_pid) {
 		nix::util::pid::pidfile_remove(server_pidfile);
