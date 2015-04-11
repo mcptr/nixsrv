@@ -53,12 +53,10 @@ class NixClient(object):
 			print("### call: %s/%s" % (mod, route))
 		params = (params or {})
 		result = Result()
-		print("empty result, calling", mod, route, params, self.__address)
 		with self.__agent.send(
 				self.__address,
 				mod, route,
 				{"message" : json.dumps(params)}) as msg:
-			print("called, waiting")
 			msg.wait_for_completion(timeout_ms)
 			result.state = msg.get_state()
 
