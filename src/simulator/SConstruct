@@ -7,6 +7,14 @@ AddOption("--compiler",
 		  help="compiler to use")
 
 
+THIS_PLATFORM = os.uname()[0].lower()
+platform_libs = {
+	"linux" : ["dl"],
+	"freebsd" : ["execinfo"],
+}
+
+platform_linkflags = ["-l%s" % l for l in platform_libs.get(THIS_PLATFORM, [])]
+
 # relative paht start as of "build" dir
 simulator_env = Environment(
 	CXX = GetOption("compiler"),
@@ -21,11 +29,11 @@ simulator_env = Environment(
 	],
 	LIBS = Split("yami4cppd yami4cored jsoncpp " +
 				 "boost_system boost_thread boost_program_options"),
-	LIBPATH = ["/usr/local/lib64/yami4", "../../../lib/external/jsoncpp"],
-	LINKFLAGS = Split("-lpthread -ldl"),
+	LIBPATH = ["/usr/local/lib", "/usr/local/lib64/yami4", "../../../lib/external/jsoncpp"],
+	LINKFLAGS = ["-lpthread"] + platform_linkflags,
 	DESTDIR = "../bin"
 )
 
 # clang colors
 simulator_env['ENV']['TERM'] = os.environ['TERM']
-SConscript('src/SConscript', variant_dir='simulator-build', exports=["simulator_env"], duplicate=0)
+SConscript('src/SConscript', variant_dir='build', exports=["simulator_env"], duplicate=0)
