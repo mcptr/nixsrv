@@ -3,6 +3,7 @@
 
 #include <memory>
 #include <unordered_map>
+#include <set>
 #include "nix/module/builtin.hxx"
 #include "nix/message/incoming.hxx"
 
@@ -23,7 +24,12 @@ private:
 	void resolve(std::unique_ptr<IncomingMessage> msg);
 	void unbind(std::unique_ptr<IncomingMessage> msg);
 
+	void bind_service(std::unique_ptr<IncomingMessage> msg);
+	void resolve_service(std::unique_ptr<IncomingMessage> msg);
+	void unbind_service(std::unique_ptr<IncomingMessage> msg);
+
 	std::unordered_map<std::string, std::string> nodes_;
+	std::unordered_map<std::string, std::set<std::string>> services_;
 };
 
 

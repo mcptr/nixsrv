@@ -31,8 +31,6 @@ queues = test
 [bulitins.queue.test]
 size = 123
 
-
-
 [infrastructure]
 srv_resolver_address = tcp://127.0.0.1:65535
 srv_cache_address = 
