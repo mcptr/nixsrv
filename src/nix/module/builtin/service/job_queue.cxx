@@ -137,7 +137,7 @@ void JobQueue::submit(std::unique_ptr<IncomingMessage> msg)
 				// will use a container now
 				msg->clear();
 				msg->set("job_id", job_id);
-				msg->reply();
+				msg->reply(*msg);
 			}
 		}
 		else {

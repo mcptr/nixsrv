@@ -337,6 +337,9 @@ translation_units = {
 	"core/resolver_client" : {
 		"env": combinedenv,
 	},
+	"core/cache_client" : {
+		"env": combinedenv,
+	},
 	# ------------------------
 	"direct_handlers" : {
 		"env": combinedenv,

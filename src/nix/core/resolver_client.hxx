@@ -14,10 +14,10 @@ class ResolverClient : public ServiceClient
 public:
 	ResolverClient() = delete;
 
-	ResolverClient(const std::string& service,
-				   const std::string& server_address,
+	ResolverClient(const std::string& server_address,
 				   const std::string& api_key,
 				   size_t max_timeout_ms_ = 2000);
+
 	virtual ~ResolverClient() = default;
 
 

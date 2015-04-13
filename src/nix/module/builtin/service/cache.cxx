@@ -91,7 +91,6 @@ void Cache::store(std::unique_ptr<IncomingMessage> msg)
 		stat_writes_failed_++;
 	}
 	else {
-
 		CacheEntry entry;
 
 		int max_age = msg->get("max_age", 0);
@@ -147,7 +146,7 @@ void Cache::retrieve(std::unique_ptr<IncomingMessage> msg)
 		else {
 			msg->clear();
 			msg->set_deserialized(key, content);
-			msg->reply();
+			msg->reply(*msg);
 			stat_hits_++;
 		}
 	}

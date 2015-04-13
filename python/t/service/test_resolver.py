@@ -16,24 +16,29 @@ expected_routing = {
 		"version": 1
 	},
 	"routing": {
-		"bind": {
-			"access_modifier": "API_PRIVATE",
-			"description": "Bind node name to address",
-			"processing_type": "SYNC"
-		},
 		"list_routes": {
 			"access_modifier": "ANY",
 			"description": "Display all routes handled by 'Resolver' module",
 			"processing_type": "SYNC"
 		},
+		"node/bind": {
+			"access_modifier": "API_PRIVATE",
+			"description": "Bind node name to address",
+			"processing_type": "SYNC"
+		},
+		"node/resolve": {
+			"access_modifier": "API_PRIVATE",
+			"description": "Resolve node's address",
+			"processing_type": "SYNC"
+		},
+		"node/unbind": {
+			"access_modifier": "API_PRIVATE",
+			"description": "Unbind node's address",
+			"processing_type": "SYNC"
+		},
 		"ping": {
 			"access_modifier": "ANY",
 			"description": "",
-			"processing_type": "SYNC"
-		},
-		"resolve": {
-			"access_modifier": "API_PRIVATE",
-			"description": "Resolve node's address",
 			"processing_type": "SYNC"
 		},
 		"service/bind": {
@@ -50,15 +55,9 @@ expected_routing = {
 			"access_modifier": "API_PRIVATE",
 			"description": "Unbind a node that serves given implementation ",
 			"processing_type": "SYNC"
-		},
-		"unbind": {
-			"access_modifier": "API_PRIVATE",
-			"description": "Unbind node's address",
-			"processing_type": "SYNC"
 		}
 	}
 }
-
 development_key = "_development_key_"
 development_key_public = "_development_key_public"
 
@@ -102,7 +101,7 @@ def test_nodes():
 		# testing 'bind' route
 
 		invalid_params = params.copy()
-		response = client.call(module, "bind", invalid_params, 2000)
+		response = client.call(module, "node/bind", invalid_params, 2000)
 		assert_equal(
 			response.status_code(),
 			501,
@@ -114,18 +113,18 @@ def test_nodes():
 			"nodename" : test_node,
 			"address" : test_address
 		})
-		response = client.call(module, "bind", params, 2000)
+		response = client.call(module, "node/bind", params, 2000)
 		assert_true(response.is_status_ok(), "Bind succeeded")
 
 		# testing 'resolve' route
 		params = {"@api_key" : development_key}
 		invalid_params = params.copy()
-		response = client.call(module, "resolve", invalid_params, 2000)
+		response = client.call(module, "node/resolve", invalid_params, 2000)
 		assert_true(response.is_status_fail(), "Resolve fails without node")
 
 		# valid
 		params.update({"nodename" : test_node})
-		response = client.call(module, "resolve", params, 2000)
+		response = client.call(module, "node/resolve", params, 2000)
 		assert_true(response.is_status_ok(), "Is resolved ok?")
 		assert_equal(
 			response.data[test_node],
@@ -135,10 +134,10 @@ def test_nodes():
 
 
 		# testing 'unbind' route
-		response = client.send_one_way(module, "unbind", params)
+		response = client.send_one_way(module, "node/unbind", params)
 		time.sleep(0.2)
 		# after unbind node cannot be resolved
-		response = client.call(module, "resolve", params, 2000)
+		response = client.call(module, "node/resolve", params, 2000)
 		assert_true(response.is_status_fail(), "Is node unbound?")
 
 
@@ -179,14 +178,14 @@ def test_services():
 			"address" : test_address1
 		})
 
-		response = client.call(module, "bind", node_bind_params)
+		response = client.call(module, "node/bind", node_bind_params)
 		assert_true(response.is_status_ok(), "node 1 bound")
 
 		node_bind_params.update({
 			"nodename" : test_nodename2,
 			"address" : test_address2
 		})
-		response = client.call(module, "bind", node_bind_params)
+		response = client.call(module, "node/bind", node_bind_params)
 		assert_true(response.is_status_ok(), "node 2 bound")
 
 		# first node
@@ -235,13 +234,13 @@ def test_services():
 		params.update({
 			"nodename" : test_nodename1
 		})
-		response = client.call(module, "unbind", params, 2000)
+		response = client.call(module, "node/unbind", params, 2000)
 		assert_true(response.is_status_ok(), "unbind node1")
 
 		params.update({
 			"nodename" : test_nodename2
 		})
-		response = client.call(module, "unbind", params, 2000)
+		response = client.call(module, "node/unbind", params, 2000)
 		assert_true(response.is_status_ok(), "unbind node1")
 
 		response = client.call(module, "service/resolve", params, 2000)

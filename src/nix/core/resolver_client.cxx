@@ -5,11 +5,10 @@ namespace nix {
 namespace core {
 
 
-ResolverClient::ResolverClient(const std::string& service,
-							   const std::string& server_address,
+ResolverClient::ResolverClient(const std::string& server_address,
 							   const std::string& api_key,
 							   size_t max_timeout_ms_)
-	: ServiceClient(service, server_address, api_key, max_timeout_ms_)
+	: ServiceClient("Resolver", server_address, api_key, max_timeout_ms_)
 {
 }
 

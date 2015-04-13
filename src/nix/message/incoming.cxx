@@ -16,7 +16,7 @@ IncomingMessage::IncomingMessage(yami::incoming_message& im)
 void IncomingMessage::reply()
 {
 	try {
-		//clear();
+		clear();
 		this->set_status(nix::ok);
 		this->reply(*this);
 	}
