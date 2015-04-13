@@ -21,21 +21,21 @@ Resolver::Resolver(std::shared_ptr<ModuleAPI> api,
 
 	// nodes
 	std::shared_ptr<Route> bind_route(
-		new Route("bind", std::bind(&Resolver::bind, this, _1),
+		new Route("node/bind", std::bind(&Resolver::bind, this, _1),
 				  Route::API_PRIVATE, Route::SYNC,
 				  "Bind node name to address"
 		)
 	);
 
 	std::shared_ptr<Route> resolve_route(
-		new Route("resolve", std::bind(&Resolver::resolve, this, _1),
+		new Route("node/resolve", std::bind(&Resolver::resolve, this, _1),
 				  Route::API_PRIVATE, Route::SYNC,
 				  "Resolve node's address"
 		)
 	);
 
 	std::shared_ptr<Route> unbind_route(
-		new Route("unbind", std::bind(&Resolver::unbind, this, _1),
+		new Route("node/unbind", std::bind(&Resolver::unbind, this, _1),
 				  Route::API_PRIVATE, Route::SYNC,
 				  "Unbind node's address"
 		)

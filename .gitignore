@@ -24,7 +24,7 @@ doc/doxy
 var/
 __pycache__
 .emacs*
-core
+./core
 doc/
 old/
 lib/

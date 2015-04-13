@@ -328,6 +328,15 @@ translation_units = {
 	"core/auth" : {
 		"env": yamienv,
 	},
+	"core/client" : {
+		"env": combinedenv,
+	},
+	"core/service_client" : {
+		"env": combinedenv,
+	},
+	"core/resolver_client" : {
+		"env": combinedenv,
+	},
 	# ------------------------
 	"direct_handlers" : {
 		"env": combinedenv,
@@ -347,6 +356,9 @@ translation_units = {
 		"env": combinedenv,
 	},
 	"message/incoming" : {
+		"env": combinedenv,
+	},
+	"message/response" : {
 		"env": combinedenv,
 	},
 	"message/value" : {
