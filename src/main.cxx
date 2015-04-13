@@ -163,6 +163,7 @@ int main(int argc, char** argv)
 	try {
 		server->start();
 		module_manager->start_manager_thread();
+		LOG(DEBUG) << "Running...";
 	}
 	catch(const std::exception& e) {
 		LOG(ERROR) << e.what();
@@ -173,17 +174,14 @@ int main(int argc, char** argv)
 	threads.push_back(std::move(std::thread(block_and_wait)));
 
 	for(auto&t : threads) {
-		LOG(INFO) << "join";
 		if(t.joinable()) {
 			t.join();
 		}
 	}
 
-	LOG(INFO) << "stopp";
 	server->stop();
 	module_manager.reset();
 
-	LOG(INFO) << "Server stopping";
 	nix::init::stop_daemon(server_pid, server_pidfile);
 	return EXIT_SUCCESS;
 }

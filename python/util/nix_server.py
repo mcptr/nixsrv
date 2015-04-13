@@ -17,7 +17,7 @@ class NixServer(object):
 		if not self.__address:
 			self.__address = "tcp://127.0.0.1:%d" % port
 		self.__pidfile = "/tmp/nix.test-%d.pid" % os.getpid()
-		self.__nodename = "unittest-node-01-%d" % port
+		self.__nodename = "unittest-node-%d" % port
 
 	def get_address(self):
 		return self.__address

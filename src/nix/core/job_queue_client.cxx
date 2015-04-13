@@ -71,5 +71,3 @@ JobQueueClient::status(const std::string& queue_node)
 
 } // core
 } // nix
-
-

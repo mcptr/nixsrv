@@ -1,5 +1,5 @@
-#ifndef TEST_UTIL_HXX
-#define TEST_UTIL_HXX
+#ifndef TEST_TOOLS_UTIL_HXX
+#define TEST_TOOLS_UTIL_HXX
 
 #include <functional>
 #include <iostream>
@@ -8,45 +8,15 @@
 #include <map>
 #include <exception>
 #include <stdexcept>
+#include <vector>
 
-#if defined(EASYLOGGINGPP_H)
-//#undef ELPP_STACKTRACE_ON_CRASH
-
-INITIALIZE_EASYLOGGINGPP
-
-
-void crash_handler(int sig) {
-	LOG(ERROR) << "Crashed";
-	el::Helpers::logCrashReason(sig, true);
-	el::Helpers::crashAbort(sig);
-}
-
-void initialize_test_env()
-{
-	el::Configurations conf;
-
-	conf.setGlobally(
-		el::ConfigurationType::ToStandardOutput,
-		"false");
-
-	conf.setGlobally(
-		el::ConfigurationType::Enabled,
-		"false");
-
-	el::Helpers::setCrashHandler(crash_handler);
-	
-	el::Loggers::reconfigureAllLoggers(conf);
-
-};
-#else
-
-void initialize_test_env()
-{
-}
-
-#endif
 
 namespace test {
+
+
+void crash_handler(int sig);
+
+void initialize_test_env();
 
 class AssertionFailed : public std::exception {};
 
@@ -418,6 +388,7 @@ protected:
 	std::vector<std::pair<std::string, TestCase::TestFunction_t>> cases_;
 	std::vector<std::string> failed_;
 };
+
 
 } // test
 
