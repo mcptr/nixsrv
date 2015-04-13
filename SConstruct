@@ -331,13 +331,16 @@ translation_units = {
 	"core/client" : {
 		"env": combinedenv,
 	},
-	"core/service_client" : {
+	"core/cache_client" : {
+		"env": combinedenv,
+	},
+	"core/job_queue_client" : {
 		"env": combinedenv,
 	},
 	"core/resolver_client" : {
 		"env": combinedenv,
 	},
-	"core/cache_client" : {
+	"core/service_client" : {
 		"env": combinedenv,
 	},
 	# ------------------------

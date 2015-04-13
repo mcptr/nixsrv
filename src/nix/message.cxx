@@ -204,6 +204,18 @@ std::string Message::to_string(bool pretty) const
 	return writer.write(root_);
 }
 
+std::string Message::to_string(const std::string& k, bool pretty) const
+{
+	Json::Value dest;
+	bool found = find(k, dest);
+
+	if(found && pretty) {
+		return dest.toStyledString();
+	}
+	Json::FastWriter writer;
+	return writer.write((found ? dest : Null_t().get_value()));
+}
+
 bool Message::exists(const std::string& k) const
 {
 	Json::Value dummy;

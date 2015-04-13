@@ -121,23 +121,30 @@ void JobQueue::submit(std::unique_ptr<IncomingMessage> msg)
 			msg->fail("No queue for module: " + dest_queue);
 		}
 		else if(!it->second->is_closed()) {
-			msg->remove("module");
 			std::string action = msg->get("action", "");
-			
-			std::unique_ptr<Job> job(new Job(action, msg->to_string()));
-			std::string job_id = job->get_id();
-			
-			bool success;
-			it->second->push(std::move(job), success);
-			if(!success) {
-				msg->fail(nix::temp_limit_reached, "Queue full");
+			bool has_data = msg->exists("data");
+
+			if(!(dest_queue.length() && action.length() && has_data)) {
+				msg->fail(nix::data_invalid_content);
 			}
 			else {
-				// 2DO: store job in db (if queue is configured to be persistent,
-				// will use a container now
-				msg->clear();
-				msg->set("job_id", job_id);
-				msg->reply(*msg);
+				msg->remove("module");
+				std::unique_ptr<Job> job(new Job(action, msg->to_string("data")));
+				std::string job_id = job->get_id();
+				
+				bool success;
+				it->second->push(std::move(job), success);
+				if(!success) {
+					msg->fail(nix::temp_limit_reached, "Queue full");
+				}
+				else {
+					// 2DO: store job in db 
+					// (if queue is configured to be persistent,
+					// will use a container now
+					msg->clear();
+					msg->set("@job_id", job_id);
+					msg->reply(*msg);
+				}
 			}
 		}
 		else {
@@ -162,8 +169,8 @@ void JobQueue::get_work(std::unique_ptr<IncomingMessage> msg)
 				Message work;
 				work.set("action", ptr->get_action());
 				work.set_deserialized("parameters", ptr->get_serialized_parameters());
-				work.set("job_id", ptr->get_id());
-				work.set("queue_node", options_.nodename);
+				work.set("@job_id", ptr->get_id());
+				work.set("@queue_node", options_.nodename);
 				msg->reply(work);
 
 				mtx_.lock();
@@ -176,7 +183,7 @@ void JobQueue::get_work(std::unique_ptr<IncomingMessage> msg)
 
 void JobQueue::set_progress(std::unique_ptr<IncomingMessage> msg)
 {
-	std::string job_id = msg->get("job_id", "");
+	std::string job_id = msg->get("@job_id", "");
 
 	auto it = in_progress_.find(job_id);
 	if(it != in_progress_.end()) {
@@ -189,24 +196,28 @@ void JobQueue::set_progress(std::unique_ptr<IncomingMessage> msg)
 
 void JobQueue::set_result(std::unique_ptr<IncomingMessage> msg)
 {
-	std::string job_id = msg->get("job_id", "");
-
-	if(!persistent_) {
-		mtx_.lock();
-		in_progress_.erase(job_id);
-		std::unique_ptr<Message> result(new Message(msg->to_string()));
-		completed_[job_id] = std::move(result);
-		completed_jobs_++;
-		mtx_.unlock();
-		msg->clear();
-		msg->reply();
+	std::string job_id = msg->get("@job_id", "");
+	if(!job_id.length()) {
+		msg->fail(nix::null_value);
+	}
+	else {
+		if(!persistent_) {
+			mtx_.lock();
+			in_progress_.erase(job_id);
+			std::unique_ptr<Message> result(new Message(msg->to_string()));
+			completed_[job_id] = std::move(result);
+			completed_jobs_++;
+			mtx_.unlock();
+			msg->clear();
+			msg->reply();
+		}
 	}
 }
 
 void JobQueue::get_result(std::unique_ptr<IncomingMessage> msg)
 {
 	std::string api_key = msg->get("@api_key", "");
-	std::string job_id = msg->get("job_id", "");
+	std::string job_id = msg->get("@job_id", "");
 
 	msg->clear();
 

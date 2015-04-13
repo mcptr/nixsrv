@@ -100,17 +100,19 @@ def test_submit():
 		params.update({
 			"module" : job_module,
 			"action" : job_action,
-			job_param_name : job_param_value
+			"data" : {
+				job_param_name : job_param_value
+			}
 		})
 
 		response = client.call(module, "job/submit", params, 1000)
 		assert_true(response.is_status_ok(), "Submit ok")
-		JOB_ID = response.data["job_id"]
+		JOB_ID = response.data["@job_id"]
 		assert_true(len(JOB_ID))
 
 		params = {
 			"@api_key" : development_key,
-			"job_id" : JOB_ID
+			"@job_id" : JOB_ID
 		}
 		response = client.call(module, "job/result/get", params, 100)
 		assert_true(response.is_status_fail(), "Fail - job not started")
@@ -123,17 +125,17 @@ def test_submit():
 		assert_true(response.is_status_ok(), "Got job to process")
 		# this does not happen in real world, but this is a test
 		# and this is the only submitted job
-		assert_equal(response.data["job_id"], JOB_ID, "Job id")
+		assert_equal(response.data["@job_id"], JOB_ID, "Job id")
 		# ---
 		assert_equal(
-			response.data["queue_node"],
+			response.data["@queue_node"],
 			server.get_nodename(), "Origin node name set")
 		job_payload = response.data["parameters"]
 		assert_equal(job_payload["@api_key"], development_key, "api key")
 		# no need to test module - it was a name of the queue
 		assert_equal(job_payload["action"], job_action, "action")
 		assert_equal(
-			job_payload[job_param_name],
+			job_payload.get("data", {}).get(job_param_name),
 			job_param_value, "API key")
 
 		# simulate some processing
@@ -141,7 +143,7 @@ def test_submit():
 		for processed in range(0, total, 20):
 			params = {
 				"@api_key" : development_key,
-				"job_id" : JOB_ID,
+				"@job_id" : JOB_ID,
 				"progress" : float(processed) / total * 100
 			}
 			client.send_one_way(module, "job/progress/set", params)
@@ -154,7 +156,7 @@ def test_submit():
 
 		params = {
 			"@api_key" : development_key,
-			"job_id" : JOB_ID,
+			"@job_id" : JOB_ID,
 			job_param_name : "Result: %s" % job_param_value
 		}
 
@@ -163,13 +165,13 @@ def test_submit():
 
 		params = {
 			"@api_key" : development_key,
-			"job_id" : JOB_ID,
+			"@job_id" : JOB_ID,
 		}
 		response = client.call(module, "job/result/get", params, 100)
 		assert_true(response.is_status_ok(), "got result")
 		data = response.data
 		assert_equal(data["@api_key"], development_key, "result: api key")
-		assert_equal(data["job_id"], JOB_ID, "result: job_id")
+		assert_equal(data["@job_id"], JOB_ID, "result: job_id")
 		assert_equal(
 			data[job_param_name],
 			"Result: %s" % job_param_value, "result: job value")
@@ -260,14 +262,14 @@ def test_queue_management():
 			submit_params.update({
 				"module" : queue_name_1,
 				"action" : "dummy",
-				"params" : [i, "a string", True, {"test" : []}, None]
+				"data" : [i, "a string", True, {"test" : []}, None]
 			})
 
 			response = client.call(
 				module, "job/submit", submit_params)
 
 			assert_true(response.is_status_ok(), "submitted job")
-			job_id = response.data["job_id"]
+			job_id = response.data["@job_id"]
 			assert_true(len(job_id), "got job id")
 			submitted_jobs.append(job_id)
 
@@ -290,7 +292,7 @@ def test_queue_management():
 			submit_params.update({
 				"module" : queue_name_2,
 				"action" : "dummy",
-				"params" : [i, "a string", True, {"test" : []}, None]
+				"data" : [i, "a string", True, {"test" : []}, None]
 			})
 
 			response = client.call(
