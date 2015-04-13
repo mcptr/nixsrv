@@ -14,6 +14,11 @@ module = "JobQueue"
 
 expected_routing = {
 	"routing": {
+		"ping" : {
+			"access_modifier": "ANY",
+			"description": "",
+			"processing_type": "SYNC"
+		},
 		"job/result/set": {
 			"processing_type": "SYNC",
 			"access_modifier": "API_PRIVATE",

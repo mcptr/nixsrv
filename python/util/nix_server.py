@@ -60,7 +60,6 @@ class NixServer(object):
 					raise Exception("Server startup failed")
 		except Exception as e:
 			print(e)
-			raise
 		print("### NixServer: Server ready")
 		return self
 

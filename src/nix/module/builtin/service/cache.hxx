@@ -9,7 +9,6 @@
 //#include <shared_mutex>
 //
 #include <thread>
-#include <condition_variable>
 #include <atomic>
 #include "nix/module/builtin.hxx"
 #include "nix/message/incoming.hxx"
@@ -56,10 +55,6 @@ private:
 	std::atomic_ullong stat_hits_{0};
 	std::atomic_ullong stat_hits_expired_{0};
 	std::atomic_ullong stat_misses_{0};
-
-	// each run will be done in cleaner_run * cleaner_sleep interval
-	int cleaner_run_interval_ = 10;
-	int cleaner_sleep_interval_ = 1000; // milliseconds
 
 	std::atomic<bool> cleaner_stop_flag_ {false};
 	std::timed_mutex cleaner_mtx_;

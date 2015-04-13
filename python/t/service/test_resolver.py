@@ -26,6 +26,11 @@ expected_routing = {
 			"description": "Display all routes handled by 'Resolver' module",
 			"processing_type": "SYNC"
 		},
+		"ping": {
+			"access_modifier": "ANY",
+			"description": "",
+			"processing_type": "SYNC"
+		},
 		"resolve": {
 			"access_modifier": "API_PRIVATE",
 			"description": "Resolve node's address",

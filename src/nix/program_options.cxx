@@ -35,7 +35,7 @@ void ProgramOptions::parse(int argc, char** argv)
 		char progn[PATH_MAX];
 		memcpy(progn, progname.data(), progname.length());
 		string base_dir(dirname(dirname(progn)));
-		//base_dir = nix::util::fs::expand_user(base_dir);
+		base_dir = nix::util::fs::expand_user(base_dir);
 		string config_path;
 		string db_config_path;
 
@@ -71,7 +71,7 @@ void ProgramOptions::parse(int argc, char** argv)
 			)
 			("dbconfig",
 			 po::value<string>(&db_config_path)->default_value(
-				 base_dir + "/etc/config.ini", "$BASE_DIR/etc/db.ini"), ""
+				 base_dir + "/etc/db.ini", "$BASE_DIR/etc/db.ini"), ""
 			)
 			("basedir", po::value(&stropt)->default_value(base_dir),
 			 "base application directory"
@@ -133,6 +133,18 @@ void ProgramOptions::parse(int argc, char** argv)
 			;
 
 		builtins_hidden.add_options()
+			// module manager
+			("module-manager.manager_thread_enabled",
+			 po::value<bool>()->implicit_value(true)->zero_tokens()->default_value(false),
+			 "enable internal module manager thread")
+			("module-manager.manager_thread_run_interval",
+			 po::value(&intopt)->default_value(60),
+			 "manager wakup every run * sleep interval")
+			("module-manager.manager_thread_sleep_interval_ms",
+			 po::value(&intopt)->default_value(1000),
+			 "manager thread sleep interval")
+
+			// cache cleaner
 			("builtins.cache.cleaner_enabled",
 			 po::value<bool>()->implicit_value(true)->zero_tokens()->default_value(false),
 			 "enable cleaner thread")
@@ -142,6 +154,24 @@ void ProgramOptions::parse(int argc, char** argv)
 			("builtins.cache.cleaner_sleep_interval_ms",
 			 po::value(&intopt)->default_value(1000),
 			 "cleaner sleep interval in ms (run * sleep)")
+
+			// resolver monitor
+			("builtins.resolver.monitor_enabled",
+			 po::value<bool>()->implicit_value(true)->zero_tokens()->default_value(false),
+			 "enable monitor thread in resolver")
+			("builtins.resolver.monitor_run_interval",
+			 po::value(&intopt)->default_value(20),
+			 "monitor run (run * sleep)")
+			("builtins.resolver.monitor_sleep_interval_ms",
+			 po::value(&intopt)->default_value(1000),
+			 "resolver monitor sleep interval in ms (run * sleep)")
+			("builtins.resolver.monitor_response_timeout_ms",
+			 po::value(&intopt)->default_value(2000),
+			 "how long to wait for response when checking if service is alive")
+			("builtins.resolver.monitor_max_failures",
+			 po::value(&intopt)->default_value(3),
+			 "monitor will remove bound addresses after max_failures reached")
+		
 			;
 
 		infrastructure.add_options()
@@ -179,14 +209,14 @@ void ProgramOptions::parse(int argc, char** argv)
 
 
 		config_file_hidden.add_options()
-			("SERVER.tcp_listen_backlog",
-			 po::value(&intopt)->default_value(10), "SERVER.tcp_listen_backlog"
+			("server.tcp_listen_backlog",
+			 po::value(&intopt)->default_value(10), "server.tcp_listen_backlog"
 			)
-			("SERVER.tcp_nonblocking",
-			 po::value(&boolopt)->default_value(true), "SERVER.tcp_nonblocking"
+			("server.tcp_nonblocking",
+			 po::value(&boolopt)->default_value(true), "server.tcp_nonblocking"
 			)
-			("SERVER.dispatcher_threads",
-			 po::value(&intopt)->default_value(10), "SERVER.dispatcher_threads"
+			("server.dispatcher_threads",
+			 po::value(&intopt)->default_value(10), "server.dispatcher_threads"
 			)
 			;
 

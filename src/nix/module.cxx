@@ -21,6 +21,16 @@ Module::Module(std::shared_ptr<ModuleAPI> api, const std::string& id, int versio
 			)
 		)
 	);
+
+	routes_.push_back(
+		std::shared_ptr<Route>(
+			new Route("ping",
+					  std::bind(&Module::is_alive, this, _1),
+					  Route::ANY,
+					  Route::SYNC
+			)
+		)
+	);
 }
 
 Module::~Module()
@@ -73,5 +83,9 @@ void Module::list_routes(std::unique_ptr<IncomingMessage> msg) const
 	msg->reply(*msg);
 }
 
+void Module::is_alive(std::unique_ptr<IncomingMessage> msg) const
+{
+	msg->reply();
+}
 
 } // nix

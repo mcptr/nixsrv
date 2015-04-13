@@ -16,6 +16,11 @@ expected_routing = {
 		"version": 1
 	},
 	"routing": {
+		"ping" : {
+			"access_modifier": "ANY",
+			"description": "",
+			"processing_type": "SYNC"
+		},
 		"remove": {
 			"processing_type": "VOID",
 			"description": "",

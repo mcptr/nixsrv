@@ -1,5 +1,5 @@
 #include <string>
-#include <iostream>
+#include <functional>
 
 #include "server.hxx"
 
@@ -13,7 +13,9 @@
 
 
 namespace nix {
-void dupa(yami::incoming_message& msg)
+
+
+void is_node_alive_handler(yami::incoming_message& msg)
 {
 	msg.reply();
 }
@@ -34,22 +36,31 @@ Server::Server(const server::Options& options)
 Server::~Server()
 {
 	LOG(INFO) << "~Server()";
+	if(is_running_) {
+		stop();
+	}
 	agent_.reset();
 }
 
 void Server::start()
 {
+	using std::placeholders::_1;
 	agent_->register_object(server::BUILTIN_STATUS_OBJECT_NAME,
-							*(dispatcher_.get()));
+							 *(dispatcher_.get()));
+
+	agent_->register_object("ping", is_node_alive_handler);
+	agent_->register_object("*", *(dispatcher_.get()));
 
 	// this throws yami::yami_runtime_error
 	resolved_address_ = agent_->add_listener(address_);
+	is_running_ = true;
 	LOG(INFO) << "Listening on: " << resolved_address_;
 }
 
 void Server::stop()
 {
 	agent_->remove_listener(resolved_address_);
+	is_running_ = false;
 	LOG(DEBUG) << "Removing listener: " << resolved_address_;
 }
 
@@ -65,6 +76,5 @@ void Server::register_object(const std::string& name,
 {
 	agent_->register_object(name, handler);
 }
-
 
 } // nix

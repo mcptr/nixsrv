@@ -336,6 +336,12 @@ translation_units = {
 	"db/connection" : {},
 	"db/instance_config" : {},
 	"db/options" : {},
+	"init/common" : {
+		"env": combinedenv,
+	},
+	"init/daemon" : {
+		"env": combinedenv,
+	},
 	"job" : {},
 	"message" : {
 		"env": combinedenv,

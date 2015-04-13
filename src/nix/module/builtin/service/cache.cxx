@@ -34,9 +34,6 @@ Cache::Cache(std::shared_ptr<ModuleAPI> api,
 {
 	using namespace std::placeholders;
 
-	cleaner_run_interval_ = options.cache_cleaner_run_interval;
-	cleaner_sleep_interval_ = options.cache_cleaner_sleep_interval_ms;
-
 	std::shared_ptr<Route> store_route(
 		new Route("store", std::bind(&Cache::store, this, _1), Route::API_PRIVATE, Route::SYNC)
 	);
@@ -212,7 +209,7 @@ void Cache::status(std::unique_ptr<IncomingMessage> msg)
 void Cache::cleaner()
 {
 	while(!cleaner_stop_flag_) {
-		LOG(INFO) << "Cache cleaner woke up";
+		LOG(INFO) << "Cache::cleaner up";
 		long removed = 0;
 		
 		std::unique_lock<std::mutex> lock(mtx_);
@@ -224,10 +221,12 @@ void Cache::cleaner()
 		}
 		lock.unlock();
 		LOG(INFO) << "Cache: Expired keys removed: " << removed;
-		int loops = cleaner_run_interval_;
+		int loops = options_.cache_cleaner_run_interval;
 		while(!cleaner_mtx_.try_lock() && loops) {
 			loops--;
-			std::this_thread::sleep_for(std::chrono::milliseconds(cleaner_sleep_interval_));
+			std::this_thread::sleep_for(
+				std::chrono::milliseconds(
+					options_.cache_cleaner_sleep_interval_ms));
 		}
 	}
 	LOG(INFO) << "Cache cleaner thread finished";
