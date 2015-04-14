@@ -11,7 +11,15 @@ Response::Response(std::unique_ptr<yami::outgoing_message> om)
 	const yami::message_state state = yami_om_->get_state();
 	if(state == yami::replied) {
 		const yami::parameters& reply = yami_om_->get_reply();
-		msg_.parse(reply.get_string("message"));
+		bool has_message = false;
+		yami::parameter_entry msg_entry;
+		if(reply.find("message", msg_entry)) {
+			has_message = true;
+		}
+
+		if(has_message) {
+			msg_.parse(reply.get_string("message"));
+		}
 	}
 	else if(state == yami::rejected) {
 		exception_msg_ = yami_om_->get_exception_msg();

@@ -1,6 +1,7 @@
 #ifndef TEST_TOOLS_UTIL_HXX
 #define TEST_TOOLS_UTIL_HXX
 
+#include <memory>
 #include <functional>
 #include <iostream>
 #include <iomanip>
@@ -285,6 +286,16 @@ public:
 		}
 	}
 
+	void assert_true(bool v, const std::string& name = "asser_true")
+	{
+		store_result(v, name);
+		if(!v) {
+			print_error(name, "Did not return true");
+			throw AssertionFailed();
+		}
+	}
+
+
 protected:
 	const Configuration config_;
 	const std::string unit_name_;
@@ -333,8 +344,7 @@ protected:
 class UnitTest
 {
 public:
-	UnitTest() = default;
-	UnitTest(const Configuration& config)
+	UnitTest(const Configuration& config = Configuration())
 		: config_(config)
 	{
 	}
@@ -387,6 +397,29 @@ protected:
 	Configuration config_;
 	std::vector<std::pair<std::string, TestCase::TestFunction_t>> cases_;
 	std::vector<std::string> failed_;
+};
+
+
+class TestDaemon
+{
+public:
+	virtual void set_arguments(std::vector<std::string>& args) = 0;
+	virtual bool is_ready() const { return true; }
+	virtual pid_t get_pid() const = 0;
+};
+
+class ProcessTest
+{
+public:
+	ProcessTest() = delete;
+	ProcessTest(std::unique_ptr<TestDaemon> daemon,
+				UnitTest& unit_test);
+	~ProcessTest() = default;
+
+	int run();
+private:
+	std::unique_ptr<TestDaemon> daemon_;
+	UnitTest unit_test_;
 };
 
 

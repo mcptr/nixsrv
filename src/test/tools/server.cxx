@@ -1,28 +1,24 @@
 #include "server.hxx"
 #include "base.hxx"
 
-#include <sys/types.h>
 #include <unistd.h>
+
+#include <sys/types.h>
 #include <stdexcept>
-#include <sstream>
-#include <algorithm>
-#include <iterator>
 #include <random>
-#include <cstring>
-#include <errno.h>
-#include <cstdlib>
-#include <signal.h>
 #include <iostream>
 
 #include <nix/util/fs.hxx>
 #include <nix/util/pid.hxx>
+#include <nix/core/client.hxx>
 
 
 namespace test {
 
 
 Server::Server(const std::string& address)
-	: address_(address)
+	: TestDaemon(),
+	  address_(address)
 {
 	char* pr = getenv("PROJECT_ROOT");
 	if(pr == nullptr) {
@@ -40,7 +36,7 @@ Server::Server(const std::vector<std::string>& modules,
 	modules_ = modules;
 }
 
-bool Server::start()
+void Server::set_arguments(std::vector<std::string>& args)
 {
 	std::random_device rd;
     std::mt19937 engine(rd());
@@ -50,16 +46,15 @@ bool Server::start()
 
 	std::string prog = project_root_ + "/bin/NIX";
 
-	std::string listen_address = address_ + ":" + std::to_string(port_);
-	std::vector<std::string> args;
+	address_ = address_ + ":" + std::to_string(port_);
 	args.push_back(prog);
 	args.push_back("-A");
-	args.push_back(listen_address);
+	args.push_back(address_);
 	args.push_back("-c");
 	args.push_back(project_root_ + "/etc/devel.ini");
-	args.push_back("-D");
 	args.push_back("-F");
-	args.push_back("-v");
+	//args.push_back("-D");
+	//args.push_back("-v");
 	args.push_back("--threads");
 	args.push_back(std::to_string(2));
 	args.push_back("--pidfile");
@@ -69,50 +64,30 @@ bool Server::start()
 	for(auto& it : modules_) {
 		args.push_back("--enable-" + it);
 	}
-
-	char** arguments = new char* [args.size() + 1];
-
-	for(size_t i = 0; i < args.size(); i++) {
-		arguments[i] = (char*) args[i].c_str();
-	}
-	arguments[args.size()] = (char*)NULL;
-	pid_t pid = fork();
-
-	if(pid > 0) {
-		if(execv(prog.c_str(), arguments) == -1) {
-			std::cerr << "execv() failed: " << strerror(errno) << std::endl;
-			return false;
-		}
-	}
-	else if(pid == 0) {
-		// 2DO: get a client, and ping until it becomes ready
-		return true;
-	}
-
-	std::cerr << "fork() failed: " << strerror(errno) << std::endl;
-	return false;
 }
 
-void Server::stop()
+pid_t Server::get_pid() const
 {
-	pid_t pid = nix::util::pid::pidfile_read(pidpath_);
-	if(pid) {
-		int status = kill(pid, SIGTERM);
-		if(status == -1) {
-			std::cerr << "kill(TERM) failed: "
-					  << strerror(errno) << std::endl;
-		}
-		int wait_loops = 20;
-		while(kill(pid, 0) == 0 && wait_loops) {
-			usleep(500 * 1000);
-			wait_loops--;
-		}
+	return nix::util::pid::pidfile_read(pidpath_);
+}
 
-		if(kill(pid, 0) == 0) {
-			std::cerr << "Resorting to SIGKILL..." << std::endl;
-			kill(pid, SIGKILL);
+bool Server::is_ready() const
+{
+	nix::core::Client client;
+	size_t wait_loops = 10;
+	while(wait_loops) {
+		try {
+			wait_loops--;
+			if(client.call(address_, "ping", "", 500)) {
+				return true;
+			}
+		}
+		catch(const std::exception& e) {
+			std::cerr << e.what() << std::endl;
 		}
 	}
+
+	return false;
 }
 
 

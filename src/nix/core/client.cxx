@@ -6,6 +6,11 @@
 namespace nix {
 namespace core {
 
+bool Client::ping(const std::string& server_address, size_t timeout_ms)
+{
+	auto response = call(server_address, "ping", "", timeout_ms);
+	return response->is_replied();
+}
 
 std::unique_ptr<nix::Response>
 Client::call(const std::string& server_address,
@@ -23,7 +28,6 @@ Client::call(const std::string& server_address,
 			agent_.send(server_address, service, route, params));
 	}
 	catch(const std::exception& e) {
-		LOG(ERROR) << "call failed: " << e.what();
 		return nullptr;
 	}
 
@@ -37,6 +41,16 @@ Client::call(const std::string& server_address,
 		new nix::Response(std::move(om)));
 
 	return response;
+}
+
+std::unique_ptr<nix::Response>
+Client::call(const std::string& server_address,
+			 const std::string& service,
+			 const std::string& route,
+			 size_t timeout_ms)
+{
+	Message empty;
+	return call(server_address, service, route, empty, timeout_ms);
 }
 
 bool Client::send_one_way(const std::string& server_address,
