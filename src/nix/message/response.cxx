@@ -6,7 +6,8 @@ namespace nix {
 
 
 Response::Response(std::unique_ptr<yami::outgoing_message> om)
-	: yami_om_(std::move(om))
+	: Message(),
+	  yami_om_(std::move(om))
 {
 	const yami::message_state state = yami_om_->get_state();
 	if(state == yami::replied) {
@@ -18,7 +19,7 @@ Response::Response(std::unique_ptr<yami::outgoing_message> om)
 		}
 
 		if(has_message) {
-			msg_.parse(reply.get_string("message"));
+			parse(reply.get_string("message"));
 		}
 	}
 	else if(state == yami::rejected) {
@@ -48,27 +49,27 @@ bool Response::is_abandoned() const
 
 bool Response::is_status_ok() const
 {
-	return (msg_.get("@status_code", nix::null_value) == nix::ok);
+	return (get("@status_code", nix::null_value) == nix::ok);
 }
 
 bool Response::is_status_fail() const
 {
-	return (msg_.get("@status_code", nix::ok) != nix::ok);
+	return (get("@status_code", nix::ok) != nix::ok);
 }
 
 int Response::get_status_code() const
 {
-	return msg_.get("@status_code", nix::null_value);
+	return get("@status_code", nix::null_value);
 }
 
 std::string Response::get_status_msg() const
 {
-	return msg_.get("@status_msg", "");
+	return get("@status_msg", "");
 }
 
 const Message& Response::data() const
 {
-	return msg_;
+	return *this;
 }
 
 

@@ -34,7 +34,6 @@ public:
 
 protected:
 	std::unique_ptr<yami::outgoing_message> yami_om_;
-	Message msg_;
 	std::string exception_msg_;
 };
 

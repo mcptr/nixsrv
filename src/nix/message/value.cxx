@@ -10,6 +10,12 @@ Value::Value(const Json::Value& v)
 {
 }
 
+void Value::to_ostream(std::ostream& os) const
+{
+	os << value_;
+}
+
+
 Json::Value Value::get_value() const
 {
 	return this->value_;
@@ -31,14 +37,14 @@ Value::operator Json::Value() const
 
 
 
-Object::Object()
-	: Value(Json::objectValue)
+Object::Object(const Json::Value& v)
+	: Value(v.isObject() ? v : Json::Value())
 {
 }
 
 
-Array::Array()
-	: Value(Json::arrayValue)
+Array::Array(const Json::Value& v)
+	: Value(v.isArray() ? v : Json::Value())
 {
 }
 

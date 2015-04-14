@@ -107,6 +107,18 @@ bool Message::get(const std::string& k, bool default_value) const
 			? dest.asBool() : default_value);
 }
 
+Message::Array_t Message::get(const std::string& k,
+							  Message::Array_t default_value) const
+{
+	if(is_array(k)) {
+		Json::Value dest;
+		find(k, dest);
+		Message::Array_t out(dest);
+		return out;
+	}
+	return Message::Array_t();
+}
+
 void Message::set_object(const std::string& k)
 {
 	set(k, Object_t().get_value());

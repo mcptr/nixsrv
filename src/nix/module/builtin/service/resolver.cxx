@@ -116,7 +116,6 @@ void Resolver::bind(std::unique_ptr<IncomingMessage> msg)
 void Resolver::resolve(std::unique_ptr<IncomingMessage> msg)
 {
 	std::string node = msg->get("nodename", "");
-
 	std::unique_lock<std::mutex> lock(mtx_);
 	std::string address = nodes_[node];
 	lock.unlock();
@@ -134,7 +133,9 @@ void Resolver::resolve(std::unique_ptr<IncomingMessage> msg)
 void Resolver::unbind(std::unique_ptr<IncomingMessage> msg)
 {
 	std::string nodename = msg->get("nodename", "");
+	std::unique_lock<std::mutex> lock(mtx_);
 	unbind_node(nodename);
+	lock.unlock();
 	msg->reply();
 }
 
@@ -165,6 +166,7 @@ void Resolver::resolve_service(std::unique_ptr<IncomingMessage> msg)
 	std::string service = msg->get("service", "");
 	std::unique_lock<std::mutex> lock(mtx_);
 	std::set<std::string> resolved_nodes;
+
 	for(auto& it : services_[service]) {
 		resolved_nodes.insert(nodes_[it]);
 	}
@@ -177,7 +179,6 @@ void Resolver::resolve_service(std::unique_ptr<IncomingMessage> msg)
 		msg->clear();
 		msg->set_array("addresses");
 		for(auto& it : resolved_nodes) {
-			LOG(DEBUG) << "IT " << it;
 			if(!it.empty()) {
 				msg->append("addresses", it);
 			}
@@ -238,7 +239,9 @@ void Resolver::monitor()
 				LOG(WARNING) << "Unresponsive node: " << node.first;
 				int total_failures = ++soft_fails_nodes[node.first];
 				if(total_failures >= options_.resolver_monitor_max_failures) {
+					std::unique_lock<std::mutex> lock(mtx_);
 					unbind_node(node.first);
+					lock.unlock();
 				}
 			}
 		}
@@ -296,16 +299,11 @@ void Resolver::monitor()
 
 void Resolver::unbind_node(const std::string& nodename)
 {
-	std::unique_lock<std::mutex> lock(mtx_);
-
 	LOG(WARNING) << "Unbinding node " << nodename;
 	nodes_.erase(nodename);
 	for(auto& it : services_) {
 		it.second.erase(nodename);
 	}
-
-	lock.unlock();
-
 }
 
 } // module

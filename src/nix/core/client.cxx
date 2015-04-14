@@ -36,6 +36,9 @@ Client::call(const std::string& server_address,
 			timeout_ms > max_timeout_ms_ ? max_timeout_ms_ : timeout_ms
 		);
 	}
+	else {
+		om->wait_for_completion(max_timeout_ms_);
+	}
 
 	std::unique_ptr<nix::Response> response(
 		new nix::Response(std::move(om)));

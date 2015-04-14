@@ -43,7 +43,7 @@ class NixServer(object):
 		print("")
 		wait = 3
 		while not os.path.isfile(self.__pidfile):
-			time.sleep(1)
+			time.sleep(0.1)
 			wait -= 1
 
 		if not os.path.isfile(self.__pidfile):
@@ -54,7 +54,7 @@ class NixServer(object):
 			with open(self.__pidfile, "r") as fh:
 				pid = int(fh.read())
 				while wait and (os.kill(pid, 0) is not None):
-					time.sleep(1)
+					time.sleep(0.1)
 					wait -= 1
 				if os.kill(pid, 0) is not None:
 					raise Exception("Server startup failed")

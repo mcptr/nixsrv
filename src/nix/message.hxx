@@ -57,6 +57,7 @@ public:
 	virtual double get(const std::string& k, double default_value) const;
 	virtual long long get(const std::string& k, long long default_value) const;
 	virtual bool get(const std::string& k, bool default_value) const;
+	virtual Array_t get(const std::string& k, Array_t default_value) const;
 
 	// value setters
 	void set_object(const std::string& k);
