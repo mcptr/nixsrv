@@ -25,7 +25,7 @@ public:
 	//Client(const Client& other) = delete;
 	virtual ~Client() = default;
 
-	bool ping(const std::string& server_address, size_t timeout_ms = 0);
+	bool ping(const std::string& server_address, size_t timeout_ms = 1000);
 
 	std::unique_ptr<nix::Response>
 	call(const std::string& server_address,

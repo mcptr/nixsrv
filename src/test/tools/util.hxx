@@ -14,7 +14,6 @@
 
 namespace test {
 
-
 void crash_handler(int sig);
 
 void initialize_test_env();
@@ -286,7 +285,7 @@ public:
 		}
 	}
 
-	void assert_true(bool v, const std::string& name = "asser_true")
+	void assert_true(bool v, const std::string& name = "assert_true")
 	{
 		store_result(v, name);
 		if(!v) {
@@ -295,6 +294,14 @@ public:
 		}
 	}
 
+	void assert_false(bool v, const std::string& name = "assert_true")
+	{
+		store_result(!v, name);
+		if(v) {
+			print_error(name, "Did not return true");
+			throw AssertionFailed();
+		}
+	}
 
 protected:
 	const Configuration config_;

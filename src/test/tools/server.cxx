@@ -25,6 +25,12 @@ Server::Server(const std::string& address)
 		throw std::runtime_error("PROJECT_ROOT env var not set");
 	}
 
+	std::random_device rd;
+    std::mt19937 engine(rd());
+    std::uniform_int_distribution<> distribution(65450, 65500);
+
+	port_ = distribution(engine);
+
 	project_root_.assign(nix::util::fs::resolve_path(pr));
 	pidpath_ = "/tmp/nix-test-" + std::to_string(getpid()) + ".pid";
 }
@@ -38,18 +44,11 @@ Server::Server(const std::vector<std::string>& modules,
 
 void Server::set_arguments(std::vector<std::string>& args)
 {
-	std::random_device rd;
-    std::mt19937 engine(rd());
-    std::uniform_int_distribution<> distribution(65450, 65500);
-
-	port_ = distribution(engine);
-
 	std::string prog = project_root_ + "/bin/NIX";
 
-	address_ = address_ + ":" + std::to_string(port_);
 	args.push_back(prog);
 	args.push_back("-A");
-	args.push_back(address_);
+	args.push_back(get_address());
 	args.push_back("-c");
 	args.push_back(project_root_ + "/etc/devel.ini");
 	args.push_back("-F");
@@ -78,7 +77,7 @@ bool Server::is_ready() const
 	while(wait_loops) {
 		try {
 			wait_loops--;
-			if(client.call(address_, "ping", "", 500)) {
+			if(client.call(get_address(), "ping", "", 500)) {
 				return true;
 			}
 		}
@@ -90,5 +89,10 @@ bool Server::is_ready() const
 	return false;
 }
 
+std::string Server::get_address() const
+{
+	std::string addr = address_ + ":" + std::to_string(port_);
+	return addr;
+}
 
 } // test

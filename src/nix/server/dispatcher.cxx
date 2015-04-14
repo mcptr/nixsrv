@@ -125,22 +125,22 @@ void Dispatcher::operator()(yami::incoming_message& msg)
 void Dispatcher::server_status(std::unique_ptr<IncomingMessage> msg)
 {
 	Message om;
-	
+	bool full = msg->get("full", false);
 	om.set("nodename", options_.nodename);
 
-	if(msg->get("server", false)) {
+	if(full || msg->get("server", false)) {
 		int uptime_sec = std::time(nullptr) - options_.start_time;
 		om.set("server.uptime", uptime_sec);
 	}
 
-	if(msg->get("stats", false)) {
+	if(full || msg->get("stats", false)) {
 		om.set("stats.requests", (long long)stats_->requests);
 		om.set("stats.auth_errors", (long long)stats_->auth_errors);
 		om.set("stats.unroutable", (long long)stats_->unroutable);
 		om.set("stats.rejected", (long long)stats_->rejected);
 	}
 
-	if(msg->get("module_stats", false)) {
+	if(full || msg->get("module_stats", false)) {
 		for(auto& it : stats_by_module_) {
 			std::string prefix = "stats." + it.first;
 			om.set(prefix + ".requests", (long long)it.second->requests);
@@ -150,7 +150,7 @@ void Dispatcher::server_status(std::unique_ptr<IncomingMessage> msg)
 		}
 	}
 
-	if(msg->get("routing", false)) {
+	if(full || msg->get("routing", false)) {
 		for(auto& it : routing_) {
 			std::string route_key = "server.routing." + it.first;
 			om.set(route_key + ".access_modifier",

@@ -99,6 +99,10 @@ int ProcessTest::run()
 			std::cout << "## Daemon ready, running test cases" << std::endl;
 			test_result = unit_test_.run();
 		}
+		else {
+			std::cout << "## WARNING: Daemon not ready, "
+					  << "test cases will not be run" << std::endl;
+		}
 
 		pid_t daemon_pid = daemon_->get_pid();
 
@@ -106,7 +110,7 @@ int ProcessTest::run()
 			std::cout << "## Stopping daemon";
 			int kill_status = kill(daemon_pid, SIGTERM);
 			if(kill_status == -1) {
-				std::cerr << "kill(" << daemon_pid << ", TERM) failed: "
+				std::cerr << "\nkill(" << daemon_pid << ", TERM) failed: "
 						  << strerror(errno) << std::endl;
 			}
 			int wait_loops = 20;

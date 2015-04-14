@@ -12,7 +12,6 @@ ResolverClient::ResolverClient(const std::string& server_address,
 {
 }
 
-
 bool ResolverClient::bind_node(const std::string& nodename,
 							   const std::string& address)
 {

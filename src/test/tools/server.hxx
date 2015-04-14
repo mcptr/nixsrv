@@ -8,18 +8,20 @@
 
 namespace test {
 
+const std::string default_address = "tcp://127.0.0.1";
 
 class Server : public TestDaemon
 {
 public:
-	explicit Server(const std::string& address = "tcp://127.0.0.1");
+	explicit Server(const std::string& address = default_address);
 	explicit Server(const std::vector<std::string>& modules,
-					const std::string& address = std::string());
+					const std::string& address = default_address);
 
 	void set_arguments(std::vector<std::string>& args);
 	bool is_ready() const;
 	pid_t get_pid() const;
 
+	std::string get_address() const;
 protected:
 
 	std::string address_;
