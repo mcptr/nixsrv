@@ -35,8 +35,7 @@ public:
 	call(const std::string& route, Message& msg, size_t timeout_ms = 0);
 
 	virtual bool send_one_way(const std::string& route,
-							  Message& msg,
-							  size_t timeout_ms = 0);
+							  Message& msg);
 
 private:
 	const std::string service_;

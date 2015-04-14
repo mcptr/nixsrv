@@ -43,8 +43,7 @@ ServiceClient::call(const std::string& route,
 }
 
 bool ServiceClient::send_one_way(const std::string& route,
-								 Message& msg,
-								 size_t timeout_ms)
+								 Message& msg)
 {
 	msg.set_meta("api_key", api_key_);
 
