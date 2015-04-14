@@ -16,6 +16,20 @@ ServiceClient::ServiceClient(const std::string& service,
 {
 }
 
+bool ServiceClient::ping_service(size_t timeout_ms)
+{
+	auto response = this->Client::call(
+		server_address_, service_, "ping", timeout_ms);
+	return response->is_replied();
+}
+
+std::unique_ptr<nix::Response>
+ServiceClient::call(const std::string& route, size_t timeout_ms)
+{
+	Message empty;
+	return call(route, empty, timeout_ms);
+}
+
 std::unique_ptr<nix::Response>
 ServiceClient::call(const std::string& route,
 					Message& msg,
@@ -34,8 +48,17 @@ bool ServiceClient::send_one_way(const std::string& route,
 {
 	msg.set_meta("api_key", api_key_);
 
-	return this->Client::send_one_way(
-		server_address_, service_, route, msg);
+	bool success = false;
+	try {
+		this->Client::send_one_way(
+			server_address_, service_, route, msg);
+		success = true;
+	}
+	catch(const std::exception& e) {
+		LOG(ERROR) << "send_one_way failed: " << e.what();
+	}
+
+	return success;
 }
 
 

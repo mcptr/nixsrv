@@ -25,10 +25,14 @@ public:
 
 	virtual ~ServiceClient() = default;
 
-	virtual
-	std::unique_ptr<nix::Response> call(const std::string& route,
-										Message& msg,
-										size_t timeout_ms = 0);
+
+	virtual bool ping_service(size_t timeout_ms = 1000);
+
+	virtual std::unique_ptr<nix::Response>
+	call(const std::string& route, size_t timeout_ms = 0);
+
+	virtual std::unique_ptr<nix::Response>
+	call(const std::string& route, Message& msg, size_t timeout_ms = 0);
 
 	virtual bool send_one_way(const std::string& route,
 							  Message& msg,
