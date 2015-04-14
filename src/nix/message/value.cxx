@@ -38,13 +38,13 @@ Value::operator Json::Value() const
 
 
 Object::Object(const Json::Value& v)
-	: Value(v.isObject() ? v : Json::Value())
+	: Value(v.isObject() ? v : Json::objectValue)
 {
 }
 
 
 Array::Array(const Json::Value& v)
-	: Value(v.isArray() ? v : Json::Value())
+	: Value(v.isArray() ? v : Json::arrayValue)
 {
 }
 

@@ -37,7 +37,7 @@ protected:
 class Object : public Value
 {
 public:
-	explicit Object(const Json::Value& v = Json::Value());
+	explicit Object(const Json::Value& v = Json::objectValue);
 
 	friend std::ostream& operator<<(std::ostream& os, const Object& v)
 	{
@@ -51,7 +51,7 @@ class Array : public Value
 {
 public:
 	//Array();
-	explicit Array(const Json::Value& v = Json::Value());
+	explicit Array(const Json::Value& v = Json::arrayValue);
 
 	friend std::ostream& operator<<(std::ostream& os, const Array& v)
 	{
