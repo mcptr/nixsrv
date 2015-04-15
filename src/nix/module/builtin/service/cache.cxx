@@ -53,6 +53,7 @@ Cache::Cache(std::shared_ptr<ModuleAPI> api,
 	routes_.push_back(store_route);
 	routes_.push_back(retrieve_route);
 	routes_.push_back(remove_route);
+	routes_.push_back(status_route);
 }
 
 void Cache::start()
@@ -201,6 +202,7 @@ void Cache::status(std::unique_ptr<IncomingMessage> msg)
 		bytes += it.second.content.size();
 	}
 	msg->set("bytes", bytes);
+	msg->reply(*msg);
 
 	lock.unlock();
 }

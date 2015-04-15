@@ -12,7 +12,7 @@
 #include <nix/message.hxx>
 
 
-struct stats
+struct Stats
 {
 	int writes = 0;
 	int writes_failed = 0;
@@ -44,6 +44,7 @@ int main(int argc, char** argv)
 	test_value.set_null("nested.null");
 	test_value.set("nested.string", "hello");
 
+	Stats stats;
 	// end of test data
 	//----------------------------------------------------------------
 
@@ -60,19 +61,20 @@ int main(int argc, char** argv)
 
 	unit_test.test_case(
 		"Store",
-		[&server_address, &test_key, &test_value](TestCase& test)
+		[&server_address, &test_key, &test_value, &stats](TestCase& test)
 		{
 			nix::core::CacheClient client(
 				server_address, DEVELOPMENT_KEY, 1000);
 
 			bool success = client.store(test_key, test_value);
 			test.assert_true(success, "store succeeded");
+			stats.writes++;
 		}
 	);
 
 	unit_test.test_case(
 		"Retrieve",
-		[&server_address, &test_key, &test_value](TestCase& test)
+		[&server_address, &test_key, &test_value, &stats](TestCase& test)
 		{
 			nix::core::CacheClient client(
 				server_address, DEVELOPMENT_KEY, 1000);
@@ -85,28 +87,48 @@ int main(int argc, char** argv)
 				test_value.to_string(),
 				"retrieved value"
 			);
+			stats.hits++;
 		}
 	);
 
 	unit_test.test_case(
 		"Remove",
-		[&server_address, &test_key](TestCase& test)
+		[&server_address, &test_key, &stats](TestCase& test)
 		{
 			nix::core::CacheClient client(
 				server_address, DEVELOPMENT_KEY, 1000);
 
 			bool success = client.remove(test_key);
 			test.assert_true(success, "remove succeeded");
+			stats.removals++;
 
 			nix::Message response_msg;
 			success = client.retrieve(test_key, response_msg);
 			test.assert_false(success, "retrieve fails after removal");
+			stats.misses++;
+		}
+	);
 
-			// test.assert_equal(
-			// 	response_msg.to_string(),
-			// 	nix::Message::Null_t(),
-			// 	"retrieved value"
-			// );
+	unit_test.test_case(
+		"Status",
+		[&server_address, &stats](TestCase& test)
+		{
+			nix::core::CacheClient client(
+				server_address, DEVELOPMENT_KEY, 1000);
+
+			nix::Message result;
+			test.assert_true(client.status(result), "status call");
+
+			std::map<std::string, int> stats_map;
+			stats_map.emplace("writes", stats.writes);
+
+			for(auto& st : stats_map) {
+				test.assert_equal(
+					result.get(st.first, -1),
+					st.second,
+					"status: " + st.first
+				);
+			}
 		}
 	);
 
