@@ -26,7 +26,7 @@ public:
 
 	bool retrieve(const std::string& key, Message& result);
 
-	void remove(const std::string& key);
+	bool remove(const std::string& key);
 
 	bool status(Message& result);
 };

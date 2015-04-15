@@ -139,8 +139,7 @@ public:
 		}
 	}
 
-	std::string to_string(bool pretty = false) const;
-	std::string to_string(const std::string& k, bool pretty = false) const;
+	std::string to_string(const std::string& k = std::string(), bool pretty = false) const;
 
 	friend std::ostream& operator<<(std::ostream& os, const Message& msg)
 	{

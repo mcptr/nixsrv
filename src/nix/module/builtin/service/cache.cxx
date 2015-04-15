@@ -96,7 +96,7 @@ void Cache::store(std::unique_ptr<IncomingMessage> msg)
 		int max_age = msg->get("max_age", 0);
 		entry.max_age = max_age ? max_age : entry.max_age;	
 
-		std::string value = msg->get_serialized("value");
+		std::string value = msg->to_string("value");
 		entry.content = value;
 
 		std::unique_lock<std::mutex> lock(mtx_);
@@ -123,6 +123,7 @@ void Cache::retrieve(std::unique_ptr<IncomingMessage> msg)
 	lock.unlock();
 
 	if(key.empty() || !found) {
+		msg->clear();
 		msg->fail(nix::null_value);
 		stat_misses_++;
 	}
@@ -150,7 +151,6 @@ void Cache::retrieve(std::unique_ptr<IncomingMessage> msg)
 			stat_hits_++;
 		}
 	}
-
 }
 
 void Cache::remove(std::unique_ptr<IncomingMessage> msg)

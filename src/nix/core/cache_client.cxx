@@ -34,7 +34,7 @@ bool CacheClient::retrieve(const std::string& key, Message& result)
 	m.set("key", key);
 	auto const& response = this->call("retrieve", m);
 	if(response->is_status_ok()) {
-		result = response->data();
+		result.parse(response->get(key, ""));
 		return true;
 	}
 
@@ -42,11 +42,11 @@ bool CacheClient::retrieve(const std::string& key, Message& result)
 }
 
 
-void CacheClient::remove(const std::string& key)
+bool CacheClient::remove(const std::string& key)
 {
 	Message m;
 	m.set("key", key);
-	this->send_one_way("remove", m);
+	return this->send_one_way("remove", m);
 }
 
 bool CacheClient::status(Message& result)

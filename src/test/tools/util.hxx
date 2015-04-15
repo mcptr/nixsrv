@@ -317,8 +317,8 @@ protected:
 			return;
 		}
 
-		std::cout << "\n\t> failed case: "
-				  << (name.empty() ? "..." : name)
+		std::cout << "\n\t> Failed case: '"
+				  << (name.empty() ? "..." : name) << "'"
 				  << "\n\tRESULT: " << result
 				  << "\n\tEXPECT: " << expected
 				  << std::endl;
@@ -330,9 +330,9 @@ protected:
 			return;
 		}
 
-		std::cout << "\n\t> failed case: "
-				  << (name.empty() ? "..." : name) << " "
-				  << error
+		std::cout << "\n\t> Failed case: '"
+				  << (name.empty() ? "..." : name) << "'"
+				  << "\n\t> Reason: " << error
 				  << std::endl;
 	}
 

@@ -121,7 +121,7 @@ def test_submit():
 			"@api_key" : development_key,
 			"module" : "test"  # queue name
 		}
-		response = client.call(module, "job/work/get", params, 100)
+		response = client.call(module, "job/work/get", params, 1000)
 		assert_true(response.is_status_ok(), "Got job to process")
 		# this does not happen in real world, but this is a test
 		# and this is the only submitted job
@@ -130,12 +130,12 @@ def test_submit():
 		assert_equal(
 			response.data["@queue_node"],
 			server.get_nodename(), "Origin node name set")
-		job_payload = response.data["parameters"]
-		assert_equal(job_payload["@api_key"], development_key, "api key")
+		job_parameters = response.data["parameters"]
+		job_payload = response.data
 		# no need to test module - it was a name of the queue
 		assert_equal(job_payload["action"], job_action, "action")
 		assert_equal(
-			job_payload.get("data", {}).get(job_param_name),
+			job_parameters.get(job_param_name),
 			job_param_value, "API key")
 
 		# simulate some processing

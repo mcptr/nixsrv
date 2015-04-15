@@ -143,6 +143,7 @@ void Message::set_deserialized(const std::string& k,
 		LOG(DEBUG) << "Cannot parse value: " << value;
 		throw std::runtime_error(reader.getFormattedErrorMessages());
 	}
+
 	set(k, deserialized);
 }
 
@@ -207,25 +208,25 @@ bool Message::is_object(const std::string& k) const
 	return (found && dest.isObject());
 }
 
-std::string Message::to_string(bool pretty) const
+std::string Message::to_string(const std::string& k, bool pretty) const
 {
+	if(k.length()) {
+		Json::Value dest;
+		bool found = find(k, dest);
+		
+		if(found && pretty) {
+			return dest.toStyledString();
+		}
+		Json::FastWriter writer;
+		return writer.write((found ? dest : Null_t().get_value()));
+	}
+
 	if(pretty) {
 		return root_.toStyledString();
 	}
+
 	Json::FastWriter writer;
 	return writer.write(root_);
-}
-
-std::string Message::to_string(const std::string& k, bool pretty) const
-{
-	Json::Value dest;
-	bool found = find(k, dest);
-
-	if(found && pretty) {
-		return dest.toStyledString();
-	}
-	Json::FastWriter writer;
-	return writer.write((found ? dest : Null_t().get_value()));
 }
 
 bool Message::exists(const std::string& k) const

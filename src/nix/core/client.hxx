@@ -21,7 +21,7 @@ namespace core {
 class Client
 {
 public:
-	Client() = default;
+	Client(size_t max_timeout = 3000);
 	//Client(const Client& other) = delete;
 	virtual ~Client() = default;
 
@@ -48,7 +48,7 @@ public:
 
 protected:
 	yami::agent agent_;
-	const size_t max_timeout_ms_ = 10000;
+	const size_t max_timeout_ms_;
 };
 
 

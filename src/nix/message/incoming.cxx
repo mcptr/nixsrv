@@ -17,8 +17,8 @@ void IncomingMessage::reply()
 {
 	try {
 		clear();
-		this->set_status(nix::ok);
-		this->reply(*this);
+		set_status(nix::ok);
+		reply(*this);
 	}
 	catch(yami::yami_runtime_error& e) {
 		LOG(DEBUG) << "Exception: " << e.what();
@@ -49,7 +49,8 @@ void IncomingMessage::reply_with_error(nix::StatusCode_t error_code,
 
 void IncomingMessage::fail(const std::string& reason)
 {
-	this->fail(nix::fail, reason);
+	clear();
+	fail(nix::fail, reason);
 }
 
 void IncomingMessage::fail(nix::StatusCode_t error_code,
@@ -57,10 +58,10 @@ void IncomingMessage::fail(nix::StatusCode_t error_code,
 {
 	LOG(DEBUG) << "FAIL: " << reason;
 	clear();
-	this->set_status(error_code, reason);
+	set_status(error_code, reason);
 
 	yami::parameters params;
-	params.set_string("message", this->to_string());
+	params.set_string("message", to_string());
 
 	try {
 		msg_.reply(params);

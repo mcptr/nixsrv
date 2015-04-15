@@ -6,6 +6,11 @@
 namespace nix {
 namespace core {
 
+Client::Client(size_t max_timeout_ms)
+	: max_timeout_ms_(max_timeout_ms)
+{
+}
+
 bool Client::ping(const std::string& server_address, size_t timeout_ms)
 {
 	auto response = call(server_address, "ping", "", timeout_ms);

@@ -21,7 +21,7 @@ public:
 	ServiceClient(const std::string& service,
 				  const std::string& server_address,
 				  const std::string& api_key,
-				  size_t max_timeout = 0);
+				  size_t max_timeout = 2000);
 
 	virtual ~ServiceClient() = default;
 
@@ -41,7 +41,6 @@ private:
 	const std::string service_;
 	const std::string server_address_;
 	const std::string api_key_;
-	const size_t max_timeout_ = 2000;
 };
 
 
