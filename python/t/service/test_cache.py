@@ -12,38 +12,42 @@ module = "Cache"
 expected_routing = {
 	"@status_code": 0,
 	"module": {
-		"ident": module,
+		"ident": "Cache",
 		"version": 1
 	},
 	"routing": {
-		"ping" : {
+		"list_routes": {
+			"access_modifier": "ANY",
+			"description": "Display all routes handled by 'Cache' module",
+			"processing_type": "SYNC"
+		},
+		"ping": {
 			"access_modifier": "ANY",
 			"description": "",
 			"processing_type": "SYNC"
 		},
 		"remove": {
-			"processing_type": "VOID",
+			"access_modifier": "API_PRIVATE",
 			"description": "",
-			"access_modifier": "API_PRIVATE"
+			"processing_type": "VOID"
 		},
 		"retrieve": {
-			"processing_type": "SYNC",
+			"access_modifier": "API_PRIVATE",
 			"description": "",
-			"access_modifier": "API_PRIVATE"
+			"processing_type": "SYNC"
 		},
-		"list_routes": {
-			"processing_type": "SYNC",
-			"description": "Display all routes handled by 'Cache' module",
-			"access_modifier": "ANY"
+		"status": {
+			"access_modifier": "API_PRIVATE",
+			"description": "",
+			"processing_type": "SYNC"
 		},
 		"store": {
-			"processing_type": "SYNC",
+			"access_modifier": "API_PRIVATE",
 			"description": "",
-			"access_modifier": "API_PRIVATE"
+			"processing_type": "SYNC"
 		}
-	},
+	}
 }
-
 
 development_key = "_development_key_"
 development_key_public = "_development_key_public"
@@ -53,6 +57,7 @@ def test_routing_structure():
 	with NixServer(modules=[module]) as server:
 		client = NixClient(server.get_address())
 		result = client.call(module, "list_routes", {}, 2000)
+		# print(json.dumps(result.data, indent=4, sort_keys=True))
 		assert_false(result.is_rejected(), "not rejected")
 		assert_false(result.is_abandoned(), "not abandoned")
 		assert_true(result.is_replied(), "is replied")
