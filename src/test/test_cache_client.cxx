@@ -20,6 +20,8 @@ struct Stats
 	int hits = 0;
 	int hits_expired = 0;
 	int misses = 0;
+	int total_calls = 0;
+	int cache_size = 0;
 };
 
 int main(int argc, char** argv)
@@ -69,6 +71,7 @@ int main(int argc, char** argv)
 			bool success = client.store(test_key, test_value);
 			test.assert_true(success, "store succeeded");
 			stats.writes++;
+			stats.cache_size++;
 		}
 	);
 
@@ -101,6 +104,7 @@ int main(int argc, char** argv)
 			bool success = client.remove(test_key);
 			test.assert_true(success, "remove succeeded");
 			stats.removals++;
+			stats.cache_size--;
 
 			nix::Message response_msg;
 			success = client.retrieve(test_key, response_msg);
@@ -121,6 +125,19 @@ int main(int argc, char** argv)
 
 			std::map<std::string, int> stats_map;
 			stats_map.emplace("writes", stats.writes);
+			stats_map.emplace("writes_failed", stats.writes_failed);
+			stats_map.emplace("removals", stats.removals);
+			stats_map.emplace("hits", stats.hits);
+			stats_map.emplace("hits_expired", stats.hits_expired);
+			stats_map.emplace("misses", stats.misses);
+
+			int total = 0;
+			for(auto& st : stats_map) {
+				total += st.second;
+			}			
+
+			stats_map.emplace("total_calls", total);
+			stats_map.emplace("cache_size", stats.cache_size);
 
 			for(auto& st : stats_map) {
 				test.assert_equal(
