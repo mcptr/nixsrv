@@ -11,7 +11,7 @@
 #include <nix/message.hxx>
 
 
-int main()
+int main(int argc, char** argv)
 {
 	using namespace test;
 	UnitTest unit_test;
@@ -41,5 +41,5 @@ int main()
 
 
 	ProcessTest proc_test(std::move(server), unit_test);
-	return proc_test.run();
+	return proc_test.run(argc, argv);
 }

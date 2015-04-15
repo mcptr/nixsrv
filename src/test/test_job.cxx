@@ -3,7 +3,7 @@
 #include <string>
 #include <iostream>
 
-int main()
+int main(int argc, char** argv)
 {
 	using nix::Job;
 	using std::string;
@@ -26,5 +26,5 @@ int main()
 		}
 	);
 
-	return unit.run();
+	return unit.run(argc, argv);
 }

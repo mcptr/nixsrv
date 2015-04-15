@@ -11,12 +11,14 @@
 #include <stdexcept>
 #include <vector>
 
+#include "util_options.hxx"
+
 
 namespace test {
 
 void crash_handler(int sig);
 
-void initialize_test_env();
+void initialize_test_env(const Options& options);
 
 class AssertionFailed : public std::exception {};
 
@@ -362,9 +364,24 @@ public:
 		cases_.push_back(std::make_pair(name, code));
 	}
 
-	int run()
+	int run(int argc, char** argv)
 	{
-		initialize_test_env();
+		Options options;
+		if(!options.parse(argc, argv)) {
+			return -1;
+		}
+
+		if(options.has_help()) {
+			options.display_help();
+			return 0;
+		}
+
+		return run(options);
+	}
+
+	int run(const Options& options)
+	{
+		initialize_test_env(options);
 
 		int i = 0;
 		for(auto& it : cases_) {
@@ -423,7 +440,7 @@ public:
 				UnitTest& unit_test);
 	~ProcessTest() = default;
 
-	int run();
+	int run(int argc, char** argv);
 private:
 	std::unique_ptr<TestDaemon> daemon_;
 	UnitTest unit_test_;

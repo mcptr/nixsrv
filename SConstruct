@@ -447,6 +447,7 @@ for tunit in sorted(translation_units):
 test_tunits = {
 	"test/tools/server" : {},
 	"test/tools/util" : {},
+	"test/tools/util_options" : {},
 }
 
 test_resources_objs = []

@@ -1,5 +1,6 @@
 #include <nix/common.hxx>
 #include "util.hxx"
+#include "util_options.hxx"
 
 #include <sys/wait.h>
 #include <errno.h>
@@ -21,12 +22,20 @@ void crash_handler(int sig)
 	el::Helpers::crashAbort(sig);
 }
 
-void initialize_test_env()
+void initialize_test_env(const Options& options)
 {
 	el::Configurations conf;
 
-	conf.setGlobally(el::ConfigurationType::ToStandardOutput, "true");
-	conf.setGlobally(el::ConfigurationType::Enabled, "true");
+	bool is_verbose = options.get<bool>("verbose");
+
+	conf.setGlobally(
+		el::ConfigurationType::ToStandardOutput,
+		(is_verbose ? "true" : "false"));
+
+	conf.setGlobally(
+		el::ConfigurationType::Enabled,
+		(is_verbose ? "true" : "false"));
+
 	el::Helpers::setCrashHandler(crash_handler);
 	el::Loggers::reconfigureAllLoggers(conf);
 
@@ -42,7 +51,7 @@ void crash_handler(int sig)
 }
 
 
-void initialize_test_env()
+void initialize_test_env(const Options&)
 {
 }
 
@@ -64,8 +73,18 @@ ProcessTest::ProcessTest(std::unique_ptr<TestDaemon> daemon,
 {
 }
 
-int ProcessTest::run()
+int ProcessTest::run(int argc, char** argv)
 {
+	Options options;
+	if(!options.parse(argc, argv)) {
+		return -1;
+	}
+
+	if(options.has_help()) {
+		options.display_help();
+		return 0;
+	}
+
 	std::vector<std::string> args;
 	daemon_->set_arguments(args);
 
@@ -97,7 +116,7 @@ int ProcessTest::run()
 	else { // parent
 		if(daemon_->is_ready()) {
 			std::cout << "## Daemon ready, running test cases" << std::endl;
-			test_result = unit_test_.run();
+			test_result = unit_test_.run(options);
 		}
 		else {
 			std::cout << "## WARNING: Daemon not ready, "
