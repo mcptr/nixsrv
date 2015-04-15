@@ -11,8 +11,6 @@ JobQueue::JobQueue(std::shared_ptr<ModuleAPI> api,
 				   const nix::server::Options& options)
 	: BuiltinModule(api, "JobQueue", 1, options)
 {
-	Route::Handler_t handler = [](std::shared_ptr<IncomingMessage> im) {};
-
 	std::shared_ptr<Route> submit(
 		new Route("job/submit",
 				  std::bind(&JobQueue::submit, this, _1),
@@ -105,9 +103,9 @@ bool JobQueue::init_queue(const std::string& name, size_t size)
 		return false;
 	}
 
-	mtx_.lock();
+	std::unique_lock<std::mutex> lock(mtx_);
 	queues_.emplace(name, new Queue<Job>(size));
-	mtx_.unlock();
+	lock.unlock();
 	return true;
 }
 
@@ -122,14 +120,15 @@ void JobQueue::submit(std::unique_ptr<IncomingMessage> msg)
 		}
 		else if(!it->second->is_closed()) {
 			std::string action = msg->get("action", "");
-			bool has_data = msg->exists("data");
+			bool has_data = msg->exists("parameters");
 
 			if(!(dest_queue.length() && action.length() && has_data)) {
 				msg->fail(nix::data_invalid_content);
 			}
 			else {
 				msg->remove("module");
-				std::unique_ptr<Job> job(new Job(action, msg->to_string("data")));
+				std::unique_ptr<Job> job(
+					new Job(action, msg->to_string("parameters")));
 				std::string job_id = job->get_id();
 				
 				bool success;
@@ -139,7 +138,7 @@ void JobQueue::submit(std::unique_ptr<IncomingMessage> msg)
 				}
 				else {
 					// 2DO: store job in db 
-					// (if queue is configured to be persistent,
+					// (if queue is configured to be persistent),
 					// will use a container now
 					msg->clear();
 					msg->set("@job_id", job_id);
@@ -167,15 +166,17 @@ void JobQueue::get_work(std::unique_ptr<IncomingMessage> msg)
 			it->second->pop(std::move(ptr));
 			if(ptr) {
 				Message work;
-				work.set("action", ptr->get_action());
-				work.set_deserialized("parameters", ptr->get_serialized_parameters());
 				work.set("@job_id", ptr->get_id());
 				work.set("@queue_node", options_.nodename);
+
+				work.set("action", ptr->get_action());
+				work.set_deserialized("parameters", ptr->get_parameters());
+
 				msg->reply(work);
 
-				mtx_.lock();
+				std::unique_lock<std::mutex> lock(mtx_);
 				in_progress_[ptr->get_id()] = std::move(ptr);
-				mtx_.unlock();
+				lock.unlock();
 			}
 		}
 	}
@@ -187,9 +188,9 @@ void JobQueue::set_progress(std::unique_ptr<IncomingMessage> msg)
 
 	auto it = in_progress_.find(job_id);
 	if(it != in_progress_.end()) {
-		mtx_.lock();
+		std::unique_lock<std::mutex> lock(mtx_);
 		it->second->set_progress(msg->get("progress", 0.0));
-		mtx_.unlock();
+		lock.unlock();
 	}
 }
 
@@ -202,12 +203,12 @@ void JobQueue::set_result(std::unique_ptr<IncomingMessage> msg)
 	}
 	else {
 		if(!persistent_) {
-			mtx_.lock();
+			std::unique_lock<std::mutex> lock(mtx_);
 			in_progress_.erase(job_id);
 			std::unique_ptr<Message> result(new Message(msg->to_string()));
 			completed_[job_id] = std::move(result);
 			completed_jobs_++;
-			mtx_.unlock();
+			lock.unlock();
 			msg->clear();
 			msg->reply();
 		}
@@ -228,9 +229,9 @@ void JobQueue::get_result(std::unique_ptr<IncomingMessage> msg)
 			std::string submitter = c_it->second->get("@api_key", "");
 			if(submitter.compare(api_key) == 0) {
 				msg->reply(*(c_it->second));
-				mtx_.lock();
+				std::unique_lock<std::mutex> lock(mtx_);
 				completed_.erase(c_it);
-				mtx_.unlock();
+				lock.unlock();
 			}
 			else {
 				msg->fail(nix::access_denied);
@@ -288,8 +289,7 @@ void JobQueue::manage(std::unique_ptr<IncomingMessage> msg)
 	// operations on single queue
 	const std::string name = msg->get("queue", "");
 	auto it = queues_.find(name);
-
-	if(!name.empty() && msg->is_object("create")) {
+	if(!name.empty() && !msg->is_null("create")) {
 		if(init_queue(name, msg->get("create.size", 0))) {
 			msg->clear();
 			msg->reply();
@@ -300,7 +300,7 @@ void JobQueue::manage(std::unique_ptr<IncomingMessage> msg)
 		any_action_matched = true;
 	}
 	else if(it != queues_.end()) {
-		mtx_.lock();
+		std::unique_lock<std::mutex> lock(mtx_);
 		
 		if(!msg->is_null("enable")) {
 			it->second->set_enabled(msg->get("enable", true));
@@ -313,10 +313,10 @@ void JobQueue::manage(std::unique_ptr<IncomingMessage> msg)
 		if(!msg->is_null("remove") && msg->get("remove", false)) {
 			it->second->set_enabled(false);
 			it->second->clear();
-				queues_.erase(it);
+			queues_.erase(it);
 		}
 		
-		mtx_.unlock();
+		lock.unlock();
 		msg->reply();
 		any_action_matched = true;
 	}

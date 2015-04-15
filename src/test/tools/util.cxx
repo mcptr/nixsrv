@@ -114,6 +114,9 @@ int ProcessTest::run(int argc, char** argv)
 		_exit(0);
 	}
 	else { // parent
+		// wait for our own child
+		pid_t wpid = wait(&status);
+
 		if(daemon_->is_ready()) {
 			std::cout << "## Daemon ready, running test cases" << std::endl;
 			test_result = unit_test_.run(options);
@@ -144,8 +147,6 @@ int ProcessTest::run(int argc, char** argv)
 				kill(daemon_pid, SIGKILL);
 			}
 		}
-		// wait for our own child
-		pid_t wpid = wait(&status);
 	}
 
 	return test_result;

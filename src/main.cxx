@@ -97,7 +97,6 @@ int main(int argc, char** argv)
 		return EXIT_FAILURE;
 	}
 
-
 	is_foreground = po.get<bool>("foreground");
 	base_dir = nix::util::fs::expand_user(
 		po.get<std::string>("basedir"));

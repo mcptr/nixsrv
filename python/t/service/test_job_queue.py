@@ -100,7 +100,7 @@ def test_submit():
 		params.update({
 			"module" : job_module,
 			"action" : job_action,
-			"data" : {
+			"parameters" : {
 				job_param_name : job_param_value
 			}
 		})
@@ -262,7 +262,7 @@ def test_queue_management():
 			submit_params.update({
 				"module" : queue_name_1,
 				"action" : "dummy",
-				"data" : [i, "a string", True, {"test" : []}, None]
+				"parameters" : [i, "a string", True, {"test" : []}, None]
 			})
 
 			response = client.call(
@@ -292,7 +292,7 @@ def test_queue_management():
 			submit_params.update({
 				"module" : queue_name_2,
 				"action" : "dummy",
-				"data" : [i, "a string", True, {"test" : []}, None]
+				"parameters" : [i, "a string", True, {"test" : []}, None]
 			})
 
 			response = client.call(

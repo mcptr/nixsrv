@@ -27,6 +27,7 @@ public:
 
 	bool ping(const std::string& server_address, size_t timeout_ms = 1000);
 
+	virtual
 	std::unique_ptr<nix::Response>
 	call(const std::string& server_address,
 		 const std::string& service,
@@ -34,17 +35,18 @@ public:
 		 const nix::Message& msg = nix::Message(),
 		 size_t timeout_ms = 0);
 
+	virtual
 	std::unique_ptr<nix::Response>
 	call(const std::string& server_address,
 		 const std::string& service,
 		 const std::string& route,
 		 size_t timeout_ms = 0);
 	
-	bool
-	send_one_way(const std::string& server_address,
-				 const std::string& service,
-				 const std::string& route,
-				 const nix::Message& msg = nix::Message());
+	
+	virtual bool send_one_way(const std::string& server_address,
+							  const std::string& service,
+							  const std::string& route,
+							  const nix::Message& msg = nix::Message());
 
 protected:
 	yami::agent agent_;

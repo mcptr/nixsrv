@@ -3,6 +3,7 @@
 #include "nix/common.hxx"
 #include "message.hxx"
 
+#include <iostream>
 
 namespace nix {
 
@@ -44,21 +45,6 @@ Json::Value Message::get_raw_value(const std::string& k)
 	return (found ? dest : Json::nullValue);
 }
 
-std::string Message::get_serialized(
-	const std::string& k,
-	const std::string& value)
-{
-	Json::Value dest;
-	bool found = find(k, dest);
-	
-	if(found) {
-		Json::FastWriter writer;
-		return writer.write(dest);
-	}
-
-	return value;
-}
-
 std::string Message::get(const std::string& k, const std::string& default_value) const
 {
 	Json::Value dest;
@@ -79,7 +65,7 @@ int Message::get(const std::string& k, int default_value) const
 {
 	Json::Value dest;
 	bool found = find(k, dest);
-	return (found && dest.isNumeric()
+	return (found && dest.isInt()
 			? dest.asInt() : default_value);
 }
 
@@ -244,7 +230,7 @@ bool Message::find(const std::string& k, Json::Value& dest) const
 	}
 	const Json::Value* ptr = &root_;
 	for(auto& it : keys) {
-		if(ptr->isArray() || !ptr->isMember(it)) {
+		if(!ptr->isObject() || !ptr->isMember(it)) {
 			return false;
 		}
 		ptr = &((*ptr)[it]);

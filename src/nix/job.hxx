@@ -22,7 +22,7 @@ public:
 		return ctime_;
 	}
 
-	inline const std::string& get_serialized_parameters() const
+	inline const std::string& get_parameters() const
 	{
 		return parameters_;
 	}

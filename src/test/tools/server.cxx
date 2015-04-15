@@ -49,6 +49,8 @@ void Server::set_arguments(std::vector<std::string>& args)
 	args.push_back(prog);
 	args.push_back("-A");
 	args.push_back(get_address());
+	args.push_back("--nodename");
+	args.push_back(nodename_);
 	args.push_back("-c");
 	args.push_back(project_root_ + "/etc/devel.ini");
 	args.push_back("-F");

@@ -42,6 +42,29 @@ ServiceClient::call(const std::string& route,
 		timeout_ms > max_timeout_ms_ ? max_timeout_ms_ : timeout_ms);
 }
 
+// proxy
+std::unique_ptr<nix::Response>
+ServiceClient::call(const std::string& server_address,
+					const std::string& service,
+					const std::string& route,
+					const nix::Message& msg,
+					size_t timeout_ms)
+{
+	return this->Client::call(
+		server_address, service, route, msg, timeout_ms);
+}
+
+// proxy
+std::unique_ptr<nix::Response>
+ServiceClient::call(const std::string& server_address,
+					const std::string& service,
+					const std::string& route,
+					size_t timeout_ms)
+{
+	return this->Client::call(
+		server_address, service, route, timeout_ms);
+}
+
 bool ServiceClient::send_one_way(const std::string& route,
 								 Message& msg)
 {
@@ -51,6 +74,15 @@ bool ServiceClient::send_one_way(const std::string& route,
 		server_address_, service_, route, msg);
 }
 
+// proxy:
+bool ServiceClient::send_one_way(const std::string& server_address,
+								 const std::string& service,
+								 const std::string& route,
+								 const nix::Message& msg)
+{
+	return this->Client::send_one_way(
+		server_address, service, route, msg);
+}
 
 } // core
 } // nix

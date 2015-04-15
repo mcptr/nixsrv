@@ -47,9 +47,6 @@ public:
 
 	// value getters
 	Json::Value get_raw_value(const std::string& k);
-	std::string get_serialized(const std::string& k,
-							   const std::string& value = std::string());
-
 
 	virtual std::string get(const std::string& k, const char* default_value) const;
 	virtual std::string get(const std::string& k, const std::string& default_value) const;
@@ -83,6 +80,13 @@ public:
 	void set_meta(const std::string& k, const T& value)
 	{
 		root_["@" + k] = value;
+	}
+
+	template< class T>
+	T get_meta(const std::string& k, const T& default_value)
+	{
+		std::string meta_key = "@" + k;
+		return get(meta_key, default_value);
 	}
 
 	template< class T>

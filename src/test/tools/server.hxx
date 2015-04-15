@@ -22,9 +22,14 @@ public:
 	pid_t get_pid() const;
 
 	std::string get_address() const;
+	inline const std::string& get_nodename() const
+	{
+		return nodename_;
+	}
 protected:
 
 	std::string address_;
+	std::string nodename_ = "test-server";
 	std::vector<std::string> modules_;
 	std::string project_root_;
 	std::string pidpath_;

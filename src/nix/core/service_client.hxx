@@ -34,8 +34,30 @@ public:
 	virtual std::unique_ptr<nix::Response>
 	call(const std::string& route, Message& msg, size_t timeout_ms = 0);
 
+	// proxy: need to not to hide overloaded
+	std::unique_ptr<nix::Response>
+	call(const std::string& server_address,
+		 const std::string& service,
+		 const std::string& route,
+		 const nix::Message& msg = nix::Message(),
+		 size_t timeout_ms = 0);
+
+	// proxy: need to not to hide overloaded
+	virtual
+	std::unique_ptr<nix::Response>
+	call(const std::string& server_address,
+		 const std::string& service,
+		 const std::string& route,
+		 size_t timeout_ms = 0);
+
 	virtual bool send_one_way(const std::string& route,
 							  Message& msg);
+
+	// proxy: need to not to hide overloaded
+	virtual bool send_one_way(const std::string& server_address,
+							  const std::string& service,
+							  const std::string& route,
+							  const nix::Message& msg = nix::Message());
 
 private:
 	const std::string service_;
