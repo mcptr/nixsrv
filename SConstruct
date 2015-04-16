@@ -334,6 +334,9 @@ translation_units = {
 	"core/cache_client" : {
 		"env": combinedenv,
 	},
+	"core/client_pool" : {
+		"env": combinedenv,
+	},
 	"core/job_queue_client" : {
 		"env": combinedenv,
 	},
@@ -341,9 +344,6 @@ translation_units = {
 		"env": combinedenv,
 	},
 	"core/service_client" : {
-		"env": combinedenv,
-	},
-	"core/service_client_pool" : {
 		"env": combinedenv,
 	},
 	# ------------------------
@@ -361,6 +361,8 @@ translation_units = {
 		"env": combinedenv,
 	},
 	"job" : {},
+	"job/client_job" : {},
+	"job/server_job" : {},
 	"message" : {
 		"env": combinedenv,
 	},
@@ -376,7 +378,9 @@ translation_units = {
 	"module" : {
 		"env": combinedenv,
 	},
-	"module/api" : {},
+	"module/api" : {
+		"env": combinedenv,
+	},
 	"module/builtin/debug" : {
 		"env": combinedenv,
 	},

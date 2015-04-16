@@ -6,7 +6,7 @@
 #include <mutex>
 #include "nix/queue.hxx"
 #include "nix/queue/instance_config.hxx"
-#include "nix/job.hxx"
+#include "nix/job/server_job.hxx"
 #include "nix/module/builtin.hxx"
 #include "nix/message/incoming.hxx"
 
@@ -16,7 +16,7 @@ namespace module {
 
 
 using nix::Queue;
-using nix::Job;
+using nix::ServerJob;
 
 class JobQueue : public BuiltinModule
 {
@@ -52,8 +52,8 @@ private:
 
 	bool persistent_ = false;
 
-	std::unordered_map<std::string, Queue<Job>*> queues_;
-	std::unordered_map<std::string, std::unique_ptr<Job>> in_progress_;
+	std::unordered_map<std::string, Queue<ServerJob>*> queues_;
+	std::unordered_map<std::string, std::unique_ptr<ServerJob>> in_progress_;
 	// this will be used when persistent queues are not in use
 	std::unordered_map<std::string, std::unique_ptr<Message>> completed_;
 };

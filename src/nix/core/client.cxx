@@ -6,28 +6,23 @@
 namespace nix {
 namespace core {
 
-Client::Client(size_t max_timeout_ms)
-	: max_timeout_ms_(max_timeout_ms)
+Client::Client(const ClientConfig& config, size_t max_timeout_ms)
+	: client_config_(config),
+	  max_timeout_ms_(max_timeout_ms)
 {
-}
-
-bool Client::ping(const std::string& server_address, size_t timeout_ms)
-{
-	auto response = call(server_address, "ping", "", timeout_ms);
-	return response->is_replied();
 }
 
 std::unique_ptr<nix::Response>
 Client::call(const std::string& server_address,
-			 const std::string& service,
-			 const std::string& route,
-			 const nix::Message& msg,
-			 size_t timeout_ms)
+			  const std::string& service,
+			  const std::string& route,
+			  const std::string& msg,
+			  size_t timeout_ms)
 {
-	std::unique_ptr<yami::outgoing_message> om;
 	yami::parameters params;
-	params.set_string("message", msg.to_string());
+	params.set_string("message", msg);
 
+	std::unique_ptr<yami::outgoing_message> om;
 	try {
 		om = std::move(
 			agent_.send(server_address, service, route, params));
@@ -51,23 +46,20 @@ Client::call(const std::string& server_address,
 	return response;
 }
 
-std::unique_ptr<nix::Response>
-Client::call(const std::string& server_address,
-			 const std::string& service,
-			 const std::string& route,
-			 size_t timeout_ms)
+bool Client::ping(const std::string& server_address, size_t timeout_ms)
 {
-	Message empty;
-	return call(server_address, service, route, empty, timeout_ms);
+	auto response = call(server_address, "ping", "", "", timeout_ms);
+	return response->is_replied();
 }
+
 
 bool Client::send_one_way(const std::string& server_address,
 						  const std::string& service,
 						  const std::string& route,
-						  const nix::Message& msg)
+						  const std::string& msg)
 {
 	yami::parameters params;
-	params.set_string("message", msg.to_string());
+	params.set_string("message", msg);
 
 	bool success = false;
 	try {

@@ -75,11 +75,12 @@ pid_t Server::get_pid() const
 bool Server::is_ready() const
 {
 	nix::core::Client client;
-	size_t wait_loops = 10;
+	size_t wait_loops = 50;
 	while(wait_loops) {
 		try {
 			wait_loops--;
-			if(client.call(get_address(), "ping", "", 500)) {
+			auto response = client.call(get_address(), "ping", "", "", 500);
+			if(response->is_replied()) {
 				return true;
 			}
 		}

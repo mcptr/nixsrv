@@ -27,7 +27,7 @@ void Message::parse(const std::string& json_string)
 {
 	Json::Reader reader;
 	
-	if(!reader.parse(json_string, root_, false)) {
+	if(json_string.length() && !reader.parse(json_string, root_, false)) {
 		LOG(DEBUG) << "Cannot parse message: " << json_string;
 		throw std::runtime_error(reader.getFormattedErrorMessages());
 	}
@@ -38,7 +38,7 @@ void Message::clear()
 	root_.clear();
 }
 
-Json::Value Message::get_raw_value(const std::string& k)
+Json::Value Message::get_raw_value(const std::string& k) const
 {
 	Json::Value dest;
 	bool found = find(k, dest);
@@ -104,6 +104,29 @@ Message::Array_t Message::get(const std::string& k,
 	}
 	return default_value;
 }
+
+// template<>
+// void set<Json(const std::string& k, const T& value)
+// {
+// 	std::vector<std::string> keys;
+// 	nix::util::string::split(k, keys, ".");
+	
+// 	Json::Value* ptr = &root_;
+// 	for(auto it = keys.begin(); it != keys.end() - 1; it++) {
+// 		if(!ptr->isMember(*it)) {
+// 			(*ptr)[*it] = Json::objectValue;
+// 		}
+// 		else if(!ptr->isObject()) {
+// 			throw std::runtime_error(
+// 				"Not an object. Cannot set value for key: " + k);
+// 		}
+// 		ptr = &((*ptr)[*it]);
+// 	}
+	
+// 	std::string last = keys.back();
+// 	ptr->removeMember(last);
+// 	(*ptr)[last] = value;
+// }
 
 void Message::set_object(const std::string& k)
 {

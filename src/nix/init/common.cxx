@@ -1,4 +1,5 @@
 #include "common.hxx"
+#include "nix/core/client_config.hxx"
 
 // ---------------------------------------------------------------------
 // initialization helpers
@@ -216,6 +217,69 @@ void setup_builtin_modules(const ProgramOptions& po,
 		);
 		module_manager->add_builtin(cache_module);
 	}
+}
+
+std::shared_ptr<core::ClientPool>
+setup_client_pool(const ProgramOptions& po)
+{
+	core::ClientConfig config;
+	config.local_nodename = po.get<std::string>("nodename");
+	config.local_address = po.get<std::string>("address");
+
+	config.api_key_private = po.get<std::string>("auth.api_key_private");
+	config.api_key_public = po.get<std::string>("auth.api_key_public");
+
+	config.generic_client_pool_size =
+		po.get<int>("resources.generic_client_pool_size");
+	config.resolver_client_pool_size =
+		po.get<int>("resources.resolver_client_pool_size");
+	config.cache_client_pool_size =
+		po.get<int>("resources.cache_client_pool_size");
+	config.job_queue_client_pool_size =
+		po.get<int>("resources.job_queue_client_pool_size");
+	config.broker_client_pool_size =
+		po.get<int>("resources.broker_client_pool_size");
+
+	config.is_local_resolver = po.get<bool>("enable-resolver");
+	config.is_local_cache = po.get<bool>("enable-cache");
+	config.is_local_job_queue = po.get<bool>("enable-job-queue");
+	config.is_local_broker = false;
+
+
+	if(po.get<std::string>("infrastructure.srv_resolver_address").length()) {
+		config.srv_resolver_address =
+			po.get<std::string>("infrastructure.srv_resolver_address");
+	}
+	else if(config.is_local_resolver) {
+		config.srv_resolver_address = config.local_address;
+	}
+
+	if(po.get<std::string>("infrastructure.srv_cache_address").length()) {
+		config.srv_cache_address =
+			po.get<std::string>("infrastructure.srv_cache_address");
+	}
+	else if(config.is_local_cache) {
+		config.srv_cache_address = config.local_address;
+	}
+
+	if(po.get<std::string>("infrastructure.srv_job_queue_address").length()) {
+		config.srv_job_queue_address =
+			po.get<std::string>("infrastructure.srv_job_queue_address");
+	}
+	else if(config.is_local_job_queue) {
+		config.srv_job_queue_address = config.local_address;
+	}
+
+	if(po.get<std::string>("infrastructure.srv_broker_address").length()) {
+		config.srv_broker_address =
+			po.get<std::string>("infrastructure.srv_broker_address");
+	}
+	else if(config.is_local_broker) {
+		config.srv_resolver_address = config.local_address;
+	}
+
+	std::shared_ptr<core::ClientPool> ptr;//(new core::ClientPool(config));
+	return ptr;
 }
 
 

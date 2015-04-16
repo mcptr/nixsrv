@@ -18,7 +18,7 @@ init_service_client(const std::string& local_address,
 	nix::core::ClientConfig config;
 	config.local_nodename = local_nodename;
 	config.local_address = local_address;
-	config.api_key = DEVELOPMENT_KEY;
+	config.api_key_private = DEVELOPMENT_KEY;
 
 	config.srv_resolver_address = local_address;
 	config.srv_cache_address = local_address;

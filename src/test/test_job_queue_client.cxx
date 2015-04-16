@@ -31,13 +31,17 @@ int main(int argc, char** argv)
 	// test data
 	std::string job_module = "test_module";
 	std::string job_action = "test_action";
-	nix::Message job;
-	job.set("module", job_module);
-	job.set("action", job_action);
-	job.set("parameters.param_1", 1234);
-	job.set("parameters.param_2", true);
+	std::string job_param = "this is a test";
+	nix::ClientJob job;
+	job.set_module(job_module);
+	job.set_action(job_action);
+	job.parameters().set("test", job_param);
 
 	std::string job_id;
+
+	nix::Message result;
+	result.set("fake_result", 123);
+
 	// end of test data
 	//----------------------------------------------------------------
 
@@ -87,50 +91,52 @@ int main(int argc, char** argv)
 		}
 	);
 
-	unit_test.test_case(
-		"Get work",
-		[&server_address, &server_nodename, &job,
-		 &job_module, &job_action, &job_id](TestCase& test)
-		{
-			auto client = 
-				init_service_client<nix::core::JobQueueClient>(
-					server_address, server_nodename);
-
-			auto response = client->get_work(job_module);
-			test.assert_true(response->is_status_ok(), "get_work called");
-			// we have one job only, so we can test job_id
-			std::string received_job_id =
-				response->get_meta("job_id", std::string());
-
-			test.assert_equal(
-				received_job_id, job_id, "received correct job");
-
-			test.assert_equal(
-				response->get_meta("queue_node", std::string()),
-				server_nodename,
-				"received job points to origin node");
-
-			test.assert_equal(
-				response->get("action", std::string()),
-				job_action,
-				"correct job action");
-
-			test.assert_equal(
-				response->get_raw_value("parameters"),
-				job.get_raw_value("parameters"),
-				"correct job parameters");
-		}
-	);
-
 	// unit_test.test_case(
-	// 	"Progress set/get",
-	// 	[&server_address, &server_nodename, &job_id](TestCase& test)
+	// 	"Get work",
+	// 	[&server_address, &server_nodename, &job,
+	// 	 &job_module, &job_action, &job_id](TestCase& test)
 	// 	{
 	// 		auto client = 
 	// 			init_service_client<nix::core::JobQueueClient>(
 	// 				server_address, server_nodename);
 
-	// 		auto response = client->submit(job);
+	// 		auto response = client->get_work(job_module);
+	// 		test.assert_true(response->is_status_ok(), "get_work called");
+	// 		// we have one job only, so we can test job_id
+	// 		std::string received_job_id =
+	// 			response->get_meta("job_id", std::string());
+
+	// 		test.assert_equal(
+	// 			received_job_id, job_id, "received correct job");
+
+	// 		test.assert_equal(
+	// 			response->get_meta("queue_node", std::string()),
+	// 			server_nodename,
+	// 			"received job points to origin node");
+
+	// 		test.assert_equal(
+	// 			response->get("action", std::string()),
+	// 			job_action,
+	// 			"correct job action");
+
+	// 		test.assert_equal(
+	// 			response->get_raw_value("parameters"),
+	// 			job.get_raw_value("parameters"),
+	// 			"correct job parameters");
+	// 	}
+	// );
+
+	// unit_test.test_case(
+	// 	"Progress set/get",
+	// 	[&server_address, &server_nodename, &job, &job_id](TestCase& test)
+	// 	{
+	// 		auto client = 
+	// 			init_service_client<nix::core::JobQueueClient>(
+	// 				server_address, server_nodename);
+
+	// 		job->set_progress(0.678);
+
+	// 		bool success = client->set_progress(job);
 	// 		test.assert_true(response->is_status_ok(), "submit call");
 	// 		job_id = response->get_meta("job_id", std::string());
 	// 		test.assert_true(job_id.length(), "got job id");
@@ -139,13 +145,13 @@ int main(int argc, char** argv)
 
 	// unit_test.test_case(
 	// 	"Set result",
-	// 	[&server_address, &server_nodename, &job, &job_id](TestCase& test)
+	// 	[&server_address, &server_nodename, &job_id, &result](TestCase& test)
 	// 	{
 	// 		auto client = 
 	// 			init_service_client<nix::core::JobQueueClient>(
 	// 				server_address, server_nodename);
 
-	// 		auto response = client->submit(job);
+	// 		bool success = client->set_result(job->);
 	// 		test.assert_true(response->is_status_ok(), "submit call");
 	// 		job_id = response->get_meta("job_id", std::string());
 	// 		test.assert_true(job_id.length(), "got job id");

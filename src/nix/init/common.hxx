@@ -18,6 +18,7 @@
 #include "nix/queue/options.hxx"
 #include "nix/module/api.hxx"
 #include "nix/module/manager.hxx"
+#include "nix/core/client_pool.hxx"
 
 // bulitin modules
 #include "nix/module/builtin/debug.hxx"
@@ -56,6 +57,9 @@ void setup_builtin_modules(const ProgramOptions& options,
 						   std::shared_ptr<nix::ModuleAPI> mod_api,
 						   nix::server::Options& server_options);
 
+
+std::shared_ptr<core::ClientPool>
+setup_client_pool(const ProgramOptions& options);
 
 } // init
 } // nix

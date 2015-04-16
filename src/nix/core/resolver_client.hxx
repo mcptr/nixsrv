@@ -1,6 +1,7 @@
 #ifndef NIX_CORE_RESOLVER_CLIENT_HXX
 #define NIX_CORE_RESOLVER_CLIENT_HXX
 
+#include <memory>
 #include <string>
 #include "service_client.hxx"
 #include "client_config.hxx"

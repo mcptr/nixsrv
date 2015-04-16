@@ -1,6 +1,7 @@
 #ifndef NIX_CORE_CACHE_CLIENT_HXX
 #define NIX_CORE_CACHE_CLIENT_HXX
 
+#include <memory>
 #include <string>
 #include "service_client.hxx"
 
@@ -28,6 +29,7 @@ public:
 	bool remove(const std::string& key);
 
 	bool status(Message& result);
+
 };
 
 

@@ -100,7 +100,7 @@ class Runner(object):
 		failures = 0
 		if self.test_results["CXX"]:
 			print("Failed CXX tests:\n%s" % "\t\n".join(
-				sorted(self.test_results["CXX"]))
+				sorted(self.test_results.get("CXX", [])))
 			)
 			print("".center(72, "-"))
 		print("PEP8: %s" % ("FAIL" if self.test_results["PEP8"] else "PASS"))

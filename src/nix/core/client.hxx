@@ -7,6 +7,8 @@
 #include <yami4-cpp/yami.h>
 #include <exception>
 
+#include "client_config.hxx"
+
 #include "nix/common.hxx"
 #include "nix/message.hxx"
 #include "nix/message/response.hxx"
@@ -21,7 +23,7 @@ namespace core {
 class Client
 {
 public:
-	Client(size_t max_timeout = 3000);
+	Client(const ClientConfig& config = ClientConfig(), size_t max_timeout = 3000);
 	//Client(const Client& other) = delete;
 	virtual ~Client() = default;
 
@@ -32,25 +34,19 @@ public:
 	call(const std::string& server_address,
 		 const std::string& service,
 		 const std::string& route,
-		 const nix::Message& msg = nix::Message(),
-		 size_t timeout_ms = 0);
+		 const std::string& msg = std::string(),
+		 size_t timeout_ms = 0) final;
 
-	virtual
-	std::unique_ptr<nix::Response>
-	call(const std::string& server_address,
-		 const std::string& service,
-		 const std::string& route,
-		 size_t timeout_ms = 0);
-	
-	
 	virtual bool send_one_way(const std::string& server_address,
 							  const std::string& service,
 							  const std::string& route,
-							  const nix::Message& msg = nix::Message());
+							  const std::string& msg = std::string());
 
 protected:
-	yami::agent agent_;
+	const ClientConfig client_config_;
 	const size_t max_timeout_ms_;
+
+	yami::agent agent_;
 };
 
 

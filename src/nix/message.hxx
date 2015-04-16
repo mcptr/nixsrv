@@ -46,7 +46,7 @@ public:
 	void clear();
 
 	// value getters
-	Json::Value get_raw_value(const std::string& k);
+	Json::Value get_raw_value(const std::string& k) const;
 
 	virtual std::string get(const std::string& k, const char* default_value) const;
 	virtual std::string get(const std::string& k, const std::string& default_value) const;
@@ -76,20 +76,20 @@ public:
 	void set_status_msg(const std::string& msg);
 	void set_status(nix::StatusCode_t status, const std::string& msg = std::string());
 
-	template< class T>
+	template <class T>
 	void set_meta(const std::string& k, const T& value)
 	{
 		root_["@" + k] = value;
 	}
 
-	template< class T>
-	T get_meta(const std::string& k, const T& default_value)
+	template <class T>
+	T get_meta(const std::string& k, const T& default_value) const
 	{
 		std::string meta_key = "@" + k;
 		return get(meta_key, default_value);
 	}
 
-	template< class T>
+	template <class T>
 	void set(const std::string& k, const T& value)
 	{
 		std::vector<std::string> keys;
@@ -113,7 +113,7 @@ public:
 	}
 
 
-	template< class T>
+	template <class T>
 	void append(const std::string& k, const T& value)
 	{
 		std::vector<std::string> keys;
@@ -144,6 +144,22 @@ public:
 	}
 
 	std::string to_string(const std::string& k = std::string(), bool pretty = false) const;
+
+	operator Json::Value() const
+	{
+		return root_;
+	}
+
+	operator std::string() const
+	{
+		return to_string();
+	}
+
+	Message& operator=(const Json::Value& other_root)
+	{
+		root_ = other_root;
+		return *this;
+	}
 
 	friend std::ostream& operator<<(std::ostream& os, const Message& msg)
 	{

@@ -25,6 +25,8 @@ void ProgramOptions::parse(int argc, char** argv)
 		po::options_description builtins("Builtins");
 		po::options_description builtins_hidden("Configuration of builtins modules");
 		po::options_description infrastructure("Infrastructure options");
+		po::options_description resources("Resources");
+		po::options_description auth("Auth");
 		po::options_description devel("Development options");
 
 		po::options_description config_file_hidden(
@@ -175,18 +177,51 @@ void ProgramOptions::parse(int argc, char** argv)
 			;
 
 		infrastructure.add_options()
-			("srv_resolver_address",
+			("infrastructure.srv_resolver_address",
 			 po::value(&stropt)->default_value(""),
 			 "external resolver address")
-			("srv_cache_address",
+			("infrastructure.srv_cache_address",
 			 po::value(&stropt)->default_value(""),
 			 "external cache server address")
-			("srv_broker_address",
+			("infrastructure.srv_broker_address",
 			 po::value(&stropt)->default_value(""),
 			 "external broker address")
-			("srv_job_queue_address",
+			("infrastructure.srv_job_queue_address",
 			 po::value(&stropt)->default_value(""),
 			 "external job queue server address")
+			;
+
+		resources.add_options()
+			("resources.generic_client_pool_size",
+			 po::value<int>(&intopt)->default_value(1),
+			 ""
+			)
+			("resources.resolver_client_pool_size",
+			 po::value<int>(&intopt)->default_value(1),
+			 ""
+			)
+			("resources.cache_client_pool_size",
+			 po::value<int>(&intopt)->default_value(1),
+			 ""
+			)
+			("resources.job_queue_client_pool_size",
+			 po::value<int>(&intopt)->default_value(1),
+			 ""
+			)
+			("resources.broker_client_pool_size",
+			 po::value<int>(&intopt)->default_value(1),
+			 ""
+			)
+			;
+
+		auth.add_options()
+			("auth.api_key_private",
+			 po::value<string>(&stropt)->default_value(""),
+			 "api auth key for querying private services"
+			)
+			("auth.api_key_public",
+			 po::value<string>(&stropt)->default_value(""),
+			 "api auth key for querying public services")
 			;
 
 		devel.add_options()
@@ -221,8 +256,9 @@ void ProgramOptions::parse(int argc, char** argv)
 			;
 
 		if(!has_help()) {
-			config_file_hidden.add(generic).add(server).add(builtins).add(infrastructure)
-				.add(builtins_hidden);
+			config_file_hidden.add(generic).add(server).add(builtins)
+				.add(infrastructure).add(resources)
+				.add(builtins_hidden).add(auth);
 
 			if(vm_["debug"].as<bool>()) {
 				std::cout << "Reading config file: " << config_path << std::endl;

@@ -104,7 +104,7 @@ bool JobQueue::init_queue(const std::string& name, size_t size)
 	}
 
 	std::unique_lock<std::mutex> lock(mtx_);
-	queues_.emplace(name, new Queue<Job>(size));
+	queues_.emplace(name, new Queue<ServerJob>(size));
 	lock.unlock();
 	return true;
 }
@@ -127,8 +127,8 @@ void JobQueue::submit(std::unique_ptr<IncomingMessage> msg)
 			}
 			else {
 				msg->remove("module");
-				std::unique_ptr<Job> job(
-					new Job(action, msg->to_string("parameters")));
+				std::unique_ptr<ServerJob> job(
+					new ServerJob(*msg));
 				std::string job_id = job->get_id();
 				
 				bool success;
@@ -162,7 +162,7 @@ void JobQueue::get_work(std::unique_ptr<IncomingMessage> msg)
 			msg->fail("No queue for module: " + queue_name);
 		}
 		else {
-			std::unique_ptr<Job> ptr;
+			std::unique_ptr<ServerJob> ptr;
 			it->second->pop(std::move(ptr));
 			if(ptr) {
 				Message work;
@@ -170,7 +170,7 @@ void JobQueue::get_work(std::unique_ptr<IncomingMessage> msg)
 				work.set("@queue_node", options_.nodename);
 
 				work.set("action", ptr->get_action());
-				work.set_deserialized("parameters", ptr->get_parameters());
+				//work.set_deserialized("parameters", ptr->get_parameters());
 
 				msg->reply(work);
 

@@ -22,14 +22,16 @@
 #include "nix/common.hxx"
 #include "nix/init/common.hxx"
 #include "nix/init/daemon.hxx"
+
+#include "nix/core/client_pool.hxx"
 #include "nix/db/connection.hxx"
 //#include "nix/db/options.hxx"
 #include "nix/module/api.hxx"
 #include "nix/module/manager.hxx"
 #include "nix/object_pool.hxx"
+#include "nix/options.hxx"
 #include "nix/program_options.hxx"
 #include "nix/server.hxx"
-#include "nix/options.hxx"
 
 // bulitin modules
 #include "nix/module/builtin/debug.hxx"
@@ -53,6 +55,7 @@ using nix::ObjectPool;
 using nix::ProgramOptions;
 using nix::db::Connection;
 using nix::server::Options;
+using nix::core::ClientPool;
 
 
 void termination_signal_handler(int sig);
@@ -119,6 +122,8 @@ int main(int argc, char** argv)
 
 		nix::init::setup_db_pool(po, db_pool);
 
+		auto client_pool = nix::init::setup_client_pool(po);
+
 		Options server_options;
 		nix::init::setup_server_options(po, server_options);
 
@@ -129,7 +134,9 @@ int main(int argc, char** argv)
 			server_pid = nix::init::start_daemon(po, server_pidfile);
 		}
 
-		std::shared_ptr<ModuleAPI> mod_api(new ModuleAPI(db_pool));
+		std::shared_ptr<ModuleAPI> mod_api(
+			new ModuleAPI(db_pool, client_pool)
+		);
 
 		module_manager.reset(
 			new ModuleManager(server_options, mod_api,
@@ -139,6 +146,7 @@ int main(int argc, char** argv)
 
 		nix::init::setup_builtin_modules(
 			po, module_manager, mod_api, server_options);
+
 		server.reset(new nix::Server(server_options));
 
 		module_manager->register_routing(server);
