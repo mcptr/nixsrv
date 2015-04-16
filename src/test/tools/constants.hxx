@@ -1,6 +1,8 @@
 #ifndef NIX_TEST_TOOLS_CONSTANTS_HXX
 #define NIX_TEST_TOOLS_CONSTANTS_HXX
 
+#include <string>
+
 
 namespace test {
 

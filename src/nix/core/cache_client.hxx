@@ -14,8 +14,7 @@ class CacheClient : public ServiceClient
 public:
 	CacheClient() = delete;
 
-	CacheClient(const std::string& server_address,
-				const std::string& api_key,
+	CacheClient(const ClientConfig& config,
 				size_t max_timeout_ms_ = 2000);
 
 	virtual ~CacheClient() = default;

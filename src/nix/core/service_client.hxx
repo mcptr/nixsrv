@@ -4,6 +4,7 @@
 #include <string>
 
 #include "client.hxx"
+#include "client_config.hxx"
 #include "nix/common.hxx"
 #include "nix/message.hxx"
 #include "nix/message/response.hxx"
@@ -20,7 +21,7 @@ public:
 
 	ServiceClient(const std::string& service,
 				  const std::string& server_address,
-				  const std::string& api_key,
+				  const ClientConfig& config,
 				  size_t max_timeout = 2000);
 
 	virtual ~ServiceClient() = default;
@@ -59,10 +60,10 @@ public:
 							  const std::string& route,
 							  const nix::Message& msg = nix::Message());
 
-private:
+protected:
 	const std::string service_;
 	const std::string server_address_;
-	const std::string api_key_;
+	const ClientConfig client_config_;
 };
 
 

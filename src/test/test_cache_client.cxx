@@ -1,6 +1,7 @@
 #include "tools/util.hxx"
 #include "tools/server.hxx"
 #include "tools/constants.hxx"
+#include "tools/init_helpers.hxx"
 
 #include <vector>
 #include <unistd.h>
@@ -35,6 +36,7 @@ int main(int argc, char** argv)
 	std::unique_ptr<Server> server(new Server(modules));
 
 	std::string server_address = server->get_address();
+	std::string server_nodename = server->get_nodename();
 
 	//----------------------------------------------------------------
 	// test data
@@ -52,23 +54,25 @@ int main(int argc, char** argv)
 
 	unit_test.test_case(
 		"Ping",
-		[&server_address](TestCase& test)
+		[&server_address, &server_nodename](TestCase& test)
 		{
-			nix::core::CacheClient client(
-				server_address, DEVELOPMENT_KEY, 1000);
+			auto client = 
+				init_service_client<nix::core::CacheClient>(
+					server_address, server_nodename);
 
-			test.assert_true(client.ping_service(), "service alive");
+			test.assert_true(client->ping_service(), "service alive");
 		}
 	);
 
 	unit_test.test_case(
 		"Store",
-		[&server_address, &test_key, &test_value, &stats](TestCase& test)
+		[&server_address, &server_nodename, &test_key, &test_value, &stats](TestCase& test)
 		{
-			nix::core::CacheClient client(
-				server_address, DEVELOPMENT_KEY, 1000);
+			auto client = 
+				init_service_client<nix::core::CacheClient>(
+					server_address, server_nodename);
 
-			bool success = client.store(test_key, test_value);
+			bool success = client->store(test_key, test_value);
 			test.assert_true(success, "store succeeded");
 			stats.writes++;
 			stats.cache_size++;
@@ -77,13 +81,14 @@ int main(int argc, char** argv)
 
 	unit_test.test_case(
 		"Retrieve",
-		[&server_address, &test_key, &test_value, &stats](TestCase& test)
+		[&server_address, &server_nodename, &test_key, &test_value, &stats](TestCase& test)
 		{
-			nix::core::CacheClient client(
-				server_address, DEVELOPMENT_KEY, 1000);
+			auto client = 
+				init_service_client<nix::core::CacheClient>(
+					server_address, server_nodename);
 
 			nix::Message response_msg;
-			bool success = client.retrieve(test_key, response_msg);
+			bool success = client->retrieve(test_key, response_msg);
 			test.assert_true(success, "retrieve succeeded");
 			test.assert_equal(
 				response_msg.to_string(),
@@ -96,18 +101,19 @@ int main(int argc, char** argv)
 
 	unit_test.test_case(
 		"Remove",
-		[&server_address, &test_key, &stats](TestCase& test)
+		[&server_address, &server_nodename, &test_key, &stats](TestCase& test)
 		{
-			nix::core::CacheClient client(
-				server_address, DEVELOPMENT_KEY, 1000);
+			auto client = 
+				init_service_client<nix::core::CacheClient>(
+					server_address, server_nodename);
 
-			bool success = client.remove(test_key);
+			bool success = client->remove(test_key);
 			test.assert_true(success, "remove succeeded");
 			stats.removals++;
 			stats.cache_size--;
 
 			nix::Message response_msg;
-			success = client.retrieve(test_key, response_msg);
+			success = client->retrieve(test_key, response_msg);
 			test.assert_false(success, "retrieve fails after removal");
 			stats.misses++;
 		}
@@ -115,13 +121,14 @@ int main(int argc, char** argv)
 
 	unit_test.test_case(
 		"Status",
-		[&server_address, &stats](TestCase& test)
+		[&server_address, &server_nodename, &stats](TestCase& test)
 		{
-			nix::core::CacheClient client(
-				server_address, DEVELOPMENT_KEY, 1000);
+			auto client = 
+				init_service_client<nix::core::CacheClient>(
+					server_address, server_nodename);
 
 			nix::Message result;
-			test.assert_true(client.status(result), "status call");
+			test.assert_true(client->status(result), "status call");
 
 			std::map<std::string, int> stats_map;
 			stats_map.emplace("writes", stats.writes);

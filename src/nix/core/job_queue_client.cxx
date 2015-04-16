@@ -5,10 +5,13 @@ namespace nix {
 namespace core {
 
 
-JobQueueClient::JobQueueClient(const std::string& server_address,
-							   const std::string& api_key,
+JobQueueClient::JobQueueClient(const ClientConfig& config,
 							   size_t max_timeout_ms_)
-	: ServiceClient("JobQueue", server_address, api_key, max_timeout_ms_)
+	: ServiceClient(
+		"JobQueue",
+		config.srv_job_queue_address,
+		config,
+		max_timeout_ms_)
 {
 }
 

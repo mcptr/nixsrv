@@ -88,4 +88,5 @@ void Module::is_alive(std::unique_ptr<IncomingMessage> msg) const
 	msg->reply();
 }
 
+
 } // nix

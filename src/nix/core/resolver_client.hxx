@@ -3,6 +3,7 @@
 
 #include <string>
 #include "service_client.hxx"
+#include "client_config.hxx"
 #include "nix/message.hxx"
 
 
@@ -15,16 +16,14 @@ class ResolverClient : public ServiceClient
 public:
 	ResolverClient() = delete;
 
-	ResolverClient(const std::string& server_address,
-				   const std::string& self_nodename,
-				   const std::string& api_key,
+	ResolverClient(const ClientConfig& config,
 				   size_t max_timeout_ms_ = 2000);
 
 	virtual ~ResolverClient() = default;
 
 
 	// FIXME: get address from server options
-	bool bind_node(const std::string& address);
+	bool bind_node();
 
 	bool bind_service(const std::string& service);
 
@@ -37,7 +36,6 @@ public:
 	bool unbind_service(const std::string& service);
 
 protected:
-	const std::string self_nodename_;
 };
 
 

@@ -7,12 +7,12 @@ namespace core {
 
 ServiceClient::ServiceClient(const std::string& service,
 							 const std::string& server_address,
-							 const std::string& api_key,
+							 const ClientConfig& config,
 							 size_t max_timeout_ms)
 	: Client(max_timeout_ms ? max_timeout_ms : 2000),
 	  service_(service),
 	  server_address_(server_address),
-	  api_key_(api_key)
+	  client_config_(config)
 {
 }
 
@@ -35,7 +35,7 @@ ServiceClient::call(const std::string& route,
 					Message& msg,
 					size_t timeout_ms)
 {
-	msg.set_meta("api_key", api_key_);
+	msg.set_meta("api_key", client_config_.api_key);
 
 	return this->Client::call(
 		server_address_, service_, route, msg,
@@ -68,7 +68,7 @@ ServiceClient::call(const std::string& server_address,
 bool ServiceClient::send_one_way(const std::string& route,
 								 Message& msg)
 {
-	msg.set_meta("api_key", api_key_);
+	msg.set_meta("api_key", client_config_.api_key);
 
 	return this->Client::send_one_way(
 		server_address_, service_, route, msg);
@@ -83,6 +83,7 @@ bool ServiceClient::send_one_way(const std::string& server_address,
 	return this->Client::send_one_way(
 		server_address, service, route, msg);
 }
+
 
 } // core
 } // nix

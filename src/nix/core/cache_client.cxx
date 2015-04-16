@@ -5,10 +5,9 @@ namespace nix {
 namespace core {
 
 
-CacheClient::CacheClient(const std::string& server_address,
-						 const std::string& api_key,
+CacheClient::CacheClient(const ClientConfig& config,
 						 size_t max_timeout_ms_)
-	: ServiceClient("Cache", server_address, api_key, max_timeout_ms_)
+	: ServiceClient("Cache", config.srv_cache_address, config, max_timeout_ms_)
 {
 }
 

@@ -1,6 +1,7 @@
 #include "tools/util.hxx"
 #include "tools/server.hxx"
 #include "tools/constants.hxx"
+#include "tools/init_helpers.hxx"
 
 #include <vector>
 #include <unistd.h>
@@ -42,28 +43,30 @@ int main(int argc, char** argv)
 
 	unit_test.test_case(
 		"Ping",
-		[&server_address](TestCase& test)
+		[&server_address, &server_nodename](TestCase& test)
 		{
-			nix::core::JobQueueClient client(
-				server_address, DEVELOPMENT_KEY, 1000);
+			auto client = 
+				init_service_client<nix::core::JobQueueClient>(
+					server_address, server_nodename);
 
-			test.assert_true(client.ping_service(), "service alive");
+			test.assert_true(client->ping_service(), "service alive");
 		}
 	);
 
 	unit_test.test_case(
 		"Create test queue",
-		[&server_address, &job_module](TestCase& test)
+		[&server_address, &server_nodename, &job_module](TestCase& test)
 		{
-			nix::core::JobQueueClient client(
-				server_address, DEVELOPMENT_KEY, 1000);
+			auto client = 
+				init_service_client<nix::core::JobQueueClient>(
+					server_address, server_nodename);
 
 			nix::Message create_msg;
 			create_msg.set_meta("api_key", DEVELOPMENT_KEY_ADMIN);
 			create_msg.set("queue", job_module);
 			create_msg.set("create", true);
 
-			auto response = client.call(
+			auto response = client->call(
 				server_address, "JobQueue", "manage", create_msg);
 			test.assert_true(response->is_status_ok(), "create success");
 		}
@@ -71,12 +74,13 @@ int main(int argc, char** argv)
 
 	unit_test.test_case(
 		"Submit job",
-		[&server_address, &job, &job_id](TestCase& test)
+		[&server_address, &server_nodename, &job, &job_id](TestCase& test)
 		{
-			nix::core::JobQueueClient client(
-				server_address, DEVELOPMENT_KEY, 1000);
+			auto client = 
+				init_service_client<nix::core::JobQueueClient>(
+					server_address, server_nodename);
 
-			auto response = client.submit(job);
+			auto response = client->submit(job);
 			test.assert_true(response->is_status_ok(), "submit call");
 			job_id = response->get_meta("job_id", std::string());
 			test.assert_true(job_id.length(), "got job id");
@@ -88,10 +92,11 @@ int main(int argc, char** argv)
 		[&server_address, &server_nodename, &job,
 		 &job_module, &job_action, &job_id](TestCase& test)
 		{
-			nix::core::JobQueueClient client(
-				server_address, DEVELOPMENT_KEY, 1000);
+			auto client = 
+				init_service_client<nix::core::JobQueueClient>(
+					server_address, server_nodename);
 
-			auto response = client.get_work(job_module);
+			auto response = client->get_work(job_module);
 			test.assert_true(response->is_status_ok(), "get_work called");
 			// we have one job only, so we can test job_id
 			std::string received_job_id =
@@ -119,12 +124,13 @@ int main(int argc, char** argv)
 
 	// unit_test.test_case(
 	// 	"Progress set/get",
-	// 	[&server_address, &job_id](TestCase& test)
+	// 	[&server_address, &server_nodename, &job_id](TestCase& test)
 	// 	{
-	// 		nix::core::JobQueueClient client(
-	// 			server_address, DEVELOPMENT_KEY, 1000);
+	// 		auto client = 
+	// 			init_service_client<nix::core::JobQueueClient>(
+	// 				server_address, server_nodename);
 
-	// 		auto response = client.submit(job);
+	// 		auto response = client->submit(job);
 	// 		test.assert_true(response->is_status_ok(), "submit call");
 	// 		job_id = response->get_meta("job_id", std::string());
 	// 		test.assert_true(job_id.length(), "got job id");
@@ -133,12 +139,13 @@ int main(int argc, char** argv)
 
 	// unit_test.test_case(
 	// 	"Set result",
-	// 	[&server_address, &job, &job_id](TestCase& test)
+	// 	[&server_address, &server_nodename, &job, &job_id](TestCase& test)
 	// 	{
-	// 		nix::core::JobQueueClient client(
-	// 			server_address, DEVELOPMENT_KEY, 1000);
+	// 		auto client = 
+	// 			init_service_client<nix::core::JobQueueClient>(
+	// 				server_address, server_nodename);
 
-	// 		auto response = client.submit(job);
+	// 		auto response = client->submit(job);
 	// 		test.assert_true(response->is_status_ok(), "submit call");
 	// 		job_id = response->get_meta("job_id", std::string());
 	// 		test.assert_true(job_id.length(), "got job id");

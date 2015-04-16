@@ -343,6 +343,9 @@ translation_units = {
 	"core/service_client" : {
 		"env": combinedenv,
 	},
+	"core/service_client_pool" : {
+		"env": combinedenv,
+	},
 	# ------------------------
 	"direct_handlers" : {
 		"env": combinedenv,
@@ -445,6 +448,7 @@ for tunit in sorted(translation_units):
 # ------------------------------------------------------------------------
 
 test_tunits = {
+	"test/tools/init_helpers" : {},
 	"test/tools/server" : {},
 	"test/tools/util" : {},
 	"test/tools/util_options" : {},
