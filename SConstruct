@@ -406,6 +406,9 @@ translation_units = {
 		"libpath" : boostenv["LIBPATH"],
 	},
 	"queue/options" : {},
+	"queue/worker" : {
+		"env": combinedenv,
+	},
 	"route" : {
 		"env": combinedenv,
 	},
