@@ -4,6 +4,8 @@
 #include <vector>
 #include <string>
 #include <memory>
+#include <mutex>
+#include <thread>
 
 #include "nix/module.hxx"
 #include "nix/db/connection.hxx"
@@ -24,7 +26,8 @@ public:
 
 
 	ModuleManager() = delete;
-	ModuleManager(std::shared_ptr<ModuleAPI> api,
+	ModuleManager(const nix::server::Options& server_options,
+				  std::shared_ptr<ModuleAPI> api,
 				  bool fatal = false);
 
 
@@ -40,13 +43,33 @@ public:
 
 	void start_all();
 	void stop_all();
+
+	//void bind(const std::string& resolver_address);
+
+	void start_manager_thread();
 private:
+	const nix::server::Options& server_options_;
+	std::shared_ptr<ModuleAPI> api_;
+	bool fatal_;
+
 	ObjectPool<ModuleInstance> modules_pool_;
 	std::vector<std::shared_ptr<Module>> builtins_;
 
-	std::shared_ptr<ModuleAPI> api_;
-	bool fatal_;
 	bool running_ = false;
+
+	std::mutex mtx_;
+
+
+	std::atomic<bool> manager_stop_flag_ {false};
+	std::timed_mutex manager_mtx_;
+	std::thread manager_thread_;
+
+	void manager();
+
+	// notify resolver service that modules are present
+	void notify_resolver_bind();
+	// notify resolver service our modules go away
+	void notify_resolver_unbind();
 };
 
 

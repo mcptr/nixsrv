@@ -1,3 +1,4 @@
+import sys
 import os
 import signal
 import random
@@ -16,7 +17,7 @@ class NixServer(object):
 		if not self.__address:
 			self.__address = "tcp://127.0.0.1:%d" % port
 		self.__pidfile = "/tmp/nix.test-%d.pid" % os.getpid()
-		self.__nodename = "unittest-node-01-%d" % port
+		self.__nodename = "unittest-node-%d" % port
 
 	def get_address(self):
 		return self.__address
@@ -35,13 +36,14 @@ class NixServer(object):
 			"--no-close-fds",
 			"--development-mode"
 		]
+
 		for module in self.__builtin_modules:
 			cmd.append("--enable-" + module.lower())
 		self.__server_process = Popen(cmd, stdout=PIPE, shell=False)
 		print("")
 		wait = 3
 		while not os.path.isfile(self.__pidfile):
-			time.sleep(1)
+			time.sleep(0.1)
 			wait -= 1
 
 		if not os.path.isfile(self.__pidfile):
@@ -52,13 +54,12 @@ class NixServer(object):
 			with open(self.__pidfile, "r") as fh:
 				pid = int(fh.read())
 				while wait and (os.kill(pid, 0) is not None):
-					time.sleep(1)
+					time.sleep(0.1)
 					wait -= 1
 				if os.kill(pid, 0) is not None:
 					raise Exception("Server startup failed")
 		except Exception as e:
 			print(e)
-			raise
 		print("### NixServer: Server ready")
 		return self
 
@@ -67,25 +68,24 @@ class NixServer(object):
 			pid = int(fh.read())
 			wait = 500
 			try:
+				print("### Stopping server", pid)
 				os.kill(pid, signal.SIGTERM)
 				is_alive = True
 				while wait and is_alive:
 					try:
 						is_alive = (os.kill(pid, 0) is None)
 						if is_alive:
-							time.sleep(0.01)
-							print("### Waiting for server to stop (%d)" % pid)
+							time.sleep(0.02)
 							wait -= 1
 						else:
 							break
 					except OSError as e:
 						if e.errno == errno.ESRCH:
-							print("### NixServer: Server stopped")
 							break
-
 				if os.kill(pid, 0) is None:
 					print("Killing with SIGKILL")
 					os.kill(pid, signal.SIGKILL)
+				print("### NixServer: Server stopped")
 			except OSError as e:
 				if e.errno != errno.ESRCH:
 					raise

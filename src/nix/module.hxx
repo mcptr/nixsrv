@@ -41,7 +41,9 @@ public:
 	virtual void stop();
 
 	// common handlers
+	virtual void is_alive(std::unique_ptr<IncomingMessage> msg) const final;
 	virtual void list_routes(std::unique_ptr<IncomingMessage> msg) const final;
+
 protected:
 	std::shared_ptr<ModuleAPI> api_;
 	Routes_t routes_;

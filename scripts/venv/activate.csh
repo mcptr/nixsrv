@@ -9,9 +9,13 @@ alias deactivate 'test $?_OLD_VIRTUAL_PATH != 0 && setenv PATH "$_OLD_VIRTUAL_PA
 deactivate nondestructive
 
 setenv VIRTUAL_ENV "~/Devel/nix-env"
+setenv PROJECT_ROOT "~/Devel/nix-env/nix"
+setenv LD_LIBRARY_PATH "/usr/local/lib64/soci:/usr/local/lib64/yami4:$VIRTUAL_ENV/nix/lib/external/jsoncpp"
+
 
 set _OLD_VIRTUAL_PATH="$PATH"
 setenv PATH "$VIRTUAL_ENV/bin:$PATH"
+setenv PYTHONPATH "$VIRTUAL_ENV/nix/python"
 
 
 set _OLD_VIRTUAL_PROMPT="$prompt"

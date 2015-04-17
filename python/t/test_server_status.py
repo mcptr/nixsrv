@@ -25,7 +25,7 @@ def test_basic():
 		}
 		client = NixClient(server.get_address())
 		response = client.call("Status", "status", params)
-		print(json.dumps(response.data, indent=4, sort_keys=True))
+		# print(json.dumps(response.data, indent=4, sort_keys=True))
 		assert_true(response.is_status_ok(), "Got server status")
 		data = response.data
 		assert_true(data.get("nodename", ""), "has nodename")

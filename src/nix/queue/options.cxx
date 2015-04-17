@@ -18,9 +18,9 @@ void Options::parse(const std::string& config_path)
 	po::options_description options;
 
 	options.add_options()
-		("builtins.queues",
+		("builtins.queues.queues",
 			 po::value(&stropt)->default_value(""),
-			 "builtins.queues")
+			 "queues to create on start")
 	;
 
 	ifstream cf(config_path.c_str());
@@ -30,7 +30,7 @@ void Options::parse(const std::string& config_path)
 
 	po::store(po::parse_config_file(cf, options, true), vm_);
 	po::notify(vm_);
-	istringstream queues(vm_["builtins.queues"].as<string>());
+	istringstream queues(vm_["builtins.queues.queues"].as<string>());
 
 	std::vector<std::string> queues_list;
 
@@ -39,7 +39,7 @@ void Options::parse(const std::string& config_path)
 		 back_inserter<vector<string> >(queues_list));
 
 	for(auto& entry : queues_list) {
-		string size_entry("queue." + entry + ".size");
+		string size_entry("builtins.queue." + entry + ".size");
 
 		options.add_options()
 			(size_entry.c_str(),
@@ -59,7 +59,7 @@ void Options::parse(const std::string& config_path)
 	for(auto& entry : queues_list) {
 		std::shared_ptr<InstanceConfig> inst(new InstanceConfig());
 		inst->name = entry;
-		int size_entry = get<int>("queue." + entry + ".size");
+		int size_entry = get<int>("builtins.queue." + entry + ".size");
 		inst->size = (size_entry ? size_entry : default_queue_size);
 		instances_.push_back(inst);
 	}

@@ -1,6 +1,7 @@
-#ifndef TEST_UTIL_HXX
-#define TEST_UTIL_HXX
+#ifndef TEST_TOOLS_UTIL_HXX
+#define TEST_TOOLS_UTIL_HXX
 
+#include <memory>
 #include <functional>
 #include <iostream>
 #include <iomanip>
@@ -8,45 +9,16 @@
 #include <map>
 #include <exception>
 #include <stdexcept>
+#include <vector>
 
-#if defined(EASYLOGGINGPP_H)
-//#undef ELPP_STACKTRACE_ON_CRASH
+#include "util_options.hxx"
 
-INITIALIZE_EASYLOGGINGPP
-
-
-void crash_handler(int sig) {
-	LOG(ERROR) << "Crashed";
-	el::Helpers::logCrashReason(sig, true);
-	el::Helpers::crashAbort(sig);
-}
-
-void initialize_test_env()
-{
-	el::Configurations conf;
-
-	conf.setGlobally(
-		el::ConfigurationType::ToStandardOutput,
-		"false");
-
-	conf.setGlobally(
-		el::ConfigurationType::Enabled,
-		"false");
-
-	el::Helpers::setCrashHandler(crash_handler);
-	
-	el::Loggers::reconfigureAllLoggers(conf);
-
-};
-#else
-
-void initialize_test_env()
-{
-}
-
-#endif
 
 namespace test {
+
+void crash_handler(int sig);
+
+void initialize_test_env(const Options& options);
 
 class AssertionFailed : public std::exception {};
 
@@ -54,7 +26,7 @@ class AssertionFailed : public std::exception {};
 struct Configuration
 {
 	bool print_exceptions = true;
-	bool verbose = true;
+	bool verbose = false;
 };
 
 class TestCase
@@ -95,6 +67,8 @@ public:
 				const T& expected,
 				const std::string& name = "equal")
 	{
+		print_name(name);
+
 		bool ok = (result == expected);
 		if(!ok) {
 			print_diff(result, expected, name);
@@ -108,6 +82,8 @@ public:
 			   const std::string& expected,
 			   const std::string& name = "equal")
 	{
+		print_name(name);
+
 		int different = (result.compare(expected));
 		if(different) {
 			print_diff(result, expected, name);
@@ -121,6 +97,8 @@ public:
 				   const T& expected,
 				   const std::string& name = "not_equal")
 	{
+		print_name(name);
+
 		bool ok = (result != expected);
 		if(!ok) {
 			print_diff(result, expected, name);
@@ -134,18 +112,22 @@ public:
 			   const std::string& expected,
 			   const std::string& name = "equal")
 	{
+		print_name(name);
+
 		bool ok = (result.compare(expected) != 0);
 		store_result(ok, name);
 		return ok;
 	}
 
-	bool no_throw(Callable_t callable, const std::string& name = std::string())
+	bool no_throw(Callable_t callable, const std::string& name = "no_throw")
 	{
 		return no_throw([&](TestCase&) { callable(); }, name);
 	}
 
-	bool no_throw(TestFunction_t code, const std::string& name = std::string())
+	bool no_throw(TestFunction_t code, const std::string& name = "no_throw")
 	{
+		print_name(name);
+
 		bool passed = false;
 		try {
 			code(*this);
@@ -164,14 +146,16 @@ public:
 	}
 
 	bool throws(Callable_t callable,
-				const std::string& name = std::string())
+				const std::string& name = "throws")
 	{
 		return throws([&](TestCase&) { callable(); }, name);
 	}
 
 	bool throws(TestFunction_t code,
-				const std::string& name = std::string())
+				const std::string& name = "throws")
 	{
+		print_name(name);
+
 		bool threw = false;
 
 		try {
@@ -188,14 +172,16 @@ public:
 	}
 
 	template <class Exception_t>
-	bool throws(Callable_t callable)
+	bool throws(Callable_t callable, const std::string& name = "throws")
 	{
-		return throws<Exception_t>([&](TestCase&) { callable(); });
+		return throws<Exception_t>([&](TestCase&) { callable(); }, name);
 	}
 
 	template <class Exception_t>
-	bool throws(TestFunction_t code)
+	bool throws(TestFunction_t code, const std::string& name = "throws")
 	{
+		print_name(name);
+
 		bool passed = false;
 		bool threw = false;
 		std::string wrong_exception_type;
@@ -268,14 +254,14 @@ public:
 		}
 	}
 
-	void assert_no_throw(Callable_t callable, const std::string& name = std::string())
+	void assert_no_throw(Callable_t callable, const std::string& name = "assert_no_throw")
 	{
 		if(!no_throw([&](TestCase&) { callable(); }, name)) {
 			throw AssertionFailed();
 		}
 	}
 
-	void assert_no_throw(TestFunction_t code, const std::string& name = std::string())
+	void assert_no_throw(TestFunction_t code, const std::string& name = "assert_no_throw")
 	{
 		if(!no_throw(code, name)) {
 			throw AssertionFailed();
@@ -284,7 +270,7 @@ public:
 
 
 	void assert_throws(Callable_t callable,
-					   const std::string& name = std::string())
+					   const std::string& name = "assert_throws")
 	{
 		if(!throws([&](TestCase&) { callable(); }, name)) {
 			throw AssertionFailed();
@@ -292,7 +278,7 @@ public:
 	}
 
 	void assert_throws(TestFunction_t code,
-					   const std::string& name = std::string())
+					   const std::string& name = "assert_throws")
 	{
 		if(!throws(code, name)) {
 			throw AssertionFailed();
@@ -300,17 +286,39 @@ public:
 	}
 
 	template <class Exception_t>
-	void assert_throws(Callable_t callable)
+	void assert_throws(Callable_t callable, const std::string& name = "assert_throws")
 	{
-		if(!throws<Exception_t>([&](TestCase&) { callable(); })) {
+		if(!throws<Exception_t>([&](TestCase&) { callable(); }, name)) {
 			throw AssertionFailed();
 		}
 	}
 
 	template <class Exception_t>
-	void assert_throws(TestFunction_t code)
+	void assert_throws(TestFunction_t code, const std::string& name = "assert_throws")
 	{
-		if(!throws<Exception_t>(code)) {
+		if(!throws<Exception_t>(code, name)) {
+			throw AssertionFailed();
+		}
+	}
+
+	void assert_true(bool v, const std::string& name = "assert_true")
+	{
+		print_name(name);
+
+		store_result(v, name);
+		if(!v) {
+			print_error(name, "Did not return true");
+			throw AssertionFailed();
+		}
+	}
+
+	void assert_false(bool v, const std::string& name = "assert_true")
+	{
+		print_name(name);
+
+		store_result(!v, name);
+		if(v) {
+			print_error(name, "Did not return true");
 			throw AssertionFailed();
 		}
 	}
@@ -319,6 +327,13 @@ protected:
 	const Configuration config_;
 	const std::string unit_name_;
 	std::map<std::string, int> results_;
+
+	void  print_name(const std::string& name)
+	{
+		if(config_.verbose) {
+			std::cout << "\n\t... " << name;
+		}
+	}
 
 	template<class T>
 	void  print_diff(const T& result,
@@ -329,8 +344,8 @@ protected:
 			return;
 		}
 
-		std::cout << "\n\t> failed case: "
-				  << (name.empty() ? "..." : name)
+		std::cout << "\n\t> Failed case: '"
+				  << (name.empty() ? "..." : name) << "'"
 				  << "\n\tRESULT: " << result
 				  << "\n\tEXPECT: " << expected
 				  << std::endl;
@@ -342,9 +357,9 @@ protected:
 			return;
 		}
 
-		std::cout << "\n\t> failed case: "
-				  << (name.empty() ? "..." : name) << " "
-				  << error
+		std::cout << "\n\t> Failed case: '"
+				  << (name.empty() ? "..." : name) << "'"
+				  << "\n\t> Reason: " << error
 				  << std::endl;
 	}
 
@@ -363,8 +378,7 @@ protected:
 class UnitTest
 {
 public:
-	UnitTest() = default;
-	UnitTest(const Configuration& config)
+	UnitTest(const Configuration& config = Configuration())
 		: config_(config)
 	{
 	}
@@ -375,9 +389,26 @@ public:
 		cases_.push_back(std::make_pair(name, code));
 	}
 
-	int run()
+	int run(int argc, char** argv)
 	{
-		initialize_test_env();
+		Options options;
+		if(!options.parse(argc, argv)) {
+			return -1;
+		}
+
+		if(options.has_help()) {
+			options.display_help();
+			return 0;
+		}
+
+		return run(options);
+	}
+
+	int run(const Options& options)
+	{
+		config_.verbose = options.get<bool>("verbose");
+
+		initialize_test_env(options);
 
 		int i = 0;
 		for(auto& it : cases_) {
@@ -386,7 +417,7 @@ public:
 				std::cout << std::setw(3) <<  std::left << i << " - "
 						  << std::setw(59) << it.first << " - ";
 
-				TestCase tcase(it.first);
+				TestCase tcase(config_, it.first);
 				try {
 					it.second(tcase);
 				}
@@ -401,7 +432,8 @@ public:
 					failed_.push_back(it.first);
 				}
 				
-				std::cout << (failures ? "FAIL" : "PASS") << std::endl;
+				std::cout << (config_.verbose ? "\n" : "")
+						  << (failures ? "FAIL" : "PASS") << std::endl;
 			}
 			catch(const std::exception& e) {
 				failed_.push_back(it.first);
@@ -418,6 +450,30 @@ protected:
 	std::vector<std::pair<std::string, TestCase::TestFunction_t>> cases_;
 	std::vector<std::string> failed_;
 };
+
+
+class TestDaemon
+{
+public:
+	virtual void set_arguments(std::vector<std::string>& args) = 0;
+	virtual bool is_ready() const { return true; }
+	virtual pid_t get_pid() const = 0;
+};
+
+class ProcessTest
+{
+public:
+	ProcessTest() = delete;
+	ProcessTest(std::unique_ptr<TestDaemon> daemon,
+				UnitTest& unit_test);
+	~ProcessTest() = default;
+
+	int run(int argc, char** argv);
+private:
+	std::unique_ptr<TestDaemon> daemon_;
+	UnitTest unit_test_;
+};
+
 
 } // test
 

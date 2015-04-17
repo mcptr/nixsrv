@@ -1,0 +1,39 @@
+import os
+AddOption("--compiler",
+		  dest="compiler",
+		  action="store",
+		  choices=["clang++", "g++"],
+		  default="clang++",
+		  help="compiler to use")
+
+
+THIS_PLATFORM = os.uname()[0].lower()
+platform_libs = {
+	"linux" : ["dl"],
+	"freebsd" : ["execinfo"],
+}
+
+platform_linkflags = ["-l%s" % l for l in platform_libs.get(THIS_PLATFORM, [])]
+
+# relative paht start as of "build" dir
+simulator_env = Environment(
+	CXX = GetOption("compiler"),
+	CXXFLAGS = Split(
+		"-std=c++11 -Wall -Wextra -pedantic -O2 " +
+		"-pipe -pthread -finline-functions -Wreorder"),
+	CPPDEFINES = Split(""),
+	CPPPATH = [
+		"/usr/include/yami4", "/usr/local/include/yami4",
+		"../../",
+		"../../external/include"
+	],
+	LIBS = Split("yami4cppd yami4cored jsoncpp " +
+				 "boost_system boost_thread boost_program_options"),
+	LIBPATH = ["/usr/local/lib", "/usr/local/lib64/yami4", "../../../lib/external/jsoncpp"],
+	LINKFLAGS = ["-lpthread"] + platform_linkflags,
+	DESTDIR = "../bin"
+)
+
+# clang colors
+simulator_env['ENV']['TERM'] = os.environ['TERM']
+SConscript('src/SConscript', variant_dir='build', exports=["simulator_env"], duplicate=0)

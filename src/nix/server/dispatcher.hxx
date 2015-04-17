@@ -5,6 +5,7 @@
 #include <map>
 #include <memory>
 #include <atomic>
+#include <mutex>
 
 #include "nix/core/auth.hxx"
 #include "nix/route.hxx"
@@ -46,10 +47,14 @@ public:
 	void operator()(yami::incoming_message& msg);
 
 	void server_status(std::unique_ptr<IncomingMessage> msg);
+
+	// "catch all" handler for "*" route
+	void default_route_handler(yami::incoming_message& msg);
 protected:
 	Routing_t routing_;
 	nix::core::Auth auth_;
 	Options options_;
+	std::mutex mtx_;
 
 	std::unique_ptr<ServerStats> stats_;
 	std::unordered_map<

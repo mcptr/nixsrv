@@ -3,6 +3,7 @@
 #include "nix/common.hxx"
 #include "message.hxx"
 
+#include <iostream>
 
 namespace nix {
 
@@ -26,7 +27,7 @@ void Message::parse(const std::string& json_string)
 {
 	Json::Reader reader;
 	
-	if(!reader.parse(json_string, root_, false)) {
+	if(json_string.length() && !reader.parse(json_string, root_, false)) {
 		LOG(DEBUG) << "Cannot parse message: " << json_string;
 		throw std::runtime_error(reader.getFormattedErrorMessages());
 	}
@@ -37,26 +38,11 @@ void Message::clear()
 	root_.clear();
 }
 
-Json::Value Message::get_raw_value(const std::string& k)
+Json::Value Message::get_raw_value(const std::string& k) const
 {
 	Json::Value dest;
 	bool found = find(k, dest);
 	return (found ? dest : Json::nullValue);
-}
-
-std::string Message::get_serialized(
-	const std::string& k,
-	const std::string& value)
-{
-	Json::Value dest;
-	bool found = find(k, dest);
-	
-	if(found) {
-		Json::FastWriter writer;
-		return writer.write(dest);
-	}
-
-	return value;
 }
 
 std::string Message::get(const std::string& k, const std::string& default_value) const
@@ -79,7 +65,7 @@ int Message::get(const std::string& k, int default_value) const
 {
 	Json::Value dest;
 	bool found = find(k, dest);
-	return (found && dest.isNumeric()
+	return (found && dest.isInt()
 			? dest.asInt() : default_value);
 }
 
@@ -107,6 +93,42 @@ bool Message::get(const std::string& k, bool default_value) const
 			? dest.asBool() : default_value);
 }
 
+Message::Array_t Message::get(const std::string& k,
+							  const Message::Array_t& default_value) const
+{
+	if(is_array(k)) {
+		Json::Value dest;
+		find(k, dest);
+		Message::Array_t out(dest);
+		return out;
+	}
+	return default_value;
+}
+
+
+// template<>
+// void set<Json(const std::string& k, const T& value)
+// {
+// 	std::vector<std::string> keys;
+// 	nix::util::string::split(k, keys, ".");
+	
+// 	Json::Value* ptr = &root_;
+// 	for(auto it = keys.begin(); it != keys.end() - 1; it++) {
+// 		if(!ptr->isMember(*it)) {
+// 			(*ptr)[*it] = Json::objectValue;
+// 		}
+// 		else if(!ptr->isObject()) {
+// 			throw std::runtime_error(
+// 				"Not an object. Cannot set value for key: " + k);
+// 		}
+// 		ptr = &((*ptr)[*it]);
+// 	}
+	
+// 	std::string last = keys.back();
+// 	ptr->removeMember(last);
+// 	(*ptr)[last] = value;
+// }
+
 void Message::set_object(const std::string& k)
 {
 	set(k, Object_t().get_value());
@@ -131,6 +153,7 @@ void Message::set_deserialized(const std::string& k,
 		LOG(DEBUG) << "Cannot parse value: " << value;
 		throw std::runtime_error(reader.getFormattedErrorMessages());
 	}
+
 	set(k, deserialized);
 }
 
@@ -195,11 +218,23 @@ bool Message::is_object(const std::string& k) const
 	return (found && dest.isObject());
 }
 
-std::string Message::to_string(bool pretty) const
+std::string Message::to_string(const std::string& k, bool pretty) const
 {
+	if(k.length()) {
+		Json::Value dest;
+		bool found = find(k, dest);
+		
+		if(found && pretty) {
+			return dest.toStyledString();
+		}
+		Json::FastWriter writer;
+		return writer.write((found ? dest : Null_t().get_value()));
+	}
+
 	if(pretty) {
 		return root_.toStyledString();
 	}
+
 	Json::FastWriter writer;
 	return writer.write(root_);
 }
@@ -219,7 +254,7 @@ bool Message::find(const std::string& k, Json::Value& dest) const
 	}
 	const Json::Value* ptr = &root_;
 	for(auto& it : keys) {
-		if(ptr->isArray() || !ptr->isMember(it)) {
+		if(!ptr->isObject() || !ptr->isMember(it)) {
 			return false;
 		}
 		ptr = &((*ptr)[it]);

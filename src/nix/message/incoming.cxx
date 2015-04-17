@@ -16,9 +16,9 @@ IncomingMessage::IncomingMessage(yami::incoming_message& im)
 void IncomingMessage::reply()
 {
 	try {
-		//clear();
-		this->set_status(nix::ok);
-		this->reply(*this);
+		clear();
+		set_status(nix::ok);
+		reply(*this);
 	}
 	catch(yami::yami_runtime_error& e) {
 		LOG(DEBUG) << "Exception: " << e.what();
@@ -39,6 +39,13 @@ void IncomingMessage::reply(Message& msg, nix::StatusCode_t status)
 	}
 }
 
+void IncomingMessage::reply(const Job& job, nix::StatusCode_t status)
+{
+	Message msg;
+	msg.parse(job.to_string());
+	this->reply(msg, status);
+}
+
 void IncomingMessage::reply_with_error(nix::StatusCode_t error_code,
 									   const std::string& msg)
 {
@@ -49,18 +56,19 @@ void IncomingMessage::reply_with_error(nix::StatusCode_t error_code,
 
 void IncomingMessage::fail(const std::string& reason)
 {
-	this->fail(nix::fail, reason);
+	clear();
+	fail(nix::fail, reason);
 }
 
 void IncomingMessage::fail(nix::StatusCode_t error_code,
 						   const std::string& reason)
 {
-	LOG(DEBUG) << "FAIL: " << reason;
+	LOG(DEBUG) << "Fail: " << reason;
 	clear();
-	this->set_status(error_code, reason);
+	set_status(error_code, reason);
 
 	yami::parameters params;
-	params.set_string("message", this->to_string());
+	params.set_string("message", to_string());
 
 	try {
 		msg_.reply(params);

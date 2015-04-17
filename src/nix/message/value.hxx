@@ -20,22 +20,44 @@ public:
 
 	virtual Json::Value get_value() const;
 	virtual std::string to_string(bool pretty) const;
+
 	operator Json::Value() const;
+
+	friend std::ostream& operator<<(std::ostream& os, const Value& v)
+	{
+		v.to_ostream(os);
+		return os;
+	}
+
 protected:
 	Json::Value value_;
+	virtual void to_ostream(std::ostream& os) const;
 };
 
 class Object : public Value
 {
 public:
-	Object();
+	explicit Object(const Json::Value& v = Json::objectValue);
+
+	friend std::ostream& operator<<(std::ostream& os, const Object& v)
+	{
+		v.to_ostream(os);
+		return os;
+	}
 };
 
 
 class Array : public Value
 {
 public:
-	Array();
+	//Array();
+	explicit Array(const Json::Value& v = Json::arrayValue);
+
+	friend std::ostream& operator<<(std::ostream& os, const Array& v)
+	{
+		v.to_ostream(os);
+		return os;
+	}
 };
 
 
@@ -43,6 +65,12 @@ class Null : public Value
 {
 public:
 	Null();
+
+	friend std::ostream& operator<<(std::ostream& os, const Null& v)
+	{
+		v.to_ostream(os);
+		return os;
+	}
 };
 
 

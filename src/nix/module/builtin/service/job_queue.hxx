@@ -51,12 +51,11 @@ private:
 	void remove_all();
 
 	bool persistent_ = false;
-	std::mutex mtx_;
 
 	std::unordered_map<std::string, Queue<Job>*> queues_;
 	std::unordered_map<std::string, std::unique_ptr<Job>> in_progress_;
 	// this will be used when persistent queues are not in use
-	std::unordered_map<std::string, std::unique_ptr<Message>> completed_;
+	std::unordered_map<std::string, std::unique_ptr<Job>> completed_;
 };
 
 

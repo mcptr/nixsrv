@@ -36,7 +36,7 @@ public:
 		}
 	}
 
-	~ObjectPool()
+	virtual ~ObjectPool()
 	{
 		typename Pool_t::iterator it = pool_.begin();
 		for( ; it != pool_.end(); it++) {

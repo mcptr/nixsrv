@@ -328,6 +328,24 @@ translation_units = {
 	"core/auth" : {
 		"env": yamienv,
 	},
+	"core/client" : {
+		"env": combinedenv,
+	},
+	"core/cache_client" : {
+		"env": combinedenv,
+	},
+	"core/client_pool" : {
+		"env": combinedenv,
+	},
+	"core/job_queue_client" : {
+		"env": combinedenv,
+	},
+	"core/resolver_client" : {
+		"env": combinedenv,
+	},
+	"core/service_client" : {
+		"env": combinedenv,
+	},
 	# ------------------------
 	"direct_handlers" : {
 		"env": combinedenv,
@@ -336,11 +354,20 @@ translation_units = {
 	"db/connection" : {},
 	"db/instance_config" : {},
 	"db/options" : {},
+	"init/common" : {
+		"env": combinedenv,
+	},
+	"init/daemon" : {
+		"env": combinedenv,
+	},
 	"job" : {},
 	"message" : {
 		"env": combinedenv,
 	},
 	"message/incoming" : {
+		"env": combinedenv,
+	},
+	"message/response" : {
 		"env": combinedenv,
 	},
 	"message/value" : {
@@ -349,7 +376,9 @@ translation_units = {
 	"module" : {
 		"env": combinedenv,
 	},
-	"module/api" : {},
+	"module/api" : {
+		"env": combinedenv,
+	},
 	"module/builtin/debug" : {
 		"env": combinedenv,
 	},
@@ -393,23 +422,10 @@ translation_units = {
 	"util/fs" : {},
 	"util/pid" : {},
 	"util/string" : {},
+	"util/test" : {},
 	"types" : {
 		"env" : yamienv,
 	},
-	# ######################################################################
-	# "core/auth/auth" : {
-	#	"cpppath" : [resolve_include("yami4")],
-	#	"env" : dbenv
-	# },
-	# "daemon/daemon" : {
-	#	"env" : combinedenv,
-	# },
-	# "daemon/signal_handlers" : {
-	#	"env" : combinedenv,
-	# },
-	# "util/version" : {},
-	# "util/pid" : {},
-	# "generic/uuid" : {},
 }
 
 main_target_objects = []
@@ -433,16 +449,34 @@ for tunit in sorted(translation_units):
 # BUILD TESTS - FIXME
 # ------------------------------------------------------------------------
 
+test_tunits = {
+	"test/tools/init_helpers" : {},
+	"test/tools/server" : {},
+	"test/tools/util" : {},
+	"test/tools/util_options" : {},
+}
+
+test_resources_objs = []
+
+for res in  test_tunits:
+	test_resources_objs.append(
+		testsenv.SharedObject(
+			os.path.join(Dirs.objects, res) + ".o",
+			os.path.join(Dirs.project_source, res) + ".cxx"
+		)
+	)
+
 all_tests = []
+
 for (root, dirs, files) in os.walk(Dirs.tests_source):
-	for u in filter(lambda f: f.endswith(".cxx"), files):
+	for u in filter(lambda f: f.startswith("test_") and f.endswith(".cxx"), files):
 		u = "%s/%s" % (root, u)
 		basename = os.path.basename(u.replace(".cxx", ""))
 		test_exe = "%s/%s.bin" % (Dirs.tests_target, basename)
 		all_tests.append(test_exe)
 		testsenv.Program(
 			target = test_exe,
-			source = [u, main_target_objects]
+			source = [u, main_target_objects, test_resources_objs]
 		)
 
 testsenv.Alias("test", all_tests)

@@ -23,7 +23,10 @@ void ProgramOptions::parse(int argc, char** argv)
 		po::options_description generic("Startup options");
 		po::options_description server("Server options");
 		po::options_description builtins("Builtins");
+		po::options_description builtins_hidden("Configuration of builtins modules");
 		po::options_description infrastructure("Infrastructure options");
+		po::options_description resources("Resources");
+		po::options_description auth("Auth");
 		po::options_description devel("Development options");
 
 		po::options_description config_file_hidden(
@@ -34,7 +37,7 @@ void ProgramOptions::parse(int argc, char** argv)
 		char progn[PATH_MAX];
 		memcpy(progn, progname.data(), progname.length());
 		string base_dir(dirname(dirname(progn)));
-		//base_dir = nix::util::fs::expand_user(base_dir);
+		base_dir = nix::util::fs::expand_user(base_dir);
 		string config_path;
 		string db_config_path;
 
@@ -70,7 +73,7 @@ void ProgramOptions::parse(int argc, char** argv)
 			)
 			("dbconfig",
 			 po::value<string>(&db_config_path)->default_value(
-				 base_dir + "/etc/config.ini", "$BASE_DIR/etc/db.ini"), ""
+				 base_dir + "/etc/db.ini", "$BASE_DIR/etc/db.ini"), ""
 			)
 			("basedir", po::value(&stropt)->default_value(base_dir),
 			 "base application directory"
@@ -112,6 +115,8 @@ void ProgramOptions::parse(int argc, char** argv)
 		server.add_options()
 			("address,A", po::value(&stropt)->default_value("tcp://*:*"),
 			 "address to listen on")
+			("threads,t", po::value(&intopt)->default_value(0),
+			 "dispatcher threads (overwrites config value)")
 			;
 
 		builtins.add_options()
@@ -129,25 +134,105 @@ void ProgramOptions::parse(int argc, char** argv)
 			 "enable job queue module")
 			;
 
+		builtins_hidden.add_options()
+			// module manager
+			("module-manager.manager_thread_enabled",
+			 po::value<bool>()->implicit_value(true)->zero_tokens()->default_value(false),
+			 "enable internal module manager thread")
+			("module-manager.manager_thread_run_interval",
+			 po::value(&intopt)->default_value(60),
+			 "manager wakup every run * sleep interval")
+			("module-manager.manager_thread_sleep_interval_ms",
+			 po::value(&intopt)->default_value(1000),
+			 "manager thread sleep interval")
+
+			// cache cleaner
+			("builtins.cache.cleaner_enabled",
+			 po::value<bool>()->implicit_value(true)->zero_tokens()->default_value(false),
+			 "enable cleaner thread")
+			("builtins.cache.cleaner_run_interval",
+			 po::value(&intopt)->default_value(60),
+			 "cleaner run (run * sleep)")
+			("builtins.cache.cleaner_sleep_interval_ms",
+			 po::value(&intopt)->default_value(1000),
+			 "cleaner sleep interval in ms (run * sleep)")
+
+			// resolver monitor
+			("builtins.resolver.monitor_enabled",
+			 po::value<bool>()->implicit_value(true)->zero_tokens()->default_value(false),
+			 "enable monitor thread in resolver")
+			("builtins.resolver.monitor_run_interval",
+			 po::value(&intopt)->default_value(20),
+			 "monitor run (run * sleep)")
+			("builtins.resolver.monitor_sleep_interval_ms",
+			 po::value(&intopt)->default_value(1000),
+			 "resolver monitor sleep interval in ms (run * sleep)")
+			("builtins.resolver.monitor_response_timeout_ms",
+			 po::value(&intopt)->default_value(2000),
+			 "how long to wait for response when checking if service is alive")
+			("builtins.resolver.monitor_max_failures",
+			 po::value(&intopt)->default_value(3),
+			 "monitor will remove bound addresses after max_failures reached")
+		
+			;
+
 		infrastructure.add_options()
-			("srv_resolver_address",
+			("infrastructure.srv_resolver_address",
 			 po::value(&stropt)->default_value(""),
 			 "external resolver address")
-			("srv_cache_address",
+			("infrastructure.srv_cache_address",
 			 po::value(&stropt)->default_value(""),
 			 "external cache server address")
-			("srv_broker_address",
+			("infrastructure.srv_broker_address",
 			 po::value(&stropt)->default_value(""),
 			 "external broker address")
-			("srv_job_queue_address",
+			("infrastructure.srv_job_queue_address",
 			 po::value(&stropt)->default_value(""),
 			 "external job queue server address")
+			;
+
+		resources.add_options()
+			("resources.generic_client_pool_size",
+			 po::value<int>(&intopt)->default_value(1),
+			 ""
+			)
+			("resources.resolver_client_pool_size",
+			 po::value<int>(&intopt)->default_value(1),
+			 ""
+			)
+			("resources.cache_client_pool_size",
+			 po::value<int>(&intopt)->default_value(1),
+			 ""
+			)
+			("resources.job_queue_client_pool_size",
+			 po::value<int>(&intopt)->default_value(1),
+			 ""
+			)
+			("resources.broker_client_pool_size",
+			 po::value<int>(&intopt)->default_value(1),
+			 ""
+			)
+			;
+
+		auth.add_options()
+			("auth.api_key_private",
+			 po::value<string>(&stropt)->default_value(""),
+			 "api auth key for querying private services"
+			)
+			("auth.api_key_public",
+			 po::value<string>(&stropt)->default_value(""),
+			 "api auth key for querying public services")
 			;
 
 		devel.add_options()
 			("development-mode",
 			 po::value<bool>()->implicit_value(true)->zero_tokens()->default_value(false),
-			 "enable development mode")
+			 "enable development mode"
+			)
+			("enable-random-sleep",
+			 po::value<bool>()->implicit_value(true)->zero_tokens()->default_value(false),
+			 "enable random sleep in builtin modules threads\n(only in 'DEBUG_BUILD' and when development mode enabled)"
+			)
 			;
 
 		passwd* pwd = getpwuid(getuid());
@@ -159,19 +244,22 @@ void ProgramOptions::parse(int argc, char** argv)
 
 
 		config_file_hidden.add_options()
-			("SERVER.tcp_listen_backlog",
-			 po::value(&intopt)->default_value(10), "SERVER.tcp_listen_backlog"
+			("server.tcp_listen_backlog",
+			 po::value(&intopt)->default_value(10), "server.tcp_listen_backlog"
 			)
-			("SERVER.tcp_nonblocking",
-			 po::value(&boolopt)->default_value(true), "SERVER.tcp_nonblocking"
+			("server.tcp_nonblocking",
+			 po::value(&boolopt)->default_value(true), "server.tcp_nonblocking"
 			)
-			("SERVER.dispatcher_threads",
-			 po::value(&intopt)->default_value(10), "SERVER.dispatcher_threads"
+			("server.dispatcher_threads",
+			 po::value(&intopt)->default_value(10), "server.dispatcher_threads"
 			)
 			;
 
 		if(!has_help()) {
-			config_file_hidden.add(generic).add(server).add(builtins).add(infrastructure);
+			config_file_hidden.add(generic).add(server).add(builtins)
+				.add(infrastructure).add(resources)
+				.add(builtins_hidden).add(auth);
+
 			if(vm_["debug"].as<bool>()) {
 				std::cout << "Reading config file: " << config_path << std::endl;
 			}

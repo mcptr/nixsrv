@@ -1,6 +1,7 @@
 #include <fstream>
 
 #include "options.hxx"
+#include "nix/common.hxx"
 
 
 namespace nix {
@@ -23,9 +24,11 @@ void Options::parse(const std::string& config_path)
 
 	ifstream cf(config_path.c_str());
 	if(!cf.good()) {
-		throw nix::InitializationError("No db config found (" + config_path + ")");
+		throw nix::InitializationError(
+			"No db config found (" + config_path + ")");
 	}
 
+	LOG(DEBUG) << "Parsing db configuration: " << config_path;
 	po::store(po::parse_config_file(cf, db_options, true), vm_);
 	po::notify(vm_);
 	istringstream databases(vm_["global.databases"].as<string>());
@@ -37,6 +40,7 @@ void Options::parse(const std::string& config_path)
 		 back_inserter<vector<string> >(dblist));
 
 	for(auto& entry : dblist) {
+		string type_entry(entry + ".type");
 		string user_entry(entry + ".user");
 		string dbname_entry(entry + ".name");
 		string passwd_entry(entry + ".password");
@@ -45,6 +49,10 @@ void Options::parse(const std::string& config_path)
 		string pool_entry(entry + ".pool_size");
 
 		db_options.add_options()
+			(type_entry.c_str(),
+			 po::value(&stropt)->default_value(""),
+			 type_entry.c_str()
+			)
 			(user_entry.c_str(),
 			 po::value(&stropt)->default_value(""),
 			 user_entry.c_str()

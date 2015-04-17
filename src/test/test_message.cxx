@@ -1,9 +1,10 @@
-#include "base.hxx"
+#include "tools/base.hxx"
 #include <nix/message.hxx>
 #include <string>
 #include <iostream>
 
-int main()
+
+int main(int argc, char** argv)
 {
 	using nix::Message;
 	using std::string;
@@ -143,7 +144,7 @@ int main()
 			test.no_throw([&m, &json]() { m.parse(json); }, "parse() success");
 			test.equal(m.to_string(), json, "parse() and to_string()");
 
-			test.throws<std::runtime_error>([&m]() { m.parse(""); } );
+			test.no_throw([&m]() { m.parse(""); } );
 			test.throws<std::runtime_error>([&m]() { m.parse("invalid"); } );
 		}
 	);
@@ -206,5 +207,5 @@ int main()
 		}
 	);
 
-	return unit.run();
+	return unit.run(argc, argv);
 }

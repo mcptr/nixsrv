@@ -56,23 +56,24 @@ class Runner(object):
 			"shell" : kwargs.pop("shell", False)
 		}
 
-		if not self.verbose:
-			params["stdout"] = DEVNULL
-			params["stderr"] = DEVNULL
+		# if not self.verbose:
+		# 	params["stdout"] = DEVNULL
+		# 	params["stderr"] = DEVNULL
 
 		status = call(*args, **params)
 		return status
 		
-
 	def run_cxx_tests(self):
 		for (root, dirs, files) in os.walk(self.cxx_tests_dir):
 			for test in files:
 				if test.startswith("test_"):
-					test_exe = "%s/%s" % (root, test)
+					test_exe = ["%s/%s" % (root, test)]
+					if self.verbose:
+						test_exe.append("-v")
 					self.exec_test(
 						test_exe,
 						title="CXX: " + test,
-						on_fail=lambda **kwargs: self.test_results["CXX"].append(test_exe)
+						on_fail=lambda **kwargs: self.test_results["CXX"].append(test_exe[0])
 					)
 					
 
@@ -99,7 +100,7 @@ class Runner(object):
 		failures = 0
 		if self.test_results["CXX"]:
 			print("Failed CXX tests:\n%s" % "\t\n".join(
-				sorted(self.test_results["CXX"]))
+				sorted(self.test_results.get("CXX", [])))
 			)
 			print("".center(72, "-"))
 		print("PEP8: %s" % ("FAIL" if self.test_results["PEP8"] else "PASS"))

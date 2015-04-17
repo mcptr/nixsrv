@@ -7,6 +7,7 @@
 #include <vector>
 #include <mutex>
 #include <condition_variable>
+#include <atomic>
 
 // os
 #include <sys/stat.h>
@@ -19,15 +20,18 @@
 
 // nix
 #include "nix/common.hxx"
+#include "nix/init/common.hxx"
+#include "nix/init/daemon.hxx"
+
+#include "nix/core/client_pool.hxx"
 #include "nix/db/connection.hxx"
-#include "nix/db/options.hxx"
-#include "nix/queue/options.hxx"
+//#include "nix/db/options.hxx"
 #include "nix/module/api.hxx"
 #include "nix/module/manager.hxx"
 #include "nix/object_pool.hxx"
+#include "nix/options.hxx"
 #include "nix/program_options.hxx"
 #include "nix/server.hxx"
-#include "nix/options.hxx"
 
 // bulitin modules
 #include "nix/module/builtin/debug.hxx"
@@ -51,49 +55,26 @@ using nix::ObjectPool;
 using nix::ProgramOptions;
 using nix::db::Connection;
 using nix::server::Options;
+using nix::core::ClientPool;
 
-
-std::string get_log_file_path(const ProgramOptions& options);
-
-
-void setup_modules(ModuleManager::Names_t& v,
-				   const ProgramOptions& po);
-
-
-void setup_server(Options& options,
-				  const ProgramOptions& po);
-
-
-void setup_db_pool(std::shared_ptr<ObjectPool<Connection>> pool,
-				   const ProgramOptions& po);
-
-void setup_signals();
 
 void termination_signal_handler(int sig);
 
-void setup_builtin_job_queue(std::shared_ptr<nix::module::JobQueue> jq,
-							 const ProgramOptions& po);
-
-
+void setup_signals();
 void block_and_wait();
-
 void join_all_threads();
+
 
 std::mutex main_mtx;
 std::condition_variable main_cv;
-bool signaled = false;
+std::atomic<bool> signaled { false };
 
 INITIALIZE_EASYLOGGINGPP
 
-// void crash_handler(int sig) {
-// 	LOG(ERROR) << "Crashed";
-// 	el::Helpers::logCrashReason(sig, true);
-// 	el::Helpers::crashAbort(sig);
-// }
 
 int main(int argc, char** argv)
 {
-	srand(time(NULL));
+	srand(std::time(nullptr));
 
 	ProgramOptions po;
 	std::shared_ptr<ModuleManager> module_manager;
@@ -106,166 +87,74 @@ int main(int argc, char** argv)
 
 	try {
 		po.parse(argc, argv);
-		
 		if(po.has_help()) {
 			po.display_help();
 			return 0;
 		}
-
 		if(po.get<bool>("debug")) {
 			po.dump_variables_map();
 		}
 	}
-
 	catch(std::exception& e) {
 		std::cerr << "Invalid command " << e.what() << std::endl;
 		return EXIT_FAILURE;
 	}
 
 	is_foreground = po.get<bool>("foreground");
-
-	base_dir = 	nix::util::fs::expand_user(
+	base_dir = nix::util::fs::expand_user(
 		po.get<std::string>("basedir"));
 
+	nix::init::setup_logging(po);
 	setup_signals();
 
-
-	//--------------------------------------------------------------
-	std::string logger_config_path = base_dir + "/etc/log.conf";
-	el::Configurations conf(logger_config_path);
-	
-	conf.setGlobally(
-		el::ConfigurationType::ToStandardOutput,
-		is_foreground ? "true" : "false");
-	
-	conf.setGlobally(
-		el::ConfigurationType::Filename,
-		get_log_file_path(po));
-	
-	el::Loggers::setDefaultConfigurations(conf, true);
-	el::Loggers::reconfigureAllLoggers(conf);
-	//el::Helpers::setCrashHandler(crash_handler);
-	
-	// logging configuration end
 	std::time_t result = std::time(nullptr);
-	LOG(INFO) << "\n\n>>> Starting: "
-			  << std::asctime(std::localtime(&result))
-			  << "\n";
+	LOG(INFO) << "\n\n>>> Started: "
+			  << std::asctime(std::localtime(&result)) << "\n";
 
-
-	pid_t other_pid = 0;
-
-	if(!is_foreground) {
-		server_pidfile = nix::util::fs::expand_user(
-			po.get<std::string>("pidfile")
-		);
-
-		std::string dirname = nix::util::fs::dirname(server_pidfile);
-		bool dir_exists = nix::util::fs::path_exists(dirname);
-
-		if(!dir_exists) {
-			int error = nix::util::fs::create_dir(dirname);
-			if(error) {
-				std::cerr << "Cannot write pid: " 
-						  << server_pidfile 
-						  << std::endl;
-				return EXIT_FAILURE;
-			}
-		}
-
-		if(nix::util::fs::file_exists(server_pidfile)) {
-			other_pid = nix::util::pid::pidfile_read(server_pidfile);
-			if(nix::util::pid::is_pid_alive(other_pid)) {
-				std::cerr << "Another instance already running: "
-						  << other_pid << std::endl;
-				return EXIT_FAILURE;
-			}
-			else {
-				std::cerr << "Removed stale pid file, old pid: "
-						  << other_pid << std::endl;
-			}
-		}
-		int daemonized = daemon(0, (po.get<bool>("no-close-fds") ? 1 : 0));
-		if(daemonized == -1) {
-			std::cerr << "daemon() failed" << std::endl;
-			return EXIT_FAILURE;
-		}
-		if(daemonized == 0) {
-			daemonized = daemon(0, (po.get<bool>("no-close-fds") ? 1 : 0));
-			if(daemonized == -1) {
-				std::cerr << "second daemon() failed" << std::endl;
-				return EXIT_FAILURE;
-			}
-		}
-
-		server_pid = getpid();
-		nix::util::pid::pidfile_write(server_pidfile, server_pid);
-	}
-
-
-	// sevrver initialization
+	// server initialization
 	try {
 
 		ModuleManager::Names_t modules;
-		setup_modules(modules, po);
+		nix::init::setup_modules(po, modules);
 
 		std::shared_ptr<ObjectPool<Connection>> db_pool(
 			new ObjectPool<Connection>()); // to be fixed
 
-		setup_db_pool(db_pool, po);
+		nix::init::setup_db_pool(po, db_pool);
 
-		std::shared_ptr<ModuleAPI> mod_api(new ModuleAPI(db_pool));
+		auto client_pool = nix::init::setup_client_pool(po);
+
+		Options server_options;
+		nix::init::setup_server_options(po, server_options);
+
+		if(!is_foreground) {
+			server_pidfile = nix::util::fs::expand_user(
+				po.get<std::string>("pidfile")
+			);
+			server_pid = nix::init::start_daemon(po, server_pidfile);
+		}
+
+		std::shared_ptr<ModuleAPI> mod_api(
+			new ModuleAPI(db_pool, client_pool)
+		);
 
 		module_manager.reset(
-			new ModuleManager(mod_api,
+			new ModuleManager(server_options, mod_api,
 							  po.get<bool>("fatal")));
 
 		module_manager->load(modules);
 
-		Options server_options;
-		setup_server(server_options, po);
+		nix::init::setup_builtin_modules(
+			po, module_manager, mod_api, server_options);
 
 		server.reset(new nix::Server(server_options));
 
-		// MODULE: debug
-		if(po.get<bool>("enable-debug")) {
-			std::shared_ptr<nix::module::Debug> debug_module(
-				new nix::module::Debug(mod_api, server_options)
-			);
-			module_manager->add_builtin(debug_module);
-		}
-
-		// MODULE: resolver
-		if(po.get<bool>("enable-resolver")) {
-			std::shared_ptr<nix::module::Resolver> resolver_module(
-				new nix::module::Resolver(mod_api, server_options)
-			);
-			module_manager->add_builtin(resolver_module);
-		}
-
-		// MODULE: job queue
-		if(po.get<bool>("enable-job-queue")) {
-			std::shared_ptr<nix::module::JobQueue> job_queue_module(
-				new nix::module::JobQueue(mod_api, server_options)
-			);
-			setup_builtin_job_queue(job_queue_module, po);
-			module_manager->add_builtin(job_queue_module);
-		}
-
-		// MODULE: cache
-		if(po.get<bool>("enable-cache")) {
-			std::shared_ptr<nix::module::Cache> cache_module(
-				new nix::module::Cache(mod_api, server_options)
-			);
-			module_manager->add_builtin(cache_module);
-		}
-
 		module_manager->register_routing(server);
 		module_manager->start_all();
-
 	}
-	catch(std::exception& e) {
+	catch(const std::exception& e) {
 		std::cerr << "std::exception (main()): " << e.what() << std::endl;
+		LOG(ERROR) << e.what();
 		return EXIT_FAILURE;
 	}
 
@@ -278,7 +167,15 @@ int main(int argc, char** argv)
 				  << "(always allows KEY_TEST) ******";
 	}
 
-	server->start();
+	try {
+		server->start();
+		module_manager->start_manager_thread();
+		LOG(DEBUG) << "Running...";
+	}
+	catch(const std::exception& e) {
+		LOG(ERROR) << e.what();
+		return 1;
+	}
 
 	std::vector<std::thread> threads;
 	threads.push_back(std::move(std::thread(block_and_wait)));
@@ -289,147 +186,25 @@ int main(int argc, char** argv)
 		}
 	}
 
-	module_manager.reset();
 	server->stop();
+	module_manager.reset();
 
-	if(server_pid) {
-		nix::util::pid::pidfile_remove(server_pidfile);
-		exit(0);
-	}
+	nix::init::stop_daemon(server_pid, server_pidfile);
 	return EXIT_SUCCESS;
 }
 
 
-// ---------------------------------------------------------------------
-// initialization helpers
-// ---------------------------------------------------------------------
-
-void setup_modules(ModuleManager::Names_t& v,
-				   const nix::ProgramOptions& po)
-{
-	using namespace nix::util;
-
-	std::string base_dir(
-		fs::expand_user(po.get<std::string>("basedir"))
-	);
-
-	std::string modules_dir = 
-		fs::expand_user(po.get<std::string>("modulesdir"));
-
-	std::ifstream modules_config(base_dir + "/etc/modules.load");
-	char line[256];
-	while(modules_config.getline(line, 255)) {
-		std::string module_name(line);
-		string::trim(module_name);
-		if(module_name.length() && module_name[0] != '#') {
-			v.push_back(module_name);
-		}
-	}
-	modules_config.close();
-}
-
-void setup_server(Options& options,
-				  const ProgramOptions& po)
-{
-	using std::string;
-	using namespace nix;
-	using nix::server::Options;
-
-	options.start_time = std::time(nullptr);
-
-	options.nodename = po.get<std::string>("nodename");
-	options.address = po.get<string>("address");
-
-	options.tcp_nonblocking = po.get<bool>("SERVER.tcp_nonblocking");
-	options.tcp_listen_backlog = po.get<int>("SERVER.tcp_listen_backlog");
-	options.dispatcher_threads = po.get<int>("SERVER.dispatcher_threads");
-
-	// development options
-	options.development_mode = po.get<bool>("development-mode");
-}
-
-void setup_db_pool(std::shared_ptr<ObjectPool<Connection>> pool,
-				   const ProgramOptions& po)
-{
-	using namespace std;
-
-	string base_dir(
-		nix::util::fs::expand_user(po.get<string>("basedir"))
-	);
-
-	std::string config_path(po.get<string>("dbconfig"));
-	if(po.is_verbose()) {
-		std::cout << "Reading db configuration: "
-				  <<  config_path
-				  << std::endl;
-	}
-
-	nix::db::Options options;
-	options.parse(config_path);
-	for(auto& inst : options.get_instances()) {
-		// create connection
-		// pool.insert
-	}
-}
-
-void setup_builtin_job_queue(std::shared_ptr<nix::module::JobQueue> jq,
-							 const ProgramOptions& po)
-{
-	using namespace std;
-	std::string config_path(po.get<string>("config"));
-	if(po.is_verbose()) {
-		std::cout << "Reading queues configuration " << std::endl;
-	}
-
-	nix::queue::Options options;
-	options.parse(config_path);
-	for(auto& inst : options.get_instances()) {
-		jq->init_queue(inst);
-	}
-}
-
-std::string get_log_file_path(const ProgramOptions& po)
-{
-	std::string log_dir(
-		nix::util::fs::expand_user(
-			po.get<std::string>("logdir")
-		)
-	);
-	
-	if(!nix::util::fs::path_exists(log_dir)) {
-		mode_t mode = S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH;
-		if(mkdir(log_dir.c_str(), mode) != 0) {
-			throw nix::InitializationError(
-				"Cannot create log directory: " + log_dir);
-		}
-
-		if(!po.get<bool>("foreground")) {
-			std::cout << "Created log directory: "
-					  << log_dir << std::endl;
-		}
-	}
-
-	std::string log_path = log_dir + "/error.log";
-
-	// test if we can open the error.log for writing
-	std::ofstream fh;
-	fh.open(log_path, std::ios::out | std::ios::app | std::ios::binary);
-	if(!fh.is_open()) {
-		throw nix::InitializationError(
-			"Cannot open log file: " + log_path);
-	}
-	
-	return log_path;
-}
 
 void setup_signals()
 {
+	LOG(DEBUG) << "Setting signal handlers";
 	std::signal(SIGINT, termination_signal_handler);
 	std::signal(SIGTERM, termination_signal_handler);
 }
 
-void termination_signal_handler(int /* sig */)
+void termination_signal_handler(int sig)
 {
+	LOG(DEBUG) << "Caught signal: " << sig;
 	signaled = true;
 	main_cv.notify_one();
 }
@@ -443,3 +218,9 @@ void block_and_wait()
 	}
 	
 }
+
+// void crash_handler(int sig) {
+// 	LOG(ERROR) << "Crashed";
+// 	el::Helpers::logCrashReason(sig, true);
+// 	el::Helpers::crashAbort(sig);
+// }
