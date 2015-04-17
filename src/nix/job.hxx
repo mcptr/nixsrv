@@ -11,7 +11,7 @@ namespace nix {
 class Job
 {
 public:
-	Job() = default;
+	Job();
 	explicit Job(const nix::Message& msg);
 	virtual ~Job() = default;
 
@@ -50,16 +50,24 @@ public:
 		return progress_;
 	}
 
-	virtual inline Message& parameters() final
+	virtual inline Message& data() final
 	{
 		return parameters_;
 	}
 
-	virtual void set_origin_node(const std::string& nodename);
-	virtual std::string to_string() const;
-	virtual void deserialize(const Message& msg);
+	virtual void set_module(const std::string& module) final;
+	virtual void set_action(const std::string& action) final;
+	virtual void set_origin_node(const std::string& nodename) final;
+	virtual void set_api_key(const std::string& api_key) final;
+	virtual void set_id(const std::string& id = std::string()) final;
+	virtual void set_progress(double progress) final;
+	virtual bool is_completed() const final;
 
-	operator std::string() const
+	virtual std::string to_string() const;
+	virtual void from_message(const Message& msg);
+	virtual void deserialize(const std::string& serialized);
+
+	virtual operator std::string() const
 	{
 		return to_string();
 	}
@@ -74,6 +82,7 @@ protected:
 	bool completed_ = false;
 	Message parameters_;
 
+	virtual void init();
 };
 
 

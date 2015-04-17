@@ -144,7 +144,7 @@ int main(int argc, char** argv)
 			test.no_throw([&m, &json]() { m.parse(json); }, "parse() success");
 			test.equal(m.to_string(), json, "parse() and to_string()");
 
-			test.throws<std::runtime_error>([&m]() { m.parse(""); } );
+			test.no_throw([&m]() { m.parse(""); } );
 			test.throws<std::runtime_error>([&m]() { m.parse("invalid"); } );
 		}
 	);

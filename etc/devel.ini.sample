@@ -1,22 +1,32 @@
+# file system layout
 basedir = ~/Devel/nix-env/nix
 modulesdir = ~/Devel/nix-env/nix/lib
 logdir = ~/Devel/nix-env/nix/var/log
 pidfile = ~/Devel/nix-env/nix/var/run/nix.pid
 
-node_name = devel-01
-address = tcp://127.0.0.1:65535
+# instance info (this information is used across infrastructure)
+nodename = node-01
+address = tcp://*.*:9876
+
 
 ## builtin modules
-enable-debug = 0
-## builtin modules: services
-enable-cache = 0
-enable-resolver = 0
-enable-job-queue = 0
+# simple debug module with queue and workers
+enable-debug = 1
+# builtin modules: services
+enable-cache = 1
+enable-resolver = 1
+enable-job-queue = 1
 
-[SERVER]
-tcp_listen_backlog = 5
+# internal network related options
+[server]
+tcp_listen_backlog = 250
 tcp_nonblocking = 1
-dispatcher_threads = 4
+dispatcher_threads = 12
+
+[module-manager]
+manager_thread_enabled = 1
+manager_thread_run_interval = 120
+manager_thread_sleep_interval_ms = 1000
 
 [builtins.cache]
 cleaner_enabled = 1
@@ -25,14 +35,44 @@ cleaner_enabled = 1
 cleaner_run_interval = 60
 cleaner_sleep_interval_ms = 1000
 
-[builtins.queues]
-queues = test
+# resolver can monitor if nodes that registered their modules are
+# still operational (checks are done per module).
+# NOTE: if this is enabled, and a service becomes unresponsive,
+# the address will be unbound from the service until another bind.
+# The bind is done in module manager thread.
+# Refer to [modules-manager] section.
+[builtins.resolver]
+monitor_enabled = 1
+# resolver monitor interval: run * sleep (milliseconds),
+# e.g. 60 * 1000 = 1 minute
+monitor_run_interval = 60
+monitor_sleep_interval_ms = 1000
+monitor_response_timeout_ms = 1000
+monitor_max_failures = 3
 
-[bulitins.queue.test]
+# configuration of queues to be created on start
+# NOTE: each queue will have its own dedicated section
+[builtins.queues]
+queues = example
+
+# configuration of 'example' queue, see [builtins.queues]
+[bulitins.queue.example]
 size = 123
 
+# configuration of remote services
 [infrastructure]
-srv_resolver_address = tcp://127.0.0.1:65535
+srv_resolver_address = tcp://127.0.0.1:9876
 srv_cache_address = 
 srv_broker_address = 
 srv_job_queue_address = 
+
+[resources]
+generic_client_pool_size = 5
+resolver_client_pool_size = 5
+cache_client_pool_size = 5
+job_queue_client_pool_size = 5
+broker_client_pool_size = 5
+
+[auth]
+api_key_private = _development_key_
+api_key_public = 

@@ -73,7 +73,7 @@ class Runner(object):
 					self.exec_test(
 						test_exe,
 						title="CXX: " + test,
-						on_fail=lambda **kwargs: self.test_results["CXX"].append(test_exe)
+						on_fail=lambda **kwargs: self.test_results["CXX"].append(test_exe[0])
 					)
 					
 

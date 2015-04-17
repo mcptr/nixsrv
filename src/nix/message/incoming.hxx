@@ -5,6 +5,7 @@
 
 #include "nix/common.hxx"
 #include "nix/message.hxx"
+#include "nix/job.hxx"
 
 
 namespace nix {
@@ -19,6 +20,7 @@ public:
 
 	void reply();
 	void reply(Message& msg, nix::StatusCode_t status = nix::ok);
+	void reply(const Job& job, nix::StatusCode_t status = nix::ok);
 
 	void reply_with_error(nix::StatusCode_t status,
 						  const std::string& msg);

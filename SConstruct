@@ -361,8 +361,6 @@ translation_units = {
 		"env": combinedenv,
 	},
 	"job" : {},
-	"job/client_job" : {},
-	"job/server_job" : {},
 	"message" : {
 		"env": combinedenv,
 	},

@@ -73,17 +73,17 @@ development_key_admin = "_development_key_admin_"
 JOB_ID = None
 
 
-def test_routing_structure():
-	with NixServer(modules=["job-queue"]) as server:
-		client = NixClient(server.get_address())
-		result = client.call(module, "list_routes", {}, 100)
-		# print(json.dumps(result.data, indent=4))
-		assert_true(result.is_replied(), "is replied")
-		assert_equal(expected_routing, result.data)
+# def test_routing_structure():
+# 	with NixServer(modules=["job-queue"]) as server:
+# 		client = NixClient(server.get_address())
+# 		result = client.call(module, "list_routes", {}, 100)
+# 		# print(json.dumps(result.data, indent=4))
+# 		assert_true(result.is_replied(), "is replied")
+# 		assert_equal(expected_routing, result.data)
 
 
 def test_submit():
-	with NixServer(modules=["job-queue"]) as server:
+	with NixServer(modules=["job-queue", "resolver"]) as server:
 		client = NixClient(server.get_address())
 		params = {"@api_key" : development_key}
 
@@ -97,7 +97,20 @@ def test_submit():
 		job_param_name = "param"
 		job_param_value = "πœę©ß←"
 
+		# first: create the queue
+		create_params = {
+			"@api_key" : development_key_admin,
+			"queue" : job_module,
+			"create" : {
+				"size" : 256,
+			}
+		}
+
+		response = client.call(module, "manage", create_params)
+		assert_true(response.is_status_ok(), "created queue")
+
 		params.update({
+			"@origin_node" : server.get_nodename(),
 			"module" : job_module,
 			"action" : job_action,
 			"parameters" : {
@@ -107,6 +120,7 @@ def test_submit():
 
 		response = client.call(module, "job/submit", params, 1000)
 		assert_true(response.is_status_ok(), "Submit ok")
+
 		JOB_ID = response.data["@job_id"]
 		assert_true(len(JOB_ID))
 
@@ -128,7 +142,7 @@ def test_submit():
 		assert_equal(response.data["@job_id"], JOB_ID, "Job id")
 		# ---
 		assert_equal(
-			response.data["@queue_node"],
+			response.data["@origin_node"],
 			server.get_nodename(), "Origin node name set")
 		job_parameters = response.data["parameters"]
 		job_payload = response.data
@@ -157,7 +171,9 @@ def test_submit():
 		params = {
 			"@api_key" : development_key,
 			"@job_id" : JOB_ID,
-			job_param_name : "Result: %s" % job_param_value
+			"parameters" : {
+				job_param_name : "Result: %s" % job_param_value
+			}
 		}
 
 		response = client.call(module, "job/result/set", params, 100)
@@ -173,7 +189,7 @@ def test_submit():
 		assert_equal(data["@api_key"], development_key, "result: api key")
 		assert_equal(data["@job_id"], JOB_ID, "result: job_id")
 		assert_equal(
-			data[job_param_name],
+			data.get("parameters", {}).get(job_param_name, ""),
 			"Result: %s" % job_param_value, "result: job value")
 
 
@@ -205,11 +221,6 @@ def test_queue_management():
 		assert_equal(status["results_awaiting"], 0, "no results awaiting")
 		assert_equal(status["in_progress"], 0, "no jobs in progress")
 		assert_equal(status["total_pending"], 0, "no pending jobs")
-		assert_equal(
-			status["queues"]["test"]["closed"],
-			False,
-			"test queue is not closed"
-		)
 
 		queue_name_1 = "unittest-queue-%d" % os.getpid()
 		queue_name_2 = "second-queue-%d" % os.getpid()

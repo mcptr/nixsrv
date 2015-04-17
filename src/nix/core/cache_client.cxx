@@ -18,6 +18,7 @@ bool CacheClient::store(const std::string& key,
 						const std::string& value)
 {
 	Message m;
+	m.set_meta("api_key", client_config_.api_key_private);
 	m.set("key", key);
 	m.set("value", value);
 	auto const& response = this->call_service("store", m);
@@ -33,6 +34,7 @@ bool CacheClient::store(const std::string& key,
 bool CacheClient::retrieve(const std::string& key, Message& result)
 {
 	Message m;
+	m.set_meta("api_key", client_config_.api_key_private);
 	m.set("key", key);
 	auto const& response = this->call_service("retrieve", m);
 	if(response->is_status_ok()) {
@@ -43,10 +45,10 @@ bool CacheClient::retrieve(const std::string& key, Message& result)
 	return false;
 }
 
-
 bool CacheClient::remove(const std::string& key)
 {
 	Message m;
+	m.set_meta("api_key", client_config_.api_key_private);
 	m.set("key", key);
 	return this->send("remove", m);
 }
@@ -54,6 +56,7 @@ bool CacheClient::remove(const std::string& key)
 bool CacheClient::status(Message& result)
 {
 	Message empty;
+	empty.set_meta("api_key", client_config_.api_key_private);
 	auto const& response = this->call_service("status", empty);
 	if(response->is_status_ok()) {
 		result = response->data();

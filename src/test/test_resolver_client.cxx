@@ -62,7 +62,7 @@ int main(int argc, char** argv)
 	);
 
 	unit_test.test_case(
-		"Resolve nodes",
+		"Resolve node",
 		[&server_address, &server_nodename](TestCase& test)
 		{
 			auto client = 

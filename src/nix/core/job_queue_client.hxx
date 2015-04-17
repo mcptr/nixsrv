@@ -6,7 +6,7 @@
 #include "service_client.hxx"
 #include "resolver_client.hxx"
 #include "nix/message/response.hxx"
-#include "nix/job/client_job.hxx"
+#include "nix/job.hxx"
 
 namespace nix {
 namespace core {
@@ -23,24 +23,19 @@ public:
 	virtual ~JobQueueClient() = default;
 
 
-	std::unique_ptr<nix::Response> submit(ClientJob& job_data);
+	std::unique_ptr<nix::Response> submit(Job& job_data);
 
-	std::unique_ptr<nix::ClientJob> get_work(const std::string& module);
+	std::unique_ptr<nix::Job> get_work(const std::string& module);
 
-	bool set_progress(const std::string& queue_node,
-					  const std::string& job_id,
-					  const double progress);
+	bool set_progress(const Job& job);
 
-	bool set_result(const std::string& queue_node,
-					const std::string& job_id,
-					Message& m);
+	bool set_result(const Job& job);
 
-	std::unique_ptr<nix::Response>
-	get_result(const std::string& queue_node,
-			   const std::string& job_id);
+	std::unique_ptr<nix::Job>
+	get_result(const Job& job);
 
 	std::unique_ptr<nix::Response>
-	status(const std::string& queue_node);
+	status(const std::string& queue_node = std::string());
 
 protected:
 	const std::unique_ptr<ResolverClient> resolver_client_;

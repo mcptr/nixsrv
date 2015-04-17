@@ -104,7 +104,7 @@ bool JobQueue::init_queue(const std::string& name, size_t size)
 	}
 
 	std::unique_lock<std::mutex> lock(mtx_);
-	queues_.emplace(name, new Queue<ServerJob>(size));
+	queues_.emplace(name, new Queue<Job>(size));
 	lock.unlock();
 	return true;
 }
@@ -120,17 +120,16 @@ void JobQueue::submit(std::unique_ptr<IncomingMessage> msg)
 		}
 		else if(!it->second->is_closed()) {
 			std::string action = msg->get("action", "");
-			bool has_data = msg->exists("parameters");
+			bool has_parameters = msg->exists("parameters");
 
-			if(!(dest_queue.length() && action.length() && has_data)) {
+			if(!(dest_queue.length() && action.length() && has_parameters)) {
 				msg->fail(nix::data_invalid_content);
 			}
 			else {
-				msg->remove("module");
-				std::unique_ptr<ServerJob> job(
-					new ServerJob(*msg));
+				std::unique_ptr<Job> job(
+					new Job(*msg));
 				std::string job_id = job->get_id();
-				
+
 				bool success;
 				it->second->push(std::move(job), success);
 				if(!success) {
@@ -141,7 +140,7 @@ void JobQueue::submit(std::unique_ptr<IncomingMessage> msg)
 					// (if queue is configured to be persistent),
 					// will use a container now
 					msg->clear();
-					msg->set("@job_id", job_id);
+					msg->set_meta("job_id", job_id);
 					msg->reply(*msg);
 				}
 			}
@@ -162,17 +161,12 @@ void JobQueue::get_work(std::unique_ptr<IncomingMessage> msg)
 			msg->fail("No queue for module: " + queue_name);
 		}
 		else {
-			std::unique_ptr<ServerJob> ptr;
+			std::unique_ptr<Job> ptr;
 			it->second->pop(std::move(ptr));
 			if(ptr) {
-				Message work;
-				work.set("@job_id", ptr->get_id());
-				work.set("@queue_node", options_.nodename);
-
-				work.set("action", ptr->get_action());
-				//work.set_deserialized("parameters", ptr->get_parameters());
-
-				msg->reply(work);
+				Message task;
+				task.parse(ptr->to_string());
+				msg->reply(task);
 
 				std::unique_lock<std::mutex> lock(mtx_);
 				in_progress_[ptr->get_id()] = std::move(ptr);
@@ -184,12 +178,14 @@ void JobQueue::get_work(std::unique_ptr<IncomingMessage> msg)
 
 void JobQueue::set_progress(std::unique_ptr<IncomingMessage> msg)
 {
-	std::string job_id = msg->get("@job_id", "");
+	std::string job_id = msg->get_meta("job_id", std::string());
 
 	auto it = in_progress_.find(job_id);
 	if(it != in_progress_.end()) {
 		std::unique_lock<std::mutex> lock(mtx_);
-		it->second->set_progress(msg->get("progress", 0.0));
+		if(msg->get("progress", 0.0)) {
+			it->second->set_progress(msg->get("progress", 0.0));
+		}
 		lock.unlock();
 	}
 }
@@ -197,7 +193,7 @@ void JobQueue::set_progress(std::unique_ptr<IncomingMessage> msg)
 
 void JobQueue::set_result(std::unique_ptr<IncomingMessage> msg)
 {
-	std::string job_id = msg->get("@job_id", "");
+	std::string job_id = msg->get_meta("job_id", std::string());
 	if(!job_id.length()) {
 		msg->fail(nix::null_value);
 	}
@@ -205,7 +201,8 @@ void JobQueue::set_result(std::unique_ptr<IncomingMessage> msg)
 		if(!persistent_) {
 			std::unique_lock<std::mutex> lock(mtx_);
 			in_progress_.erase(job_id);
-			std::unique_ptr<Message> result(new Message(msg->to_string()));
+			std::unique_ptr<Job> result(new Job(*msg));
+			result->set_progress(100);
 			completed_[job_id] = std::move(result);
 			completed_jobs_++;
 			lock.unlock();
@@ -217,19 +214,18 @@ void JobQueue::set_result(std::unique_ptr<IncomingMessage> msg)
 
 void JobQueue::get_result(std::unique_ptr<IncomingMessage> msg)
 {
-	std::string api_key = msg->get("@api_key", "");
-	std::string job_id = msg->get("@job_id", "");
-
+	std::string api_key = msg->get_meta("api_key", std::string());
+	std::string job_id = msg->get_meta("job_id", std::string());
 	msg->clear();
 
 	if(!persistent_) {
 		auto c_it = completed_.find(job_id);
 		bool is_completed = (c_it != completed_.end());
 		if(is_completed) {
-			std::string submitter = c_it->second->get("@api_key", "");
+			std::string submitter = c_it->second->get_api_key();
 			if(submitter.compare(api_key) == 0) {
-				msg->reply(*(c_it->second));
 				std::unique_lock<std::mutex> lock(mtx_);
+				msg->reply(*(c_it->second));
 				completed_.erase(c_it);
 				lock.unlock();
 			}
@@ -240,10 +236,12 @@ void JobQueue::get_result(std::unique_ptr<IncomingMessage> msg)
 		else {
 			auto it = in_progress_.find(job_id);
 			if(it != in_progress_.end()) {
-				msg->set("progress", it->second->get_progress());
-				msg->reply(*msg, nix::not_ready);
+				std::unique_lock<std::mutex> lock(mtx_);
+				msg->reply(*(it->second), nix::not_ready);
+				lock.unlock();
 			}
 			else {
+				LOG(DEBUG) << " NOT STARTED ";
 				msg->fail("Job not found or not yet started");
 			}
 		}

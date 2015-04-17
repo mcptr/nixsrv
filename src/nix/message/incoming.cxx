@@ -39,6 +39,13 @@ void IncomingMessage::reply(Message& msg, nix::StatusCode_t status)
 	}
 }
 
+void IncomingMessage::reply(const Job& job, nix::StatusCode_t status)
+{
+	Message msg;
+	msg.parse(job.to_string());
+	this->reply(msg, status);
+}
+
 void IncomingMessage::reply_with_error(nix::StatusCode_t error_code,
 									   const std::string& msg)
 {
@@ -56,7 +63,7 @@ void IncomingMessage::fail(const std::string& reason)
 void IncomingMessage::fail(nix::StatusCode_t error_code,
 						   const std::string& reason)
 {
-	LOG(DEBUG) << "FAIL: " << reason;
+	LOG(DEBUG) << "Fail: " << reason;
 	clear();
 	set_status(error_code, reason);
 

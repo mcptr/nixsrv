@@ -32,6 +32,7 @@ int main(int argc, char** argv)
 
 	std::vector<std::string> modules;
 	modules.push_back("cache");
+	modules.push_back("resolver");
 
 	std::unique_ptr<Server> server(new Server(modules));
 

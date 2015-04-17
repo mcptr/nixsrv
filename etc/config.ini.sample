@@ -5,7 +5,7 @@ logdir = ~/Devel/nix-env/nix/var/log
 pidfile = ~/Devel/nix-env/nix/var/run/nix.pid
 
 # instance info (this information is used across infrastructure)
-node_name = node-01
+nodename = node-01
 address = tcp://*.*:9876
 
 
@@ -61,9 +61,18 @@ size = 123
 
 # configuration of remote services
 [infrastructure]
-# enable remote resolver
-srv_resolver_enabled = 1
 srv_resolver_address = tcp://127.0.0.1:9876
 srv_cache_address = 
 srv_broker_address = 
 srv_job_queue_address = 
+
+[resources]
+generic_client_pool_size = 5
+resolver_client_pool_size = 5
+cache_client_pool_size = 5
+job_queue_client_pool_size = 5
+broker_client_pool_size = 5
+
+[auth]
+api_key_private = _development_key_
+api_key_public = 

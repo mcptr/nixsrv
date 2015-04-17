@@ -161,6 +161,11 @@ public:
 		return *this;
 	}
 
+	friend bool operator==(const Message& lhs, const Message& rhs)
+	{
+		return lhs.root_ == rhs.root_;
+	}
+
 	friend std::ostream& operator<<(std::ostream& os, const Message& msg)
 	{
 		return os << msg.to_string();

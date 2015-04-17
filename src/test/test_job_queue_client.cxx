@@ -10,8 +10,9 @@
 
 #include <nix/common.hxx>
 #include <nix/core/job_queue_client.hxx>
+#include <nix/core/resolver_client.hxx>
 #include <nix/message.hxx>
-
+#include <nix/job.hxx>
 
 
 int main(int argc, char** argv)
@@ -21,6 +22,7 @@ int main(int argc, char** argv)
 
 	std::vector<std::string> modules;
 	modules.push_back("job-queue");
+	modules.push_back("resolver");
 
 	std::unique_ptr<Server> server(new Server(modules));
 
@@ -32,10 +34,10 @@ int main(int argc, char** argv)
 	std::string job_module = "test_module";
 	std::string job_action = "test_action";
 	std::string job_param = "this is a test";
-	nix::ClientJob job;
+	nix::Job job;
 	job.set_module(job_module);
 	job.set_action(job_action);
-	job.parameters().set("test", job_param);
+	job.data().set("test", job_param);
 
 	std::string job_id;
 
@@ -44,6 +46,19 @@ int main(int argc, char** argv)
 
 	// end of test data
 	//----------------------------------------------------------------
+
+	unit_test.test_case(
+		"Bind our node as a job queue server",
+		[&server_address, &server_nodename](TestCase& test)
+		{
+			auto client = 
+				init_service_client<nix::core::ResolverClient>(
+					server_address, server_nodename);
+
+			bool success = client->bind_node();
+			test.assert_true(success, "bind succeeded");
+		}
+	);
 
 	unit_test.test_case(
 		"Ping",
@@ -91,72 +106,98 @@ int main(int argc, char** argv)
 		}
 	);
 
-	// unit_test.test_case(
-	// 	"Get work",
-	// 	[&server_address, &server_nodename, &job,
-	// 	 &job_module, &job_action, &job_id](TestCase& test)
-	// 	{
-	// 		auto client = 
-	// 			init_service_client<nix::core::JobQueueClient>(
-	// 				server_address, server_nodename);
+ 	unit_test.test_case(
+		"Get work",
+		[&server_address, &server_nodename, &job,
+		 &job_module, &job_action, &job_id](TestCase& test)
+		{
+			auto client = 
+				init_service_client<nix::core::JobQueueClient>(
+					server_address, server_nodename);
 
-	// 		auto response = client->get_work(job_module);
-	// 		test.assert_true(response->is_status_ok(), "get_work called");
-	// 		// we have one job only, so we can test job_id
-	// 		std::string received_job_id =
-	// 			response->get_meta("job_id", std::string());
+			auto task = client->get_work(job_module);
+			test.assert_true((bool)task, "get_work called");
 
-	// 		test.assert_equal(
-	// 			received_job_id, job_id, "received correct job");
+			// we have one job only, so we can test job_id
+			test.assert_equal(
+				task->get_id(), job_id, "received correct job");
 
-	// 		test.assert_equal(
-	// 			response->get_meta("queue_node", std::string()),
-	// 			server_nodename,
-	// 			"received job points to origin node");
+			test.assert_equal(
+				task->get_origin_node(),
+				server_nodename,
+				"received job points to origin node");
 
-	// 		test.assert_equal(
-	// 			response->get("action", std::string()),
-	// 			job_action,
-	// 			"correct job action");
+			test.assert_equal(
+				task->get_action(),
+				job_action,
+				"correct job action");
 
-	// 		test.assert_equal(
-	// 			response->get_raw_value("parameters"),
-	// 			job.get_raw_value("parameters"),
-	// 			"correct job parameters");
-	// 	}
-	// );
+			test.assert_equal(
+				task->data(),
+				job.data(),
+				"correct job parameters");
+		}
+	);
 
-	// unit_test.test_case(
-	// 	"Progress set/get",
-	// 	[&server_address, &server_nodename, &job, &job_id](TestCase& test)
-	// 	{
-	// 		auto client = 
-	// 			init_service_client<nix::core::JobQueueClient>(
-	// 				server_address, server_nodename);
+	unit_test.test_case(
+		"Progress set/get",
+		[&server_address, &server_nodename, &job](TestCase& test)
+		{
+			auto client = 
+				init_service_client<nix::core::JobQueueClient>(
+					server_address, server_nodename);
 
-	// 		job->set_progress(0.678);
+			job.set_progress(0.678);
+			
+			bool success = client->set_progress(job);
+			test.assert_true(success, "set_progress call");
+		}
+	);
 
-	// 		bool success = client->set_progress(job);
-	// 		test.assert_true(response->is_status_ok(), "submit call");
-	// 		job_id = response->get_meta("job_id", std::string());
-	// 		test.assert_true(job_id.length(), "got job id");
-	// 	}
-	// );
+	unit_test.test_case(
+		"Get incomplete result",
+		[&server_address, &server_nodename, &job](TestCase& test)
+		{
+			auto client = 
+				init_service_client<nix::core::JobQueueClient>(
+					server_address, server_nodename);
 
-	// unit_test.test_case(
-	// 	"Set result",
-	// 	[&server_address, &server_nodename, &job_id, &result](TestCase& test)
-	// 	{
-	// 		auto client = 
-	// 			init_service_client<nix::core::JobQueueClient>(
-	// 				server_address, server_nodename);
+			auto result_job = client->get_result(job);
+			test.assert_true((bool)result_job, "got result response");
+			test.assert_true(
+				result_job->get_progress() > 0,
+				"incomplete"
+			);
+		}
+	);
 
-	// 		bool success = client->set_result(job->);
-	// 		test.assert_true(response->is_status_ok(), "submit call");
-	// 		job_id = response->get_meta("job_id", std::string());
-	// 		test.assert_true(job_id.length(), "got job id");
-	// 	}
-	// );
+	unit_test.test_case(
+		"Set result",
+		[&server_address, &server_nodename, &job](TestCase& test)
+		{
+			auto client = 
+				init_service_client<nix::core::JobQueueClient>(
+					server_address, server_nodename);
+
+			job.data().clear();
+			job.data().set("result", "result");
+			test.assert_true(client->set_result(job), "set result call");
+		}
+	);
+
+	unit_test.test_case(
+		"Get result",
+		[&server_address, &server_nodename, &job](TestCase& test)
+		{
+			auto client = 
+				init_service_client<nix::core::JobQueueClient>(
+					server_address, server_nodename);
+
+			auto result_job = client->get_result(job);
+			test.assert_true((bool)result_job, "got result response");
+			test.assert_true(result_job->is_completed(), "completed");
+		}
+	);
 
 
 	ProcessTest proc_test(std::move(server), unit_test);

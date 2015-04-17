@@ -18,6 +18,7 @@ ResolverClient::ResolverClient(const ClientConfig& config,
 bool ResolverClient::bind_node()
 {
 	Message m;
+	m.set_meta("api_key", client_config_.api_key_private);
 	m.set("nodename", client_config_.local_nodename);
 	m.set("address", client_config_.local_address);
 	auto const& response = this->call_service("node/bind", m);
@@ -27,6 +28,7 @@ bool ResolverClient::bind_node()
 bool ResolverClient::bind_service(const std::string& service)
 {
 	Message m;
+	m.set_meta("api_key", client_config_.api_key_private);
 	m.set("service", service);
 	m.set("nodename", client_config_.local_nodename);
 	auto const& response = this->call_service("service/bind", m);
@@ -36,6 +38,7 @@ bool ResolverClient::bind_service(const std::string& service)
 std::string ResolverClient::resolve_node(const std::string& nodename)
 {
 	Message m;
+	m.set_meta("api_key", client_config_.api_key_private);
 	m.set("nodename", nodename);
 	auto const& response = this->call_service("node/resolve", m);
 	return response->get(nodename, "");
@@ -44,6 +47,7 @@ std::string ResolverClient::resolve_node(const std::string& nodename)
 Message::Array_t ResolverClient::resolve_service(const std::string& service)
 {
 	Message m;
+	m.set_meta("api_key", client_config_.api_key_private);
 	m.set("service", service);
 	auto const& response = this->call_service("service/resolve", m);
 	return response->get("addresses", Message::Array_t());
@@ -52,6 +56,7 @@ Message::Array_t ResolverClient::resolve_service(const std::string& service)
 bool ResolverClient::unbind_node()
 {
 	Message m;
+	m.set_meta("api_key", client_config_.api_key_private);
 	m.set("nodename", client_config_.local_nodename);
 	auto const& response = this->call_service("node/unbind", m);
 	return response->is_status_ok();
@@ -60,6 +65,7 @@ bool ResolverClient::unbind_node()
 bool ResolverClient::unbind_service(const std::string& service)
 {
 	Message m;
+	m.set_meta("api_key", client_config_.api_key_private);
 	m.set("service", service);
 	m.set("nodename", client_config_.local_nodename);
 	auto const& response = this->call_service("service/unbind", m);

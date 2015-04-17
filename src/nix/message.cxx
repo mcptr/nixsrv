@@ -105,6 +105,7 @@ Message::Array_t Message::get(const std::string& k,
 	return default_value;
 }
 
+
 // template<>
 // void set<Json(const std::string& k, const T& value)
 // {
