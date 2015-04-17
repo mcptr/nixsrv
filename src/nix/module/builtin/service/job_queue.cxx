@@ -84,6 +84,19 @@ JobQueue::~JobQueue()
 				   << " jobs left)";
 
 		it.second->clear();
+		while(workers_awaiting_[it.first]->size()) {
+			std::unique_ptr<IncomingMessage> msg;
+			workers_awaiting_[it.first]->pop(std::move(msg));
+			try {
+				msg->reject(
+					nix::service_unavailable,
+					"Service unavailable."
+				);
+			}
+			catch(...) {
+
+			}
+		}
 		delete it.second;
 	}
 }
@@ -105,6 +118,7 @@ bool JobQueue::init_queue(const std::string& name, size_t size)
 
 	std::unique_lock<std::mutex> lock(mtx_);
 	queues_.emplace(name, new Queue<Job>(size));
+	workers_awaiting_.emplace(name, new Queue<IncomingMessage>(size));
 	lock.unlock();
 	return true;
 }
@@ -130,18 +144,44 @@ void JobQueue::submit(std::unique_ptr<IncomingMessage> msg)
 					new Job(*msg));
 				std::string job_id = job->get_id();
 
-				bool success;
-				it->second->push(std::move(job), success);
-				if(!success) {
-					msg->fail(nix::temp_limit_reached, "Queue full");
+				bool passed_to_worker = false;
+				size_t workers_count = 
+					workers_awaiting_[it->first]->size();
+				if(workers_count) {
+					try {
+						for(size_t count = 0;
+							!passed_to_worker && count < workers_count;
+							count++)
+						{
+							std::unique_ptr<IncomingMessage> worker_msg;
+							workers_awaiting_[it->first]->pop(
+								std::move(worker_msg));
+							
+							Message task;
+							task.parse(job->to_string());
+							worker_msg->reply(task);
+							passed_to_worker = true;
+						}
+					}
+					catch(const std::exception& e) {
+						LOG(ERROR) << e.what();
+					}
 				}
-				else {
-					// 2DO: store job in db 
-					// (if queue is configured to be persistent),
-					// will use a container now
-					msg->clear();
-					msg->set_meta("job_id", job_id);
-					msg->reply(*msg);
+
+				if(!passed_to_worker) {
+					bool success;
+					it->second->push(std::move(job), success);
+					if(!success) {
+						msg->fail(nix::temp_limit_reached, "Queue full");
+					}
+					else {
+						// 2DO: store job in db 
+						// (if queue is configured to be persistent),
+						// will use a container now
+						msg->clear();
+						msg->set_meta("job_id", job_id);
+						msg->reply(*msg);
+					}
 				}
 			}
 		}
@@ -171,6 +211,10 @@ void JobQueue::get_work(std::unique_ptr<IncomingMessage> msg)
 				std::unique_lock<std::mutex> lock(mtx_);
 				in_progress_[ptr->get_id()] = std::move(ptr);
 				lock.unlock();
+			}
+			else {
+				bool success;
+				workers_awaiting_[it->first]->push(std::move(msg), success);
 			}
 		}
 	}

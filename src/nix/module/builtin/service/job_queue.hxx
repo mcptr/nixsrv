@@ -53,6 +53,9 @@ private:
 	bool persistent_ = false;
 
 	std::unordered_map<std::string, Queue<Job>*> queues_;
+	std::unordered_map<std::string, Queue<IncomingMessage>*>
+		workers_awaiting_;
+
 	std::unordered_map<std::string, std::unique_ptr<Job>> in_progress_;
 	// this will be used when persistent queues are not in use
 	std::unordered_map<std::string, std::unique_ptr<Job>> completed_;

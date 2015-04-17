@@ -5,12 +5,14 @@
 namespace nix {
 
 
-typedef enum 
+typedef enum
 {
 	null_value = -1,
 	ok = 0,
 	fail,
 	not_ready,
+	service_unavailable,
+	temporary_failue,
 
 	// access other than core::auth (e.g. api_key mismatch)
 	access_denied = 51,

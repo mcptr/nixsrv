@@ -89,3 +89,8 @@ class NixServer(object):
 			except OSError as e:
 				if e.errno != errno.ESRCH:
 					raise
+		try:
+			os.unlink(self.__pidfile)
+		except OSError as e:
+			if e.errno != errno.ENOENT:
+				print(e)
