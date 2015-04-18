@@ -1,4 +1,5 @@
 #include "worker.hxx"
+#include "nix/common.hxx"
 #include "nix/core/job_queue_client.hxx"
 
 
@@ -15,19 +16,29 @@ QueueWorker::QueueWorker(const std::string& module,
 void QueueWorker::run()
 {
 	while(true) { // FIXME
-		auto job = api_->client_pool->job_queue()->get_work(module_);
-		if(job) {
-			this->process_job(std::move(job));
+		auto client =  api_->client_pool->job_queue();
+		if(client) {
+			auto job = client->get_work(module_);
+			if(job) {
+				this->process_job(std::move(job));
+			}
+		}
+		else {
+			break;
 		}
 	}
 }
 
 void QueueWorker::set_result(std::unique_ptr<Job> job)
 {
-	api_->client_pool->job_queue()->set_result(*job);
+	auto client =  api_->client_pool->job_queue();
+	if(client) {
+		client->set_result(*job);
+	}
+	else {
+		LOG(ERROR) << "Cannot set result. Failed to acquire job queue client";
+	}
 }
 
 
 } // nix
-
-
